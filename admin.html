@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Status Truck</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .hidden { display: none; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .sidebar-link.active { background-color: #4f46e5; color: white; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 2rem; border-radius: 0.75rem;
+            width: 90%; max-width: 900px; max-height: 90vh;
+            display: flex; flex-direction: column; position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 1rem; right: 1.5rem;
+            font-size: 2rem; font-weight: bold; color: #64748b; cursor: pointer;
+        }
+        .modal-body { overflow-y: auto; }
+        .status-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+        th[data-sort], th[data-filter] { cursor: pointer; position: relative; }
+        th[data-sort]:hover, th[data-filter]:hover { background-color: #eef2ff; }
+        th[data-filter]::after {
+            content: '\f0d7';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: 8px;
+            color: #94a3b8;
+        }
+
+        .header-filter-popup {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            z-index: 1010;
+            width: 250px;
+            padding: 0.5rem;
+        }
+        .filter-options {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .filter-item { display: block; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="loading-container" class="min-h-screen flex flex-col items-center justify-center">
+        <i class="fas fa-spinner fa-spin text-4xl text-indigo-600"></i>
+        <p class="mt-4 text-slate-600 font-semibold">Memuat Aplikasi...</p>
+    </div>
+
+    <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4 hidden">
+        <div class="w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden md:flex">
+            <div class="hidden md:block md:w-1/2 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1579869847514-432b8a3d3b37?q=80&w=2574&auto=format&fit=crop');">
+                <div class="h-full w-full bg-indigo-900 bg-opacity-60 p-10 flex flex-col justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-wider text-white"><i class="fas fa-truck-moving mr-2"></i>LOG IKK</h1>
+                        <p class="text-indigo-200 mt-2">Platform Monitoring Status Truck.</p>
+                    </div>
+                    <div class="text-indigo-100 text-sm">
+                        &copy; <span id="copyright-year-login-admin"></span> Jagaddhita Arya Koswara
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/2 p-8 md:p-12">
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Login Admin</h2>
+                <p class="text-slate-500 mb-8">Selamat datang kembali, silakan masuk.</p>
+                
+                <div class="space-y-6">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-envelope text-slate-400"></i>
+                        </span>
+                        <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-lock text-slate-400"></i>
+                        </span>
+                        <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition">
+                    </div>
+
+                    <div id="loginError" class="text-red-500 text-sm h-4"></div>
+                    
+                    <button id="loginButton" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">Masuk</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dashboard-container" class="hidden">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
+
+        <div class="relative min-h-screen lg:flex">
+            <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col">
+                <div class="h-16 flex items-center justify-between px-4 border-b border-slate-700 flex-shrink-0">
+                    <h1 class="text-2xl font-bold tracking-wider"><i class="fas fa-truck-moving mr-2"></i>LOG IKK</h1>
+                    <button id="sidebar-close-btn" class="lg:hidden text-2xl text-slate-400 hover:text-white">&times;</button>
+                </div>
+                <nav class="flex-grow px-4 py-4 overflow-y-auto">
+                    <a href="#" id="nav-home" class="sidebar-link flex items-center px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('home')">
+                        <i class="fas fa-home w-6 text-center"></i><span class="ml-3">Home</span>
+                    </a>
+                    <a href="#" id="nav-statusTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('statusTruck')">
+                        <i class="fas fa-eye w-6 text-center"></i><span class="ml-3">Status Truck</span>
+                    </a>
+                    <a href="#" id="nav-listTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('listTruck')">
+                        <i class="fas fa-list-ul w-6 text-center"></i><span class="ml-3">List Truck</span>
+                    </a>
+                    <a href="#" id="nav-ritaseTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('ritaseTruck')">
+                        <i class="fas fa-route w-6 text-center"></i><span class="ml-3">Ritase Truck</span>
+                    </a>
+                    <a href="#" id="nav-summaryReport" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('summaryReport')">
+                        <i class="fas fa-chart-pie w-6 text-center"></i><span class="ml-3">Summary Report</span>
+                    </a>
+                    <a href="#" id="nav-logHistory" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('logHistory')">
+                        <i class="fas fa-history w-6 text-center"></i><span class="ml-3">Riwayat Log</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <header class="bg-white shadow-md">
+                    <div class="flex h-16 items-center justify-between px-4 lg:px-8">
+                        <div class="flex items-center">
+                            <button id="sidebar-open-btn" class="lg:hidden text-2xl mr-4 text-slate-600">
+                                <i class="fas fa-bars"></i>
+                            </button>
+                            <h2 id="page-title" class="text-xl lg:text-2xl font-bold text-slate-700 whitespace-nowrap">Home</h2>
+                        </div>
+                        <div class="flex items-center gap-2 lg:gap-4">
+                            <div id="currentUserDisplay" class="text-xs sm:text-sm font-medium text-slate-500 text-right"></div>
+                            <button id="logoutButton" class="bg-red-500 text-white font-semibold px-3 py-2 lg:px-4 rounded-lg hover:bg-red-600 text-sm">Logout</button>
+                        </div>
+                    </div>
+                </header>
+                
+                <main class="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto">
+                    <div id="home" class="content-section">
+                        <div class="mb-8 p-6 bg-white rounded-xl shadow-md">
+                            <h2 id="welcome-title" class="text-2xl font-bold text-slate-800">Selamat Datang!</h2>
+                            <p id="current-date" class="text-slate-500"></p>
+                        </div>
+                    
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-indigo-500 rounded-full">
+                                    <i class="fas fa-truck text-3xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p id="total-truck-title" class="font-semibold">Total Truk</p>
+                                    <p id="total-truck-count" class="text-3xl font-bold">0</p>
+                                </div>
+                            </div>
+                            <div id="total-angkutan-card" class="bg-sky-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-sky-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
+                                <div class="ml-4">
+                                    <p class="font-semibold">Total Vendor Angkutan</p>
+                                    <p id="total-angkutan-count" class="text-3xl font-bold">0</p>
+                                </div>
+                            </div>
+                            <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-green-500 rounded-full">
+                                    <i class="fas fa-route text-3xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="font-semibold">Truk Sedang Jalan</p>
+                                    <p id="active-truck-count" class="text-3xl font-bold">0</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-700 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-slate-600 rounded-full">
+                                    <i class="fas fa-check-circle text-3xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="font-semibold">Truk Tersedia</p>
+                                    <p id="available-truck-count" class="text-3xl font-bold">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-700 mb-4">Rincian Status Armada</h3>
+                            <div id="status-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="statusTruck" class="content-section">
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Status</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label for="statusCardFilterAngkutan" class="block text-sm font-medium text-slate-600 mb-1">Angkutan</label><select id="statusCardFilterAngkutan" onchange="window.displayStatusCards()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                                <div><label for="statusCardFilterJenisMobil" class="block text-sm font-medium text-slate-600 mb-1">Jenis Truck</label><select id="statusCardFilterJenisMobil" onchange="window.displayStatusCards()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                                <div><label for="statusCardFilterStatus" class="block text-sm font-medium text-slate-600 mb-1">Status</label><select id="statusCardFilterStatus" onchange="window.displayStatusCards()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                            </div>
+                        </div>
+                        <div id="readOnlyTruckList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    </div>
+
+                    <div id="listTruck" class="content-section">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                            <button class="flex items-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.toggleAddForm()"><i class="fas fa-plus"></i> Tambah Data</button>
+                            <div class="relative w-full md:w-1/3"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-slate-400"></i></span><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari data truk..." class="w-full p-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></div>
+                        </div>
+                        
+                        <form class="add-form hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addForm">
+                            <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Truk Baru</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <input type="text" id="newAngkutan" placeholder="Angkutan" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg"><option value="LOSSBAK">LOSSBAK</option><option value="WINGBOX">WINGBOX</option></select>
+                                <select id="newKeterangan" class="w-full p-2 border border-slate-300 rounded-lg"></select>
+                                <input type="text" id="newFo" placeholder="Nomor FO" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newNoHp" placeholder="No HP Driver" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newCustomer" placeholder="Nama Customer" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newTujuan" placeholder="Kota Tujuan" class="w-full p-2 border border-slate-300 rounded-lg">
+                                
+                                <div class="flex items-center gap-2 lg:col-start-4">
+                                    <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addTruck()">Simpan</button>
+                                    <button type="button" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg" onclick="window.toggleAddForm()">Batal</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                            <table id="truckTable" class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3">Angkutan</th>
+                                        <th class="px-6 py-3">Plat Nomor</th>
+                                        <th class="px-6 py-3">Jenis Mobil</th>
+                                        <th class="px-6 py-3">Status</th>
+                                        <th class="px-6 py-3">Customer</th>
+                                        <th class="px-6 py-3">Tujuan</th>
+                                        <th class="px-6 py-3">Driver</th>
+                                        <th class="px-6 py-3">No HP</th>
+                                        <th class="px-6 py-3">FO</th>
+                                        <th class="px-6 py-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="ritaseTruck" class="content-section">
+                        <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Berdasarkan Tanggal Selesai</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <label for="ritaseStartDate" class="block text-sm font-medium text-slate-600 mb-1">Dari Tanggal</label>
+                                    <input type="date" id="ritaseStartDate" class="w-full p-2 border border-slate-300 rounded-lg">
+                                </div>
+                                <div>
+                                    <label for="ritaseEndDate" class="block text-sm font-medium text-slate-600 mb-1">Sampai Tanggal</label>
+                                    <input type="date" id="ritaseEndDate" class="w-full p-2 border border-slate-300 rounded-lg">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button id="applyDateFilterBtn" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700">
+                                        <i class="fas fa-filter mr-2"></i>Terapkan
+                                    </button>
+                                    <button id="resetDateFilterBtn" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300">
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end items-center gap-2 mb-4">
+                            <button onclick="window.exportRitaseToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                            <button onclick="window.exportRitaseToPdf()" class="flex items-center gap-2 bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                            <table id="ritaseTable" class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3" data-filter="angkutanName" onclick="handleHeaderClick(event, 'angkutanName')">Angkutan</th>
+                                        <th class="px-6 py-3" data-filter="plat_nomor" onclick="handleHeaderClick(event, 'plat_nomor')">Plat Nomor</th>
+                                        <th class="px-6 py-3" data-filter="nama_driver" onclick="handleHeaderClick(event, 'nama_driver')">Nama Driver</th>
+                                        <th class="px-6 py-3" data-filter="customer" onclick="handleHeaderClick(event, 'customer')">Customer</th>
+                                        <th class="px-6 py-3" data-filter="tujuan" onclick="handleHeaderClick(event, 'tujuan')">Kota</th>
+                                        <th class="px-6 py-3" data-filter="timestamp_selesai" onclick="handleHeaderClick(event, 'timestamp_selesai')">Tanggal Selesai</th>
+                                        <th class="px-6 py-3" data-filter="fo" onclick="handleHeaderClick(event, 'fo')">FO</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ritaseTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="summaryReport" class="content-section">
+                         <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Laporan</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label for="summaryFilterAngkutan" class="block text-sm font-medium text-slate-600 mb-1">Angkutan</label><select id="summaryFilterAngkutan" onchange="window.renderSummaryReport()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                                <div><label for="summaryFilterJenisMobil" class="block text-sm font-medium text-slate-600 mb-1">Jenis Mobil</label><select id="summaryFilterJenisMobil" onchange="window.renderSummaryReport()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                                <div><label for="summaryFilterStatus" class="block text-sm font-medium text-slate-600 mb-1">Status</label><select id="summaryFilterStatus" onchange="window.renderSummaryReport()" class="w-full p-2 border border-slate-300 rounded-lg"></select></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md" id="summaryReportContainer">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                                <div>
+                                    <h4 class="text-xl font-bold text-slate-800">Summary Report</h4>
+                                    <p id="export-timestamp" class="text-sm text-slate-500">Data saat ini</p>
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <button onclick="window.exportToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                                        <i class="fas fa-file-excel"></i> Export Excel
+                                    </button>
+                                    <button onclick="window.exportToPdf()" class="flex items-center gap-2 bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
+                                        <i class="fas fa-file-pdf"></i> Export PDF
+                                    </button>
+                                    <button onclick="window.exportAsImage()" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                                        <i class="fas fa-image"></i> Export Gambar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table id="summaryTable" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">ANGKUTAN</th>
+                                            <th class="px-6 py-3">FO</th>
+                                            <th class="px-6 py-3">TIBA LOKASI MUAT</th>
+                                            <th class="px-6 py-3">KELUAR LOKASI MUAT</th>
+                                            <th class="px-6 py-3">TIBA LOKASI BONGKAR</th>
+                                            <th class="px-6 py-3">KELUAR LOKASI BONGKAR</th>
+                                            <th class="px-6 py-3">NAMA CUSTOMER</th>
+                                            <th class="px-6 py-3">KOTA</th>
+                                            <th class="px-6 py-3">STATUS</th>
+                                            <th class="px-6 py-3">NAMA DRIVER</th>
+                                            <th class="px-6 py-3">NO HP</th>
+                                            <th class="px-6 py-3">PLAT NOMOR</th>
+                                            <th class="px-6 py-3">JENIS TRUCK</th>
+                                        </tr>
+                                        </thead>
+                                    <tbody id="summaryTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="logHistory" class="content-section">
+                        <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Riwayat Log</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div>
+                                    <label for="logStartDate" class="block text-sm font-medium text-slate-600 mb-1">Dari Tanggal</label>
+                                    <input type="date" id="logStartDate" class="w-full p-2 border border-slate-300 rounded-lg">
+                                </div>
+                                <div>
+                                    <label for="logEndDate" class="block text-sm font-medium text-slate-600 mb-1">Sampai Tanggal</label>
+                                    <input type="date" id="logEndDate" class="w-full p-2 border border-slate-300 rounded-lg">
+                                </div>
+                                <div class="md:col-span-2">
+                                     <label for="logSearchInput" class="block text-sm font-medium text-slate-600 mb-1">Cari (Plat, Angkutan, Pengubah)</label>
+                                     <input type="text" id="logSearchInput" placeholder="Masukkan kata kunci..." class="w-full p-2 border border-slate-300 rounded-lg">
+                                </div>
+                            </div>
+                             <div class="flex justify-end gap-2 mt-4">
+                                <button id="applyLogFilterBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700">
+                                    <i class="fas fa-filter mr-2"></i>Filter
+                                </button>
+                                <button id="resetLogFilterBtn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end items-center gap-2 mb-4">
+                            <button onclick="window.exportLogsToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </button>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                            <table id="logHistoryTable" class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3">Waktu</th>
+                                        <th class="px-6 py-3">Plat Nomor</th>
+                                        <th class="px-6 py-3">Angkutan</th>
+                                        <th class="px-6 py-3">Status Lama</th>
+                                        <th class="px-6 py-3">Status Baru</th>
+                                        <th class="px-6 py-3">Diubah Oleh</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="logHistoryTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+                <footer class="text-center p-4 text-sm text-slate-500 mt-auto bg-white border-t">&copy; <span id="copyright-year"></span> Jagaddhita Arya Koswara - Logistik IKK</footer>
+            </div>
+        </div>
+    </div>
+    
+    <div id="status-modal" class="modal-overlay hidden" onclick="window.closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="window.closeModal()">&times;</span>
+            <h3 id="modal-title" class="text-2xl font-bold text-slate-800 mb-4">Daftar Truk</h3>
+            <div class="flex items-center gap-4 mb-4">
+                <input type="text" id="modalSearchInput" placeholder="Cari..." class="w-full p-2 border border-slate-300 rounded-lg">
+                <select id="modalFilterAngkutan" class="p-2 border border-slate-300 rounded-lg"><option value="">Semua Angkutan</option></select>
+            </div>
+            <div class="modal-body">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3" data-sort="angkutan" onclick="window.sortModalTable('angkutan')">Angkutan</th>
+                            <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortModalTable('no_mobil')">Plat Nomor</th>
+                            <th class="px-4 py-3" data-sort="nama_driver" onclick="window.sortModalTable('nama_driver')">Nama Driver</th>
+                            <th class="px-4 py-3" data-sort="no_hp" onclick="window.sortModalTable('no_hp')">No HP</th>
+                            <th class="px-4 py-3" data-sort="jenis_mobil" onclick="window.sortModalTable('jenis_mobil')">Jenis Truck</th>
+                            <th class="px-4 py-3">Dimensi (cm)</th>
+                            <th class="px-4 py-3">Kubikasi (m³)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-truck-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="log-modal" class="modal-overlay hidden" onclick="window.closeLogModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="window.closeLogModal()">&times;</span>
+            <h3 id="log-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Log Perubahan Status</h3>
+            <div class="modal-body">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                        <tr>
+                            <th class="px-4 py-3">Waktu</th>
+                            <th class="px-4 py-3">Status Lama</th>
+                            <th class="px-4 py-3">Status Baru</th>
+                            <th class="px-4 py-3">Diubah Oleh</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-modal-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="header-filter-popup" class="header-filter-popup hidden">
+        <input type="text" id="filter-search" class="w-full p-2 border border-slate-300 rounded-md mb-2" placeholder="Cari opsi...">
+        <div id="filter-options" class="filter-options"></div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+            <button id="apply-filter-btn" class="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm font-semibold">Terapkan</button>
+            <button id="clear-filter-btn" class="bg-slate-200 px-3 py-1 rounded-md text-sm">Hapus Filter</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, query, orderBy, where, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.trucksData = []; 
+        window.allRitaseData = [];
+        window.allLogData = [];
+        let jenisMobilOptions = [];
+        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase;
+        
+        let currentModalTrucks = [];
+        let modalSort = { column: 'angkutan', direction: 'asc' };
+        let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
+        let activeFilters = {};
+
+        const appId = 'truck-dashboard-app';
+        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
+        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
+        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'MUAT': 'bg-blue-100 text-blue-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+        
+        function calculateLeadTime(startTimeString) {
+            if (!startTimeString) return '-';
+            const startTime = new Date(startTimeString);
+            const now = new Date();
+            let diff = now - startTime;
+
+            if (isNaN(diff) || diff < 0) return 'Invalid Time';
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            diff -= days * (1000 * 60 * 60 * 24);
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            diff -= hours * (1000 * 60 * 60);
+            const minutes = Math.floor(diff / (1000 * 60));
+
+            let result = [];
+            if (days > 0) result.push(`${days} Hari`);
+            if (hours > 0) result.push(`${hours} Jam`);
+            if (minutes > 0) result.push(`${minutes} Menit`);
+            
+            return result.length > 0 ? result.join(' ') : 'Kurang dari semenit';
+        }
+
+        function formatTanggalJam(isoString) {
+            if (!isoString || !isoString.includes('T')) { return '-'; }
+            const [tanggalPart, jamPart] = isoString.split('T');
+            if (!tanggalPart || !jamPart) { return '-'; }
+            const [tahun, bulan, tanggal] = tanggalPart.split('-');
+            if (!tahun || !bulan || !tanggal) { return '-'; }
+            return `${tanggal}/${bulan}/${tahun}, ${jamPart}`;
+        }
+        
+        const firebaseConfig = {
+          apiKey: "AIzaSyBQYgVCVzHwBk-Am3MB425FdRXkV4U8bBw", authDomain: "truck-kontrak.firebaseapp.com", projectId: "truck-kontrak",
+          storageBucket: "truck-kontrak.firebasestorage.app", messagingSenderId: "198359286959", appId: "1:198359286959:web:5d672f88d73ed05ab9805a", measurementId: "G-V2G0NSDVVB"
+        };
+        try { const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); } catch(e) { console.error("Firebase Init Error:", e); }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (unsubscribeFromTrucks) unsubscribeFromTrucks();
+            if (unsubscribeFromRitase) unsubscribeFromRitase();
+            if (user) {
+                try {
+                    const userDocSnap = await getDoc(doc(db, "users", user.uid));
+                    if (userDocSnap.exists() && userDocSnap.data().role === 'admin') {
+                        currentUserData = userDocSnap.data();
+                        document.getElementById('currentUserDisplay').textContent = `Selamat datang, ${currentUserData.name || 'Admin'} (Admin)`;
+                        setupRealtimeListeners(); 
+                        document.getElementById('loading-container').classList.add('hidden');
+                        document.getElementById('login-container').classList.add('hidden');
+                        document.getElementById('dashboard-container').classList.remove('hidden');
+                        window.showContent('home'); 
+                    } else { await signOut(auth); }
+                } catch (error) { await signOut(auth); }
+            } else {
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('dashboard-container').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
+            }
+        });
+        
+        function setupRealtimeListeners() {
+            if (!currentUserData) return;
+            
+            const trucksCollectionRef = collection(db, `artifacts/${appId}/public/data/trucks`);
+            unsubscribeFromTrucks = onSnapshot(trucksCollectionRef, (snapshot) => {
+                 let needsFullRender = window.trucksData.length !== snapshot.size;
+                 snapshot.docChanges().forEach((change) => {
+                     const truckData = { ...change.doc.data(), firestoreId: change.doc.id };
+                     const index = window.trucksData.findIndex(t => t.firestoreId === change.doc.id);
+                     if (change.type === "added") {
+                         if (index === -1) window.trucksData.push(truckData);
+                         needsFullRender = true;
+                     }
+                     if (change.type === "modified") {
+                         if (index > -1) {
+                            window.trucksData[index] = truckData;
+                            updateTableRow(truckData);
+                            updateStatusCard(truckData);
+                         } else {
+                            needsFullRender = true;
+                         }
+                     }
+                     if (change.type === "removed") {
+                         if (index > -1) window.trucksData.splice(index, 1);
+                         needsFullRender = true;
+                     }
+                 });
+
+                 renderHomePage(window.trucksData);
+
+                 if (needsFullRender) { 
+                    renderTruckList(window.trucksData); 
+                    displayStatusCards(); 
+                 }
+                 
+                 jenisMobilOptions = [...new Set(window.trucksData.map(t => t.jenis_mobil))].sort();
+                 populateAddFormOptions();
+                 populateSummaryFilters();
+                 populateStatusCardFilters();
+                 if (document.getElementById('summaryReport').classList.contains('active')) {
+                    renderSummaryReport();
+                 }
+            }, (error) => console.error("Trucks Listener Error:", error));
+
+            const ritaseCollectionRef = collection(db, "completed_deliveries");
+            const q = query(ritaseCollectionRef, orderBy("timestamp_selesai", "desc"));
+            unsubscribeFromRitase = onSnapshot(q, (snapshot) => {
+                window.allRitaseData = snapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+                if(document.getElementById('ritaseTruck').classList.contains('active')) {
+                    applyRitaseFiltersAndSort();
+                }
+            }, (error) => console.error("Ritase Listener Error:", error));
+        }
+        
+        function renderHomePage(data) {
+            if (!data) return;
+
+            document.getElementById('welcome-title').textContent = `Selamat Datang, Admin!`;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const totalTrucks = data.length;
+            const activeTrucks = data.filter(t => ['OTW MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'STORING'].includes(t.keterangan)).length;
+            const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
+            const totalAngkutan = [...new Set(data.map(t => t.angkutan))].length;
+
+            document.getElementById('total-truck-count').textContent = totalTrucks;
+            document.getElementById('active-truck-count').textContent = activeTrucks;
+            document.getElementById('available-truck-count').textContent = availableTrucks;
+            document.getElementById('total-angkutan-count').textContent = totalAngkutan;
+
+
+            const container = document.getElementById('status-details-grid');
+            container.innerHTML = '';
+            statusOptions.forEach(status => {
+                const count = data.filter(truck => truck.keterangan === status).length;
+                if (count === 0) return;
+                
+                const info = statusInfo[status] || { icon: 'fa-question-circle', color: 'gray' };
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
+                card.style.cursor = 'pointer';
+                card.innerHTML = `
+                    <div class="p-3 bg-${info.color}-100 rounded-full"><i class="fas ${info.icon} text-2xl text-${info.color}-600"></i></div>
+                    <div class="ml-4">
+                        <p class="text-slate-500 font-semibold">${status}</p>
+                        <p class="text-2xl font-bold text-slate-800">${count}</p>
+                    </div>`;
+                card.onclick = () => window.showTrucksByStatus(status);
+                container.appendChild(card);
+            });
+        }
+        
+        function renderTruckList(dataToRender) {
+            const tableBody = document.getElementById('truckTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            if (!dataToRender || dataToRender.length === 0) { tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
+            const sortedData = [...dataToRender].sort((a, b) => (a.angkutan || '').localeCompare(b.angkutan || ''));
+            sortedData.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
+            filterTable();
+        }
+
+        function createTableRow(truck) {
+            const row = document.createElement('tr');
+            row.className = 'bg-white border-b hover:bg-slate-50';
+            row.setAttribute('data-id', truck.firestoreId);
+            updateTableRow(truck, row);
+            return row;
+        }
+
+        function updateTableRow(truck, rowElement) {
+            const row = rowElement || document.querySelector(`#truckTable tr[data-id="${truck.firestoreId}"]`);
+            if (!row) return;
+            const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
+            
+            row.innerHTML = `
+                <td data-field="angkutan" class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td><td data-field="no_mobil" class="px-6 py-4">${truck.no_mobil || '-'}</td>
+                <td data-field="jenis_mobil" class="px-6 py-4">${truck.jenis_mobil || '-'}</td><td data-field="keterangan" class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || '-'}</span></td>
+                <td data-field="customer" class="px-6 py-4">${truck.customer || '-'}</td><td data-field="tujuan" class="px-6 py-4">${truck.tujuan || '-'}</td>
+                <td data-field="nama_driver" class="px-6 py-4">${truck.nama_driver || '-'}</td>
+                <td data-field="no_hp" class="px-6 py-4">${truck.no_hp || '-'}</td><td data-field="fo" class="px-6 py-4">${truck.fo || '-'}</td>
+                <td class="px-6 py-4 action-buttons flex items-center gap-2">
+                    <button class="log p-2 text-xs text-white bg-sky-500 rounded-lg hover:bg-sky-600" title="Lihat Log" onclick="window.showStatusLog('${truck.firestoreId}', '${truck.no_mobil}')"><i class="fas fa-history"></i></button>
+                    <button class="edit p-2 text-xs text-white bg-amber-500 rounded-lg hover:bg-amber-600" title="Edit" onclick="window.editRow('${truck.firestoreId}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete p-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700" title="Hapus" onclick="window.deleteTruck('${truck.firestoreId}', '${truck.no_mobil}')"><i class="fas fa-trash"></i></button>
+                </td>`;
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const tableBody = document.getElementById('truckTable').querySelector('tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
+        }
+        
+        window.addTruck = async function() {
+            const newTruck = {
+                angkutan: document.getElementById('newAngkutan').value.trim(), no_mobil: document.getElementById('newNoMobil').value.trim(),
+                jenis_mobil: document.getElementById('newJenisMobil').value, keterangan: document.getElementById('newKeterangan').value,
+                fo: document.getElementById('newFo').value.trim(), nama_driver: document.getElementById('newNamaDriver').value.trim(),
+                no_hp: document.getElementById('newNoHp').value.trim(), customer: document.getElementById('newCustomer').value.trim(),
+                tujuan: document.getElementById('newTujuan').value.trim()
+            };
+            if (!newTruck.angkutan || !newTruck.no_mobil || !newTruck.jenis_mobil) { alert("Kolom Angkutan, Plat Nomor, dan Jenis Mobil wajib diisi."); return; }
+            try { await addDoc(collection(db, `artifacts/${appId}/public/data/trucks`), newTruck); window.toggleAddForm(true); } 
+            catch (error) { alert("Gagal menyimpan data baru."); }
+        };
+
+        window.editRow = (firestoreId) => {
+            cancelEdit();
+            const row = document.querySelector(`tr[data-id="${firestoreId}"]`); if (!row) return;
+            const truck = window.trucksData.find(t => t.firestoreId === firestoreId); if (!truck) return;
+            const createInput = (value, type = 'text') => `<input type="${type}" class="w-full p-2 border border-slate-300 rounded-lg" value="${value}">`;
+            const createSelect = (options, selectedValue) => `<select class="w-full p-2 border border-slate-300 rounded-lg">${options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('')}</select>`;
+            row.querySelectorAll('td[data-field]').forEach(cell => {
+                const field = cell.dataset.field; const value = truck[field] || '';
+                if(field === 'jenis_mobil') cell.innerHTML = createSelect(['LOSSBAK', 'WINGBOX'], value);
+                else if(field === 'keterangan') cell.innerHTML = createSelect(statusOptions, value);
+                else cell.innerHTML = createInput(value);
+            });
+            row.querySelector('.action-buttons').innerHTML = `<button class="save p-2 text-xs text-white bg-green-600 rounded-lg" onclick="window.saveRow('${firestoreId}')"><i class="fas fa-check"></i></button><button class="cancel p-2 text-xs text-white bg-gray-500 rounded-lg" onclick="window.cancelEdit()"><i class="fas fa-times"></i></button>`;
+        };
+
+        window.saveRow = async (firestoreId) => {
+            const row = document.querySelector(`tr[data-id="${firestoreId}"]`); if (!row) return;
+            const updatedData = {};
+            row.querySelectorAll('td[data-field]').forEach(cell => {
+                const field = cell.dataset.field;
+                const input = cell.querySelector('input, select');
+                if (input) updatedData[field] = input.value;
+            });
+            
+            const truckDocRef = doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId);
+
+            try {
+                const newStatus = updatedData.keterangan;
+                if (newStatus) {
+                    const docSnap = await getDoc(truckDocRef);
+                    if (docSnap.exists()) {
+                        const oldStatus = docSnap.data().keterangan;
+                        if (oldStatus !== newStatus) {
+                            await addDoc(collection(db, "truck_status_logs"), {
+                                truckId: firestoreId,
+                                plat_nomor: docSnap.data().no_mobil,
+                                angkutanName: docSnap.data().angkutan,
+                                oldStatus: oldStatus,
+                                newStatus: newStatus,
+                                changedBy: currentUserData.name || 'Admin',
+                                timestamp: serverTimestamp()
+                            });
+                        }
+                    }
+                }
+                
+                await updateDoc(truckDocRef, updatedData); 
+
+            } catch (error) { 
+                console.error("Gagal menyimpan data atau membuat log:", error);
+                alert("Gagal menyimpan perubahan."); 
+            }
+        };
+
+        window.deleteTruck = async (firestoreId, noMobil) => {
+            if (confirm(`Yakin ingin menghapus truk ${noMobil}?`)) {
+                try { await deleteDoc(doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId)); }
+                catch (error) { alert("Gagal menghapus data."); }
+            }
+        };
+        
+        window.cancelEdit = () => renderTruckList(window.trucksData);
+
+        window.toggleAddForm = (forceClose = false) => {
+            const form = document.getElementById('addForm');
+            const isHidden = form.classList.contains('hidden');
+            if (forceClose || !isHidden) {
+                form.classList.add('hidden');
+            } else {
+                form.reset();
+                form.classList.remove('hidden');
+            }
+        };
+        
+        function populateAddFormOptions() {
+             document.getElementById('newKeterangan').innerHTML = statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        }
+        
+        function populateStatusCardFilters() {
+            const angkutanSelect = document.getElementById('statusCardFilterAngkutan'), jenisMobilSelect = document.getElementById('statusCardFilterJenisMobil'), statusSelect = document.getElementById('statusCardFilterStatus');
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan))].sort();
+            angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
+            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
+        }
+        
+        window.displayStatusCards = () => {
+            const container = document.getElementById('readOnlyTruckList'); 
+            const selectedAngkutan = document.getElementById('statusCardFilterAngkutan').value, selectedJenisMobil = document.getElementById('statusCardFilterJenisMobil').value, selectedStatus = document.getElementById('statusCardFilterStatus').value;
+            let filteredTrucks = window.trucksData;
+            if (selectedAngkutan !== 'all') filteredTrucks = filteredTrucks.filter(t => t.angkutan === selectedAngkutan);
+            if (selectedJenisMobil !== 'all') filteredTrucks = filteredTrucks.filter(t => t.jenis_mobil === selectedJenisMobil);
+            if (selectedStatus !== 'all') filteredTrucks = filteredTrucks.filter(t => t.keterangan === selectedStatus);
+            container.innerHTML = '';
+            if (!filteredTrucks || filteredTrucks.length === 0) { container.innerHTML = `<p class="text-slate-500 col-span-full text-center">Tidak ada data.</p>`; return; }
+            const sortedTrucks = [...filteredTrucks].sort((a, b) => statusOptions.indexOf(a.keterangan) - statusOptions.indexOf(b.keterangan));
+            sortedTrucks.forEach((truck) => container.appendChild(createStatusCard(truck)));
+        }
+
+        function createStatusCard(truck) {
+            const card = document.createElement('div'); card.className = 'bg-white p-6 rounded-xl shadow-md';
+            card.setAttribute('data-id', truck.firestoreId);
+            updateStatusCard(truck, card);
+            return card;
+        }
+
+        function updateStatusCard(truck, cardElement) {
+            const card = cardElement || document.querySelector(`#readOnlyTruckList div[data-id="${truck.firestoreId}"]`);
+            if (!card) return;
+            const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
+            const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
+            const kubikasi = (p * l * t / 1000000).toFixed(2);
+            const [tanggal, jam] = (truck.waktu || 'T').split('T');
+            const waktuDisplay = tanggal && jam ? `${tanggal}, ${jam}` : '-';
+
+            const formatWaktu = (waktu) => {
+                if (!waktu) return '-';
+                const [d, t] = waktu.split('T');
+                return `${d}, ${t || ''}`;
+            };
+            const timestampHTML = `
+            <div class="border-t border-slate-100 pt-2 mt-2 space-y-2 text-xs">
+                <div class="flex justify-between"><span class="text-slate-500">Tiba Muat:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.tiba_lokasi_muat)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Keluar Muat:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.keluar_lokasi_muat)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Tiba Bongkar:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.tiba_lokasi_bongkar)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Keluar Bongkar:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.keluar_lokasi_bongkar)}</span></div>
+            </div>`;
+            
+            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
+        }
+        
+        function populateSummaryFilters() {
+            const angkutanSelect = document.getElementById('summaryFilterAngkutan'), jenisMobilSelect = document.getElementById('summaryFilterJenisMobil'), statusSelect = document.getElementById('summaryFilterStatus');
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan))].sort();
+            angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
+            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
+        }
+
+        window.renderSummaryReport = function() {
+            let filteredData = [...window.trucksData];
+            const selectedAngkutan = document.getElementById('summaryFilterAngkutan').value;
+            const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
+            const selectedStatus = document.getElementById('summaryFilterStatus').value;
+            if (selectedAngkutan !== 'all') filteredData = filteredData.filter(t => t.angkutan === selectedAngkutan);
+            if (selectedJenisMobil !== 'all') filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil);
+            if (selectedStatus !== 'all') filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            
+            const tableBody = document.getElementById('summaryTableBody'); tableBody.innerHTML = '';
+            if (filteredData.length === 0) { tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
+            
+            const formatWaktuTabel = (waktu) => waktu ? waktu.replace('T', ' ') : '-';
+            filteredData.forEach(truck => {
+                const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
+                tableBody.innerHTML += `
+                <tr class="bg-white border-b">
+                    <td class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td>
+                    <td class="px-6 py-4">${truck.fo || '-'}</td>
+                    <td class="px-6 py-4">${formatWaktuTabel(truck.tiba_lokasi_muat)}</td>
+                    <td class="px-6 py-4">${formatWaktuTabel(truck.keluar_lokasi_muat)}</td>
+                    <td class="px-6 py-4">${formatWaktuTabel(truck.tiba_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4">${formatWaktuTabel(truck.keluar_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4">${truck.customer || '-'}</td>
+                    <td class="px-6 py-4">${truck.tujuan || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || '-'}</span></td>
+                    <td class="px-6 py-4">${truck.nama_driver || '-'}</td>
+                    <td class="px-6 py-4">${truck.no_hp || '-'}</td>
+                    <td class="px-6 py-4">${truck.no_mobil || '-'}</td>
+                    <td class="px-6 py-4">${truck.jenis_mobil || '-'}</td>
+                </tr>`;
+            });
+        }
+        
+        function renderModalTable(trucksToRender) {
+            const modalList = document.getElementById('modal-truck-list');
+            modalList.innerHTML = '';
+            if (!trucksToRender || trucksToRender.length === 0) {
+                modalList.innerHTML = '<tr><td colspan="7" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>';
+                return;
+            }
+            trucksToRender.forEach(truck => {
+                const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
+                const dimensi = `${p}×${l}×${t}`;
+                const kubikasi = (p * l * t / 1000000).toFixed(2);
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-medium">${truck.angkutan || '-'}</td>
+                    <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
+                    <td class="px-4 py-3">${truck.nama_driver || '-'}</td>
+                    <td class="px-4 py-3">${truck.no_hp || '-'}</td>
+                    <td class="px-4 py-3">${truck.jenis_mobil || '-'}</td>
+                    <td class="px-4 py-3">${dimensi}</td>
+                    <td class="px-4 py-3 font-semibold">${kubikasi} m³</td>
+                `;
+                modalList.appendChild(row);
+            });
+        }
+
+        function applyModalFiltersAndSort() {
+            const searchTerm = document.getElementById('modalSearchInput').value.toLowerCase();
+            const selectedAngkutan = document.getElementById('modalFilterAngkutan').value;
+            let filtered = [...currentModalTrucks];
+            if (selectedAngkutan) {
+                filtered = filtered.filter(truck => truck.angkutan === selectedAngkutan);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(truck => Object.values(truck).some(val => String(val).toLowerCase().includes(searchTerm)));
+            }
+            filtered.sort((a, b) => {
+                const valA = a[modalSort.column] || '';
+                const valB = b[modalSort.column] || '';
+                const comparison = valA.localeCompare(valB, undefined, { numeric: true });
+                return modalSort.direction === 'asc' ? comparison : -comparison;
+            });
+            renderModalTable(filtered);
+        }
+
+        window.sortModalTable = (column) => {
+            if (modalSort.column === column) {
+                modalSort.direction = modalSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                modalSort.column = column;
+                modalSort.direction = 'asc';
+            }
+            applyModalFiltersAndSort();
+        };
+
+        window.showTrucksByStatus = (status) => {
+            const modal = document.getElementById('status-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const filterDropdown = document.getElementById('modalFilterAngkutan');
+            const searchInput = document.getElementById('modalSearchInput');
+            currentModalTrucks = window.trucksData.filter(truck => truck.keterangan === status);
+            modalTitle.textContent = `Daftar Truk: ${status}`;
+            const uniqueAngkutan = [...new Set(currentModalTrucks.map(t => t.angkutan))].sort();
+            filterDropdown.innerHTML = '<option value="">Semua Angkutan</option>';
+            uniqueAngkutan.forEach(a => { if (a) filterDropdown.innerHTML += `<option value="${a}">${a}</option>`; });
+            searchInput.value = '';
+            filterDropdown.value = '';
+            modalSort = { column: 'angkutan', direction: 'asc' };
+            renderModalTable(currentModalTrucks);
+            modal.classList.remove('hidden');
+        }
+
+        window.closeModal = () => {
+            document.getElementById('status-modal').classList.add('hidden');
+        }
+
+        window.showStatusLog = async (truckId, platNomor) => {
+            const modal = document.getElementById('log-modal');
+            const title = document.getElementById('log-modal-title');
+            const tableBody = document.getElementById('log-modal-table-body');
+            
+            title.textContent = `Log Perubahan Status - ${platNomor}`;
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat log...</td></tr>`;
+            modal.classList.remove('hidden');
+
+            try {
+                const logsRef = collection(db, "truck_status_logs");
+                const q = query(logsRef, where("truckId", "==", truckId), orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-slate-500">Tidak ada riwayat perubahan status untuk truk ini.</td></tr>`;
+                    return;
+                }
+
+                tableBody.innerHTML = '';
+                querySnapshot.forEach(doc => {
+                    const log = doc.data();
+                    const timestamp = log.timestamp?.toDate() ? log.timestamp.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : 'N/A';
+                    const row = `
+                        <tr class="border-b hover:bg-slate-50">
+                            <td class="px-4 py-3">${timestamp}</td>
+                            <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.oldStatus] || ''}">${log.oldStatus}</span></td>
+                            <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.newStatus] || ''}">${log.newStatus}</span></td>
+                            <td class="px-4 py-3 font-medium">${log.changedBy}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Gagal memuat log:", error);
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center p-8 text-red-500">Gagal memuat riwayat.</td></tr>`;
+            }
+        };
+
+        window.closeLogModal = () => {
+            document.getElementById('log-modal').classList.add('hidden');
+        };
+        
+        let currentFilterColumn = null;
+
+        function closeFilterPopup() {
+            const popup = document.getElementById('header-filter-popup');
+            if (popup) popup.classList.add('hidden');
+            currentFilterColumn = null;
+        }
+
+        window.openFilterPopup = (event, column) => {
+            event.stopPropagation();
+            const popup = document.getElementById('header-filter-popup');
+            const filterOptions = document.getElementById('filter-options');
+            const searchInput = document.getElementById('filter-search');
+
+            if (currentFilterColumn === column && !popup.classList.contains('hidden')) {
+                closeFilterPopup();
+                return;
+            }
+            
+            currentFilterColumn = column;
+            const uniqueValues = [...new Set(window.allRitaseData.map(item => item[column]))].filter(Boolean).sort();
+            
+            filterOptions.innerHTML = '';
+            uniqueValues.forEach(value => {
+                const isChecked = activeFilters[column] && activeFilters[column].includes(String(value));
+                const itemHtml = `<label class="filter-item flex items-center"><input type="checkbox" value="${value}" ${isChecked ? 'checked' : ''} class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><span>${value}</span></label>`;
+                filterOptions.innerHTML += itemHtml;
+            });
+
+            searchInput.value = '';
+            searchInput.onkeyup = () => {
+                const term = searchInput.value.toLowerCase();
+                document.querySelectorAll('#filter-options .filter-item').forEach(item => {
+                    const text = item.querySelector('span').textContent.toLowerCase();
+                    item.style.display = text.includes(term) ? 'flex' : 'none';
+                });
+            };
+
+            const headerRect = event.currentTarget.getBoundingClientRect();
+            popup.style.left = `${headerRect.left}px`;
+            popup.style.top = `${headerRect.bottom + window.scrollY}px`;
+            popup.classList.remove('hidden');
+        }
+
+        function applyHeaderFilters() {
+            if (!currentFilterColumn) return;
+            const selectedValues = [];
+            document.querySelectorAll('#filter-options input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedValues.push(checkbox.value);
+            });
+            
+            if (selectedValues.length > 0) {
+                activeFilters[currentFilterColumn] = selectedValues;
+            } else {
+                delete activeFilters[currentFilterColumn];
+            }
+            applyRitaseFiltersAndSort();
+            closeFilterPopup();
+        }
+
+        function clearHeaderFilters() {
+            if (!currentFilterColumn) return;
+            delete activeFilters[currentFilterColumn];
+            applyRitaseFiltersAndSort();
+            closeFilterPopup();
+        }
+
+        function displayRitaseTable(dataToRender) {
+            const tableBody = document.getElementById('ritaseTableBody');
+            tableBody.innerHTML = '';
+            if (!dataToRender || dataToRender.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
+                return;
+            }
+            dataToRender.forEach(data => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-slate-50';
+                const formattedDate = data.timestamp_selesai?.toDate() 
+                    ? data.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short'}) + ' WIB' 
+                    : '-';
+                row.innerHTML = `
+                    <td class="px-6 py-4">${data.angkutanName || '-'}</td>
+                    <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
+                    <td class="px-6 py-4">${data.nama_driver || '-'}</td>
+                    <td class="px-6 py-4">${data.customer || '-'}</td>
+                    <td class="px-6 py-4">${data.tujuan || '-'}</td>
+                    <td class="px-6 py-4">${formattedDate}</td>
+                    <td class="px-6 py-4">${data.fo || '-'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function applyRitaseFiltersAndSort() {
+            let filtered = [...window.allRitaseData];
+
+            const startDateString = document.getElementById('ritaseStartDate').value;
+            const endDateString = document.getElementById('ritaseEndDate').value;
+
+            if (startDateString || endDateString) {
+                const startDate = startDateString ? new Date(startDateString) : null;
+                const endDate = endDateString ? new Date(endDateString) : null;
+
+                if(startDate) startDate.setHours(0, 0, 0, 0);
+                if(endDate) endDate.setHours(23, 59, 59, 999);
+
+                filtered = filtered.filter(item => {
+                    if (!item.timestamp_selesai || !item.timestamp_selesai.toDate) return false;
+                    const itemDate = item.timestamp_selesai.toDate();
+                    
+                    if (startDate && itemDate < startDate) return false;
+                    if (endDate && itemDate > endDate) return false;
+                    return true;
+                });
+            }
+
+            for (const column in activeFilters) {
+                if (activeFilters[column] && activeFilters[column].length > 0) {
+                    filtered = filtered.filter(item => activeFilters[column].includes(String(item[column])));
+                }
+            }
+            
+            filtered.sort((a, b) => {
+                const valA = a[ritaseSort.column];
+                const valB = b[ritaseSort.column];
+                if (ritaseSort.column === 'timestamp_selesai') {
+                    const timeA = valA?.toMillis() || 0;
+                    const timeB = valB?.toMillis() || 0;
+                    return ritaseSort.direction === 'asc' ? timeA - timeB : timeB - timeA;
+                }
+                const comparison = String(valA || '').localeCompare(String(valB || ''), undefined, { numeric: true });
+                return ritaseSort.direction === 'asc' ? comparison : -comparison;
+            });
+
+            displayRitaseTable(filtered);
+        }
+        
+        async function fetchAndRenderLogs() {
+            const tableBody = document.getElementById('logHistoryTableBody');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data log...</td></tr>`;
+            try {
+                const logsRef = collection(db, "truck_status_logs");
+                const q = query(logsRef, orderBy("timestamp", "desc"));
+                const querySnapshot = await getDocs(q);
+                window.allLogData = querySnapshot.docs.map(doc => ({...doc.data(), docId: doc.id}));
+                applyLogFiltersAndSort();
+            } catch (error) {
+                console.error("Gagal memuat data log:", error);
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Gagal memuat data log.</td></tr>`;
+            }
+        }
+
+        function applyLogFiltersAndSort() {
+            let filtered = [...window.allLogData];
+            const startDateString = document.getElementById('logStartDate').value;
+            const endDateString = document.getElementById('logEndDate').value;
+            const searchTerm = document.getElementById('logSearchInput').value.toLowerCase();
+
+            if (startDateString || endDateString) {
+                const startDate = startDateString ? new Date(startDateString) : null;
+                const endDate = endDateString ? new Date(endDateString) : null;
+                if(startDate) startDate.setHours(0, 0, 0, 0);
+                if(endDate) endDate.setHours(23, 59, 59, 999);
+
+                filtered = filtered.filter(item => {
+                    if (!item.timestamp || !item.timestamp.toDate) return false;
+                    const itemDate = item.timestamp.toDate();
+                    if (startDate && itemDate < startDate) return false;
+                    if (endDate && itemDate > endDate) return false;
+                    return true;
+                });
+            }
+
+            if (searchTerm) {
+                filtered = filtered.filter(log => {
+                    return (log.plat_nomor?.toLowerCase().includes(searchTerm) || 
+                            log.angkutanName?.toLowerCase().includes(searchTerm) || 
+                            log.changedBy?.toLowerCase().includes(searchTerm));
+                });
+            }
+            
+            displayLogTable(filtered);
+        }
+        
+        function displayLogTable(dataToRender) {
+            const tableBody = document.getElementById('logHistoryTableBody');
+            tableBody.innerHTML = '';
+            if (!dataToRender || dataToRender.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Tidak ada data log yang cocok.</td></tr>`;
+                return;
+            }
+            dataToRender.forEach(log => {
+                const timestamp = log.timestamp?.toDate() ? log.timestamp.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : '-';
+                const row = `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="px-6 py-4">${timestamp}</td>
+                        <td class="px-6 py-4 font-medium">${log.plat_nomor || '-'}</td>
+                        <td class="px-6 py-4">${log.angkutanName || '-'}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.oldStatus] || ''}">${log.oldStatus || '-'}</span></td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.newStatus] || ''}">${log.newStatus || '-'}</span></td>
+                        <td class="px-6 py-4">${log.changedBy || '-'}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        window.exportLogsToExcel = () => {
+            const table = document.getElementById('logHistoryTable');
+            const workbook = XLSX.utils.table_to_book(table, {sheet: "Riwayat Log"});
+            const filename = `Riwayat_Log_Status_Truck_${getFilenameTimestamp()}.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        };
+
+        window.sortRitaseTable = (column) => {
+            if (ritaseSort.column === column) {
+                ritaseSort.direction = ritaseSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                ritaseSort.column = column;
+                ritaseSort.direction = 'asc';
+            }
+            applyRitaseFiltersAndSort();
+        };
+        
+        window.handleHeaderClick = (event, column) => {
+            if (event.shiftKey) {
+                sortRitaseTable(column);
+            } else {
+                openFilterPopup(event, column);
+            }
+        };
+
+        function updateRealTimeClock() {
+            const clockElement = document.getElementById('export-timestamp');
+            if (clockElement) {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+                clockElement.textContent = now.toLocaleString('id-ID', options);
+            }
+        }
+
+        function getFormattedTimestamp() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short' };
+            return now.toLocaleString('id-ID', options);
+        }
+
+        function getFilenameTimestamp() {
+            const now = new Date();
+            const YYYY = now.getFullYear();
+            const MM = String(now.getMonth() + 1).padStart(2, '0');
+            const DD = String(now.getDate()).padStart(2, '0');
+            const HH = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            return `${YYYY}-${MM}-${DD}_${HH}-${mm}`;
+        }
+        
+        window.exportToExcel = () => {
+            const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
+            const angkutanName = selectedAngkutanSelect.value === 'all' ? 'Semua_Angkutan' : selectedAngkutanSelect.value.replace(/ /g, '_');
+            const selectedStatus = document.getElementById('summaryFilterStatus').value;
+            const isInapMode = selectedStatus === 'INAP';
+            
+            let filteredData = [...window.trucksData];
+            if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
+            const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
+            if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
+            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
+
+            const header1 = ["ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
+            if (isInapMode) header1.push("LEAD TIME INAP");
+            const header2 = [null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
+            if (isInapMode) header2.push(null);
+            
+            const body = filteredData.map(truck => {
+                const row = [
+                    truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                ];
+                if (isInapMode) row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                return row;
+            });
+
+            const dataToExport = [header1, header2, ...body];
+            const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+
+            const merges = [
+                { s: { r: 0, c: 2 }, e: { r: 0, c: 3 } }, { s: { r: 0, c: 4 }, e: { r: 0, c: 5 } },
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
+                { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },
+                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } },
+                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } },
+                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }
+            ];
+            if (isInapMode) merges.push({ s: { r: 0, c: 13 }, e: { r: 1, c: 13 } });
+            worksheet['!merges'] = merges;
+            
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary Status Truck");
+            const filename = `Summary_Status_Truck_${angkutanName}_${getFilenameTimestamp()}.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        };
+
+        window.exportToPdf = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+            const timestamp = getFormattedTimestamp();
+            const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
+            const angkutanName = selectedAngkutanSelect.options[selectedAngkutanSelect.selectedIndex].text;
+            const title = `Summary Status Truck - ${angkutanName}`;
+            
+            const selectedStatus = document.getElementById('summaryFilterStatus').value;
+            const isInapMode = selectedStatus === 'INAP';
+
+            let filteredData = [...window.trucksData];
+            if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
+            const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
+            if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
+            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
+
+            doc.text(title, 14, 15);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
+
+            const head = [[
+                { content: 'ANGKUTAN', rowSpan: 2 }, { content: 'FO', rowSpan: 2 },
+                { content: 'LOKASI MUAT', colSpan: 2 }, { content: 'LOKASI BONGKAR', colSpan: 2 },
+                { content: 'NAMA CUSTOMER', rowSpan: 2 }, { content: 'KOTA', rowSpan: 2 }, { content: 'STATUS', rowSpan: 2 },
+                { content: 'NAMA DRIVER', rowSpan: 2 }, { content: 'NO HP', rowSpan: 2 }, { content: 'PLAT NOMOR', rowSpan: 2 }, { content: 'JENIS TRUCK', rowSpan: 2 },
+            ], [ 'TIBA', 'KELUAR', 'TIBA', 'KELUAR' ]];
+            if (isInapMode) head[0].push({ content: 'LEAD TIME INAP', rowSpan: 2 });
+
+            const body = filteredData.map(truck => {
+                const row = [
+                    truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                ];
+                if (isInapMode) row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                return row;
+            });
+
+            doc.autoTable({
+                head: head, body: body, startY: 28, theme: 'grid',
+                headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], halign: 'center', valign: 'middle', lineWidth: 0.1, lineColor: [255, 255, 255] },
+                styles: { fontSize: 6.5, cellPadding: 1.5 },
+                didDrawPage: (data) => {
+                    doc.setFontSize(10);
+                    doc.setTextColor(150);
+                    doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                }
+            });
+            const filename = `Summary_Status_Truck_${angkutanName.replace(/ /g, '_')}_${getFilenameTimestamp()}.pdf`;
+            doc.save(filename);
+        };
+        
+        window.exportAsImage = async () => {
+            const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
+            const angkutanName = selectedAngkutanSelect.options[selectedAngkutanSelect.selectedIndex].text;
+            const cleanAngkutanName = angkutanName.replace(/ /g, '_');
+            const selectedStatus = document.getElementById('summaryFilterStatus').value;
+            const isInapMode = selectedStatus === 'INAP';
+
+            let filteredData = [...window.trucksData];
+            if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
+            const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
+            if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
+            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
+
+            const screenshotContainer = document.createElement('div');
+            screenshotContainer.style.position = 'absolute';
+            screenshotContainer.style.left = '-9999px';
+            screenshotContainer.style.top = '0';
+            screenshotContainer.style.padding = '1.5rem';
+            screenshotContainer.style.backgroundColor = 'white';
+            screenshotContainer.style.width = 'fit-content';
+            
+            screenshotContainer.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #334155;">Summary Report - ${angkutanName}</h4>
+                    <p style="font-size: 0.875rem; color: #64748b;">${document.getElementById('export-timestamp').textContent}</p>
+                </div>
+            `;
+
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm text-left';
+            const originalThead = document.getElementById('summaryTable').querySelector('thead').cloneNode(true);
+            if (isInapMode) {
+                originalThead.querySelector('tr').innerHTML += `<th class="px-6 py-3">LEAD TIME INAP</th>`;
+            }
+            
+            const tbody = document.createElement('tbody');
+            filteredData.forEach(truck => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b';
+                let rowHTML = `
+                    <td class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td><td class="px-6 py-4">${truck.fo || '-'}</td>
+                    <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_muat)}</td><td class="px-6 py-4">${formatTanggalJam(truck.keluar_lokasi_muat)}</td>
+                    <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td><td class="px-6 py-4">${formatTanggalJam(truck.keluar_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4">${truck.customer || '-'}</td><td class="px-6 py-4">${truck.tujuan || '-'}</td>
+                    <td class="px-6 py-4">${truck.keterangan || '-'}</td><td class="px-6 py-4">${truck.nama_driver || '-'}</td>
+                    <td class="px-6 py-4">${truck.no_hp || '-'}</td><td class="px-6 py-4">${truck.no_mobil || '-'}</td>
+                    <td class="px-6 py-4">${truck.jenis_mobil || '-'}</td>
+                `;
+                if (isInapMode) {
+                    rowHTML += `<td class="px-6 py-4">${calculateLeadTime(truck.tiba_lokasi_bongkar)}</td>`;
+                }
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+            });
+            
+            table.appendChild(originalThead);
+            table.appendChild(tbody);
+            screenshotContainer.appendChild(table);
+            document.body.appendChild(screenshotContainer);
+
+            try {
+                const canvas = await html2canvas(screenshotContainer, { scale: 2, useCORS: true });
+                const link = document.createElement('a');
+                link.download = `Summary_Report_${cleanAngkutanName}_${getFilenameTimestamp()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            } catch (error) {
+                console.error("Gagal membuat gambar:", error);
+                alert("Terjadi kesalahan saat membuat gambar laporan.");
+            } finally {
+                document.body.removeChild(screenshotContainer);
+            }
+        };
+
+        window.exportRitaseToExcel = () => {
+            const table = document.getElementById('ritaseTable');
+            const workbook = XLSX.utils.table_to_book(table, {sheet: "Laporan Ritase"});
+            const filename = `Laporan_Ritase_Admin_${getFilenameTimestamp()}.xlsx`;
+            XLSX.writeFile(workbook, filename);
+        };
+
+        window.exportRitaseToPdf = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+            const timestamp = getFormattedTimestamp();
+            const title = "Ritase Truck";
+            doc.text(title, 14, 15);
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
+            doc.autoTable({ html: '#ritaseTable', startY: 28, theme: 'grid', headStyles: { fillColor: [79, 70, 229] } });
+            const filename = `Laporan_Ritase_Admin_${getFilenameTimestamp()}.pdf`;
+            doc.save(filename);
+        };
+
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
+        window.showContent = (contentId) => {
+            document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(contentId).classList.add('active');
+            document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(`nav-${contentId}`).classList.add('active');
+            document.getElementById('page-title').textContent = pageTitles[contentId];
+            if (contentId === 'summaryReport') renderSummaryReport();
+            if (contentId === 'statusTruck') displayStatusCards();
+            if (contentId === 'ritaseTruck') applyRitaseFiltersAndSort();
+            if (contentId === 'logHistory') fetchAndRenderLogs();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(updateRealTimeClock, 1000);
+            document.getElementById('copyright-year-login-admin').textContent = new Date().getFullYear();
+            document.getElementById('loginButton').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => document.getElementById('loginError').textContent = 'Email atau password salah.'));
+            document.getElementById('logoutButton').addEventListener('click', () => signOut(auth));
+            document.getElementById('copyright-year').textContent = new Date().getFullYear();
+            document.getElementById('apply-filter-btn').addEventListener('click', applyHeaderFilters);
+            document.getElementById('clear-filter-btn').addEventListener('click', clearHeaderFilters);
+            
+            document.getElementById('applyDateFilterBtn').addEventListener('click', applyRitaseFiltersAndSort);
+            document.getElementById('resetDateFilterBtn').addEventListener('click', () => {
+                document.getElementById('ritaseStartDate').value = '';
+                document.getElementById('ritaseEndDate').value = '';
+                applyRitaseFiltersAndSort();
+            });
+
+            document.getElementById('applyLogFilterBtn').addEventListener('click', applyLogFiltersAndSort);
+            document.getElementById('resetLogFilterBtn').addEventListener('click', () => {
+                document.getElementById('logStartDate').value = '';
+                document.getElementById('logEndDate').value = '';
+                document.getElementById('logSearchInput').value = '';
+                applyLogFiltersAndSort();
+            });
+
+            document.addEventListener('click', (event) => {
+                const popup = document.getElementById('header-filter-popup');
+                if (!popup.classList.contains('hidden') && !popup.contains(event.target) && !event.target.closest('th[data-filter]')) {
+                    closeFilterPopup();
+                }
+            });
+
+            // --- SCRIPT UNTUK NAVIGASI MOBILE ---
+            const sidebar = document.getElementById('sidebar');
+            const openBtn = document.getElementById('sidebar-open-btn');
+            const closeBtn = document.getElementById('sidebar-close-btn');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            const openSidebar = () => {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            };
+
+            openBtn.addEventListener('click', openSidebar);
+            closeBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
