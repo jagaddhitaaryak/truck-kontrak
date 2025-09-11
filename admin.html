@@ -214,6 +214,13 @@
                             <div id="status-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             </div>
                         </div>
+
+                        <div class="mt-8">
+                            <h3 class="text-xl font-bold text-slate-700 mb-4">Rincian Armada per Vendor</h3>
+                            <div id="vendor-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            </div>
+                        </div>
+
                     </div>
 
                     <div id="statusTruck" class="content-section">
@@ -231,23 +238,21 @@
                     <div id="listTruck" class="content-section">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
                             <button class="flex items-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.toggleAddForm()"><i class="fas fa-plus"></i> Tambah Data</button>
-                            <div class="relative w-full md:w-1/3"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-slate-400"></i></span><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Cari data truk..." class="w-full p-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></div>
+                            <div class="relative w-full md:w-1/3"><span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-slate-400"></i></span><input type="text" id="searchInput" onkeyup="window.filterTable()" placeholder="Cari data truk..." class="w-full p-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></div>
                         </div>
                         
                         <form class="add-form hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addForm">
                             <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Truk Baru</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <input type="text" id="newAngkutan" placeholder="Angkutan" class="w-full p-2 border border-slate-300 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <select id="newAngkutan" class="w-full p-2 border border-slate-300 rounded-lg"></select>
                                 <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg">
-                                <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg"><option value="LOSSBAK">LOSSBAK</option><option value="WINGBOX">WINGBOX</option></select>
-                                <select id="newKeterangan" class="w-full p-2 border border-slate-300 rounded-lg"></select>
-                                <input type="text" id="newFo" placeholder="Nomor FO" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg">
+                                    <option value="LOSSBAK">LOSSBAK</option>
+                                    <option value="WINGBOX">WINGBOX</option>
+                                </select>
                                 <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <input type="text" id="newNoHp" placeholder="No HP Driver" class="w-full p-2 border border-slate-300 rounded-lg">
-                                <input type="text" id="newCustomer" placeholder="Nama Customer" class="w-full p-2 border border-slate-300 rounded-lg">
-                                <input type="text" id="newTujuan" placeholder="Kota Tujuan" class="w-full p-2 border border-slate-300 rounded-lg">
-                                
-                                <div class="flex items-center gap-2 lg:col-start-4">
+                                <div class="flex items-center gap-2">
                                     <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addTruck()">Simpan</button>
                                     <button type="button" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg" onclick="window.toggleAddForm()">Batal</button>
                                 </div>
@@ -488,6 +493,29 @@
         </div>
     </div>
 
+    <div id="vendor-truck-modal" class="modal-overlay hidden" onclick="window.closeVendorTruckModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="window.closeVendorTruckModal()">&times;</span>
+            <h3 id="vendor-truck-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Daftar Truk</h3>
+            <div class="modal-body">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                        <tr>
+                            <th class="px-4 py-3" data-sort="fo" onclick="window.sortVendorTruckModal('fo')">FO</th>
+                            <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortVendorTruckModal('no_mobil')">Plat Nomor</th>
+                            <th class="px-4 py-3" data-sort="nama_driver" onclick="window.sortVendorTruckModal('nama_driver')">Nama Driver</th>
+                            <th class="px-4 py-3" data-sort="no_hp" onclick="window.sortVendorTruckModal('no_hp')">No HP</th>
+                            <th class="px-4 py-3">Dimensi (cm)</th>
+                            <th class="px-4 py-3" data-filter="keterangan" onclick="window.openVendorTruckFilterPopup(event, 'keterangan')">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vendor-truck-modal-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -503,6 +531,8 @@
         let modalSort = { column: 'angkutan', direction: 'asc' };
         let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
         let activeFilters = {};
+        let vendorTruckModalFilters = {};
+        let currentVendorTruckFilterColumn = null;
 
         const appId = 'truck-dashboard-app';
         const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
@@ -605,9 +635,10 @@
                  }
                  
                  jenisMobilOptions = [...new Set(window.trucksData.map(t => t.jenis_mobil))].sort();
-                 populateAddFormOptions();
                  populateSummaryFilters();
                  populateStatusCardFilters();
+                 populateAddFormVendorSelect();
+
                  if (document.getElementById('summaryReport').classList.contains('active')) {
                     renderSummaryReport();
                  }
@@ -622,6 +653,148 @@
                 }
             }, (error) => console.error("Ritase Listener Error:", error));
         }
+
+        let currentVendorTrucks = [];
+        let vendorTruckModalSort = { column: 'no_mobil', direction: 'asc' };
+
+        function renderVendorTruckTable() {
+            const tableBody = document.getElementById('vendor-truck-modal-body');
+            tableBody.innerHTML = '';
+
+            let filteredData = [...currentVendorTrucks];
+            if (vendorTruckModalFilters.keterangan && vendorTruckModalFilters.keterangan.length > 0) {
+                filteredData = filteredData.filter(truck => vendorTruckModalFilters.keterangan.includes(truck.keterangan));
+            }
+
+            const sortedData = [...filteredData].sort((a, b) => {
+                const col = vendorTruckModalSort.column;
+                const dir = vendorTruckModalSort.direction === 'asc' ? 1 : -1;
+                
+                if (col === 'keterangan') {
+                    const indexA = statusOptions.indexOf(a[col]);
+                    const indexB = statusOptions.indexOf(b[col]);
+                    return (indexA - indexB) * dir;
+                }
+
+                const valA = a[col] || '';
+                const valB = b[col] || '';
+                return valA.localeCompare(valB, undefined, { numeric: true }) * dir;
+            });
+
+            if (sortedData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Tidak ada data truk yang cocok dengan filter.</td></tr>`;
+            } else {
+                sortedData.forEach(truck => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-slate-50';
+                    
+                    const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
+                    const dimensi = `${p}×${l}×${t}`;
+                    const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-3 font-medium">${truck.fo || '-'}</td>
+                        <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
+                        <td class="px-4 py-3">${truck.nama_driver || '-'}</td>
+                        <td class="px-4 py-3">${truck.no_hp || '-'}</td>
+                        <td class="px-4 py-3">${dimensi}</td>
+                        <td class="px-4 py-3"><span class="px-2 py-1 text-xs font-semibold rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        window.sortVendorTruckModal = (column) => {
+            if (vendorTruckModalSort.column === column) {
+                vendorTruckModalSort.direction = vendorTruckModalSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                vendorTruckModalSort.column = column;
+                vendorTruckModalSort.direction = 'asc';
+            }
+            renderVendorTruckTable();
+        };
+
+        window.showTrucksByVendor = (vendorName) => {
+            const modal = document.getElementById('vendor-truck-modal');
+            const title = document.getElementById('vendor-truck-modal-title');
+            
+            title.textContent = `Daftar Truk - ${vendorName}`;
+            
+            currentVendorTrucks = window.trucksData.filter(truck => (truck.angkutan || 'Lainnya') === vendorName);
+            vendorTruckModalSort = { column: 'no_mobil', direction: 'asc' };
+            vendorTruckModalFilters = {};
+
+            renderVendorTruckTable();
+            modal.classList.remove('hidden');
+        };
+
+        window.closeVendorTruckModal = () => {
+            document.getElementById('vendor-truck-modal').classList.add('hidden');
+        };
+        
+        function applyVendorTruckFilter() {
+            if (!currentVendorTruckFilterColumn) return;
+            const selectedValues = [];
+            document.querySelectorAll('#filter-options input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedValues.push(checkbox.value);
+            });
+            
+            if (selectedValues.length > 0) {
+                vendorTruckModalFilters[currentVendorTruckFilterColumn] = selectedValues;
+            } else {
+                delete vendorTruckModalFilters[currentVendorTruckFilterColumn];
+            }
+            renderVendorTruckTable();
+            closeFilterPopup();
+        }
+
+        function clearVendorTruckFilter() {
+            if (!currentVendorTruckFilterColumn) return;
+            delete vendorTruckModalFilters[currentVendorTruckFilterColumn];
+            renderVendorTruckTable();
+            closeFilterPopup();
+        }
+        
+        window.openVendorTruckFilterPopup = (event, column) => {
+            event.stopPropagation();
+            const popup = document.getElementById('header-filter-popup');
+            const filterOptions = document.getElementById('filter-options');
+            const searchInput = document.getElementById('filter-search');
+
+            if (currentVendorTruckFilterColumn === column && !popup.classList.contains('hidden')) {
+                closeFilterPopup();
+                return;
+            }
+            
+            currentVendorTruckFilterColumn = column;
+            
+            const uniqueValues = statusOptions;
+            
+            filterOptions.innerHTML = '';
+            uniqueValues.forEach(value => {
+                const isChecked = vendorTruckModalFilters[column] && vendorTruckModalFilters[column].includes(String(value));
+                const itemHtml = `<label class="filter-item flex items-center"><input type="checkbox" value="${value}" ${isChecked ? 'checked' : ''} class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><span>${value}</span></label>`;
+                filterOptions.innerHTML += itemHtml;
+            });
+
+            searchInput.value = '';
+            searchInput.onkeyup = () => {
+                const term = searchInput.value.toLowerCase();
+                document.querySelectorAll('#filter-options .filter-item').forEach(item => {
+                    const text = item.querySelector('span').textContent.toLowerCase();
+                    item.style.display = text.includes(term) ? 'flex' : 'none';
+                });
+            };
+            
+            document.getElementById('apply-filter-btn').onclick = applyVendorTruckFilter;
+            document.getElementById('clear-filter-btn').onclick = clearVendorTruckFilter;
+
+            const headerRect = event.currentTarget.getBoundingClientRect();
+            popup.style.left = `${headerRect.left}px`;
+            popup.style.top = `${headerRect.bottom + window.scrollY}px`;
+            popup.classList.remove('hidden');
+        }
         
         function renderHomePage(data) {
             if (!data) return;
@@ -632,7 +805,7 @@
             const totalTrucks = data.length;
             const activeTrucks = data.filter(t => ['OTW MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'STORING'].includes(t.keterangan)).length;
             const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
-            const totalAngkutan = [...new Set(data.map(t => t.angkutan))].length;
+            const totalAngkutan = [...new Set(data.map(t => t.angkutan).filter(Boolean))].length;
 
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
@@ -659,6 +832,37 @@
                 card.onclick = () => window.showTrucksByStatus(status);
                 container.appendChild(card);
             });
+
+            const vendorContainer = document.getElementById('vendor-details-grid');
+            if (vendorContainer) {
+                vendorContainer.innerHTML = '';
+                
+                const vendorCounts = data.reduce((acc, truck) => {
+                    const vendorName = truck.angkutan || 'Lainnya';
+                    acc[vendorName] = (acc[vendorName] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const sortedVendors = Object.keys(vendorCounts).sort();
+
+                sortedVendors.forEach(vendorName => {
+                    const count = vendorCounts[vendorName];
+                    
+                    const vendorCard = document.createElement('div');
+                    vendorCard.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
+                    vendorCard.style.cursor = 'pointer';
+                    vendorCard.onclick = () => window.showTrucksByVendor(vendorName);
+                    vendorCard.innerHTML = `
+                        <div class="p-3 bg-sky-100 rounded-full">
+                            <i class="fas fa-building text-2xl text-sky-600"></i>
+                        </div>
+                        <div class="ml-4 overflow-hidden">
+                            <p class="text-slate-500 font-semibold truncate" title="${vendorName}">${vendorName}</p>
+                            <p class="text-2xl font-bold text-slate-800">${count} Truk</p>
+                        </div>`;
+                    vendorContainer.appendChild(vendorCard);
+                });
+            }
         }
         
         function renderTruckList(dataToRender) {
@@ -667,7 +871,7 @@
             if (!dataToRender || dataToRender.length === 0) { tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
             const sortedData = [...dataToRender].sort((a, b) => (a.angkutan || '').localeCompare(b.angkutan || ''));
             sortedData.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
-            filterTable();
+            window.filterTable();
         }
 
         function createTableRow(truck) {
@@ -696,24 +900,39 @@
                 </td>`;
         }
 
-        function filterTable() {
+        window.filterTable = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const tableBody = document.getElementById('truckTable').querySelector('tbody');
             const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => { row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; });
+            rows.forEach(row => { 
+                row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
+            });
         }
         
         window.addTruck = async function() {
             const newTruck = {
-                angkutan: document.getElementById('newAngkutan').value.trim(), no_mobil: document.getElementById('newNoMobil').value.trim(),
-                jenis_mobil: document.getElementById('newJenisMobil').value, keterangan: document.getElementById('newKeterangan').value,
-                fo: document.getElementById('newFo').value.trim(), nama_driver: document.getElementById('newNamaDriver').value.trim(),
-                no_hp: document.getElementById('newNoHp').value.trim(), customer: document.getElementById('newCustomer').value.trim(),
-                tujuan: document.getElementById('newTujuan').value.trim()
+                angkutan: document.getElementById('newAngkutan').value,
+                no_mobil: document.getElementById('newNoMobil').value.trim(),
+                jenis_mobil: document.getElementById('newJenisMobil').value,
+                nama_driver: document.getElementById('newNamaDriver').value.trim(),
+                no_hp: document.getElementById('newNoHp').value.trim(),
+                keterangan: "TERSEDIA",
+                fo: "",
+                customer: "",
+                tujuan: ""
             };
-            if (!newTruck.angkutan || !newTruck.no_mobil || !newTruck.jenis_mobil) { alert("Kolom Angkutan, Plat Nomor, dan Jenis Mobil wajib diisi."); return; }
-            try { await addDoc(collection(db, `artifacts/${appId}/public/data/trucks`), newTruck); window.toggleAddForm(true); } 
-            catch (error) { alert("Gagal menyimpan data baru."); }
+            if (!newTruck.angkutan || !newTruck.no_mobil || !newTruck.jenis_mobil) {
+                alert("Kolom Angkutan, Plat Nomor, dan Jenis Mobil wajib diisi.");
+                return;
+            }
+            try {
+                await addDoc(collection(db, `artifacts/${appId}/public/data/trucks`), newTruck);
+                window.toggleAddForm(true);
+            } 
+            catch (error) {
+                alert("Gagal menyimpan data baru.");
+                console.error("Add truck error: ", error);
+            }
         };
 
         window.editRow = (firestoreId) => {
@@ -786,17 +1005,32 @@
                 form.classList.add('hidden');
             } else {
                 form.reset();
+                document.getElementById('newAngkutan').value = "";
                 form.classList.remove('hidden');
             }
         };
         
-        function populateAddFormOptions() {
-             document.getElementById('newKeterangan').innerHTML = statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        function populateAddFormVendorSelect() {
+            const angkutanSelect = document.getElementById('newAngkutan');
+            if (!angkutanSelect || angkutanSelect.tagName !== 'SELECT') return;
+
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
+            
+            const previouslySelected = angkutanSelect.value;
+
+            angkutanSelect.innerHTML = '<option value="" disabled selected>Pilih Angkutan...</option>';
+            uniqueAngkutan.forEach(angkutan => {
+                angkutanSelect.innerHTML += `<option value="${angkutan}">${angkutan}</option>`;
+            });
+
+            if (previouslySelected && uniqueAngkutan.includes(previouslySelected)) {
+                angkutanSelect.value = previouslySelected;
+            }
         }
         
         function populateStatusCardFilters() {
             const angkutanSelect = document.getElementById('statusCardFilterAngkutan'), jenisMobilSelect = document.getElementById('statusCardFilterJenisMobil'), statusSelect = document.getElementById('statusCardFilterStatus');
-            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan))].sort();
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
             angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
             jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
@@ -849,7 +1083,7 @@
         
         function populateSummaryFilters() {
             const angkutanSelect = document.getElementById('summaryFilterAngkutan'), jenisMobilSelect = document.getElementById('summaryFilterJenisMobil'), statusSelect = document.getElementById('summaryFilterStatus');
-            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan))].sort();
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
             angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
             jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
@@ -1013,7 +1247,6 @@
         function closeFilterPopup() {
             const popup = document.getElementById('header-filter-popup');
             if (popup) popup.classList.add('hidden');
-            currentFilterColumn = null;
         }
 
         window.openFilterPopup = (event, column) => {
@@ -1045,6 +1278,9 @@
                     item.style.display = text.includes(term) ? 'flex' : 'none';
                 });
             };
+            
+            document.getElementById('apply-filter-btn').onclick = applyHeaderFilters;
+            document.getElementById('clear-filter-btn').onclick = clearHeaderFilters;
 
             const headerRect = event.currentTarget.getBoundingClientRect();
             popup.style.left = `${headerRect.left}px`;
@@ -1484,8 +1720,6 @@
             document.getElementById('loginButton').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => document.getElementById('loginError').textContent = 'Email atau password salah.'));
             document.getElementById('logoutButton').addEventListener('click', () => signOut(auth));
             document.getElementById('copyright-year').textContent = new Date().getFullYear();
-            document.getElementById('apply-filter-btn').addEventListener('click', applyHeaderFilters);
-            document.getElementById('clear-filter-btn').addEventListener('click', clearHeaderFilters);
             
             document.getElementById('applyDateFilterBtn').addEventListener('click', applyRitaseFiltersAndSort);
             document.getElementById('resetDateFilterBtn').addEventListener('click', () => {
@@ -1502,6 +1736,9 @@
                 applyLogFiltersAndSort();
             });
 
+            document.getElementById('modalSearchInput').addEventListener('input', applyModalFiltersAndSort);
+            document.getElementById('modalFilterAngkutan').addEventListener('change', applyModalFiltersAndSort);
+
             document.addEventListener('click', (event) => {
                 const popup = document.getElementById('header-filter-popup');
                 if (!popup.classList.contains('hidden') && !popup.contains(event.target) && !event.target.closest('th[data-filter]')) {
@@ -1509,7 +1746,6 @@
                 }
             });
 
-            // --- SCRIPT UNTUK NAVIGASI MOBILE ---
             const sidebar = document.getElementById('sidebar');
             const openBtn = document.getElementById('sidebar-open-btn');
             const closeBtn = document.getElementById('sidebar-close-btn');
