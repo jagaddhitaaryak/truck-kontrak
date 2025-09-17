@@ -137,6 +137,9 @@
                     <a href="#" id="nav-listTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('listTruck')">
                         <i class="fas fa-list-ul w-6 text-center"></i><span class="ml-3">List Truck</span>
                     </a>
+                    <a href="#" id="nav-masterCustomer" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('masterCustomer')">
+                        <i class="fas fa-users w-6 text-center"></i><span class="ml-3">Master Customer</span>
+                    </a>
                     <a href="#" id="nav-ritaseTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('ritaseTruck')">
                         <i class="fas fa-route w-6 text-center"></i><span class="ml-3">Ritase Truck</span>
                     </a>
@@ -272,6 +275,39 @@
                                         <th class="px-6 py-3">Driver</th>
                                         <th class="px-6 py-3">No HP</th>
                                         <th class="px-6 py-3">FO</th>
+                                        <th class="px-6 py-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="masterCustomer" class="content-section">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                            <button class="flex items-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.toggleAddCustomerForm()"><i class="fas fa-plus"></i> Tambah Customer</button>
+                            <div class="relative w-full md:w-1/3">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-slate-400"></i></span>
+                                <input type="text" id="customerSearchInput" onkeyup="window.filterCustomerTable()" placeholder="Cari nama customer..." class="w-full p-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        
+                        <form class="hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addCustomerForm">
+                            <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Customer Baru</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input type="text" id="newCustomerName" placeholder="Nama Customer" class="w-full p-2 border border-slate-300 rounded-lg md:col-span-2">
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addCustomer()">Simpan</button>
+                                    <button type="button" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg" onclick="window.toggleAddCustomerForm()">Batal</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                            <table id="customerTable" class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3">Nama Customer</th>
                                         <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
@@ -522,10 +558,11 @@
         import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, query, orderBy, where, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         window.trucksData = []; 
+        window.customersData = [];
         window.allRitaseData = [];
         window.allLogData = [];
         let jenisMobilOptions = [];
-        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase;
+        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers;
         
         let currentModalTrucks = [];
         let modalSort = { column: 'angkutan', direction: 'asc' };
@@ -560,6 +597,15 @@
             
             return result.length > 0 ? result.join(' ') : 'Kurang dari semenit';
         }
+        
+        function calculateLeadTimeInMinutes(startTimeString) {
+            if (!startTimeString) return 0;
+            const startTime = new Date(startTimeString);
+            const now = new Date();
+            const diff = now - startTime;
+            if (isNaN(diff) || diff < 0) return 0;
+            return Math.floor(diff / (1000 * 60)); // Mengembalikan total menit
+        }
 
         function formatTanggalJam(isoString) {
             if (!isoString || !isoString.includes('T')) { return '-'; }
@@ -579,6 +625,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (unsubscribeFromTrucks) unsubscribeFromTrucks();
             if (unsubscribeFromRitase) unsubscribeFromRitase();
+            if (unsubscribeFromCustomers) unsubscribeFromCustomers();
             if (user) {
                 try {
                     const userDocSnap = await getDoc(doc(db, "users", user.uid));
@@ -652,6 +699,14 @@
                     applyRitaseFiltersAndSort();
                 }
             }, (error) => console.error("Ritase Listener Error:", error));
+
+            const customersCollectionRef = collection(db, "customers");
+            unsubscribeFromCustomers = onSnapshot(query(customersCollectionRef, orderBy("name")), (snapshot) => {
+                window.customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if(document.getElementById('masterCustomer').classList.contains('active')) {
+                    renderCustomerTable();
+                }
+            }, (error) => console.error("Customer Listener Error:", error));
         }
 
         let currentVendorTrucks = [];
@@ -1036,6 +1091,16 @@
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
         }
         
+        function populateSummaryFilters() {
+            const angkutanSelect = document.getElementById('summaryFilterAngkutan'), jenisMobilSelect = document.getElementById('summaryFilterJenisMobil'), statusSelect = document.getElementById('summaryFilterStatus');
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
+            angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
+            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            statusSelect.innerHTML = '<option value="all">Semua Status</option>'; 
+            statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
+            statusSelect.innerHTML += `<option value="ANTRI BONGKAR + INAP">ANTRI BONGKAR + INAP</option>`;
+        }
+        
         window.displayStatusCards = () => {
             const container = document.getElementById('readOnlyTruckList'); 
             const selectedAngkutan = document.getElementById('statusCardFilterAngkutan').value, selectedJenisMobil = document.getElementById('statusCardFilterJenisMobil').value, selectedStatus = document.getElementById('statusCardFilterStatus').value;
@@ -1081,14 +1146,6 @@
             card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
         }
         
-        function populateSummaryFilters() {
-            const angkutanSelect = document.getElementById('summaryFilterAngkutan'), jenisMobilSelect = document.getElementById('summaryFilterJenisMobil'), statusSelect = document.getElementById('summaryFilterStatus');
-            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
-            angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
-            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
-            statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
-        }
-
         window.renderSummaryReport = function() {
             let filteredData = [...window.trucksData];
             const selectedAngkutan = document.getElementById('summaryFilterAngkutan').value;
@@ -1096,7 +1153,12 @@
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
             if (selectedAngkutan !== 'all') filteredData = filteredData.filter(t => t.angkutan === selectedAngkutan);
             if (selectedJenisMobil !== 'all') filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil);
-            if (selectedStatus !== 'all') filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            
+            if (selectedStatus === 'ANTRI BONGKAR + INAP') {
+                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            } else if (selectedStatus !== 'all') {
+                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            }
             
             const tableBody = document.getElementById('summaryTableBody'); tableBody.innerHTML = '';
             if (filteredData.length === 0) { tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
@@ -1242,6 +1304,121 @@
             document.getElementById('log-modal').classList.add('hidden');
         };
         
+        // --- MASTER CUSTOMER CRUD FUNCTIONS ---
+
+        function renderCustomerTable() {
+            const tableBody = document.getElementById('customerTable').querySelector('tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+            if (window.customersData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-8 text-slate-500">Belum ada data customer.</td></tr>`;
+                return;
+            }
+            window.customersData.forEach(customer => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-slate-50';
+                row.setAttribute('data-id', customer.id);
+                row.innerHTML = `
+                    <td data-field="name" class="px-6 py-4 font-medium">${customer.name}</td>
+                    <td class="px-6 py-4 action-buttons flex items-center gap-2">
+                        <button class="edit p-2 text-xs text-white bg-amber-500 rounded-lg hover:bg-amber-600" title="Edit" onclick="window.editCustomer('${customer.id}')"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="delete p-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700" title="Hapus" onclick="window.deleteCustomer('${customer.id}', '${customer.name}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            filterCustomerTable();
+        }
+
+        window.toggleAddCustomerForm = (forceClose = false) => {
+            const form = document.getElementById('addCustomerForm');
+            const isHidden = form.classList.contains('hidden');
+            if (forceClose || !isHidden) {
+                form.classList.add('hidden');
+            } else {
+                form.reset();
+                form.classList.remove('hidden');
+            }
+        };
+
+        window.addCustomer = async () => {
+            const customerNameInput = document.getElementById('newCustomerName');
+            const customerName = customerNameInput.value.trim();
+            if (!customerName) {
+                alert("Nama customer tidak boleh kosong.");
+                return;
+            }
+            try {
+                await addDoc(collection(db, "customers"), { name: customerName });
+                toggleAddCustomerForm(true); // Close form on success
+            } catch (error) {
+                console.error("Error adding customer: ", error);
+                alert("Gagal menambahkan customer baru.");
+            }
+        };
+
+        window.deleteCustomer = async (id, name) => {
+            if (confirm(`Yakin ingin menghapus customer "${name}"?`)) {
+                try {
+                    await deleteDoc(doc(db, "customers", id));
+                } catch (error) {
+                    console.error("Error deleting customer: ", error);
+                    alert("Gagal menghapus customer.");
+                }
+            }
+        };
+
+        window.editCustomer = (id) => {
+            cancelCustomerEdit();
+            const row = document.querySelector(`#customerTable tr[data-id="${id}"]`);
+            if (!row) return;
+
+            const nameCell = row.querySelector('td[data-field="name"]');
+            const currentName = nameCell.textContent;
+            nameCell.innerHTML = `<input type="text" class="w-full p-2 border border-slate-300 rounded-lg" value="${currentName}">`;
+
+            const actionCell = row.querySelector('.action-buttons');
+            actionCell.innerHTML = `
+                <button class="save p-2 text-xs text-white bg-green-600 rounded-lg" onclick="window.saveCustomer('${id}')"><i class="fas fa-check"></i></button>
+                <button class="cancel p-2 text-xs text-white bg-gray-500 rounded-lg" onclick="window.cancelCustomerEdit()"><i class="fas fa-times"></i></button>
+            `;
+        };
+        
+        window.saveCustomer = async (id) => {
+            const row = document.querySelector(`#customerTable tr[data-id="${id}"]`);
+            if (!row) return;
+
+            const input = row.querySelector('td[data-field="name"] input');
+            const newName = input.value.trim();
+
+            if (!newName) {
+                alert("Nama customer tidak boleh kosong.");
+                return;
+            }
+            try {
+                await updateDoc(doc(db, "customers", id), { name: newName });
+            } catch (error) {
+                console.error("Error updating customer: ", error);
+                alert("Gagal menyimpan perubahan.");
+            }
+        };
+
+        window.cancelCustomerEdit = () => {
+            renderCustomerTable(); // Simplest way to cancel is to re-render the whole table
+        };
+        
+        window.filterCustomerTable = function() {
+            const searchTerm = document.getElementById('customerSearchInput').value.toLowerCase();
+            const tableBody = document.getElementById('customerTable').querySelector('tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(row => { 
+                const nameCell = row.querySelector('td[data-field="name"]');
+                if (nameCell) {
+                    row.style.display = nameCell.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
+                }
+            });
+        }
+        // --- END MASTER CUSTOMER FUNCTIONS ---
+
         let currentFilterColumn = null;
 
         function closeFilterPopup() {
@@ -1501,47 +1678,90 @@
             return `${YYYY}-${MM}-${DD}_${HH}-${mm}`;
         }
         
+        // MODIFIKASI DIMULAI: Penyesuaian logika sorting dan lead time pada fungsi export
         window.exportToExcel = () => {
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.value === 'all' ? 'Semua_Angkutan' : selectedAngkutanSelect.value.replace(/ /g, '_');
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
             const isInapMode = selectedStatus === 'INAP';
-            
+            const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
+            const showLeadTimeColumn = isInapMode || isCombinedMode;
+
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
-            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
-
-            const header1 = ["ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
-            if (isInapMode) header1.push("LEAD TIME INAP");
-            const header2 = [null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
-            if (isInapMode) header2.push(null);
             
-            const body = filteredData.map(truck => {
+            if (isCombinedMode) {
+                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            } else if (selectedStatus !== 'all') {
+                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            }
+
+            if (showLeadTimeColumn) {
+                filteredData.sort((a, b) => {
+                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[a.keterangan] || 3;
+                    const statusB = statusPriority[b.keterangan] || 3;
+                    const statusComp = statusA - statusB;
+                    if (statusComp !== 0) return statusComp;
+
+                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
+                    if (customerComp !== 0) return customerComp;
+
+                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
+                    if (cityComp !== 0) return cityComp;
+                    
+                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
+                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
+                    return leadTimeB - leadTimeA;
+                });
+            }
+
+            const header1 = ["No", "ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
+            if (showLeadTimeColumn) header1.push("LEAD TIME");
+            const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
+            if (showLeadTimeColumn) header2.push(null);
+            
+            const body = filteredData.map((truck, index) => {
                 const row = [
+                    index + 1,
                     truck.angkutan || '-', truck.fo || '-',
                     formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
                     formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
                     truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
                     truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
-                if (isInapMode) row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                if (showLeadTimeColumn) {
+                    row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                }
                 return row;
             });
 
             const dataToExport = [header1, header2, ...body];
             const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
 
+            if (showLeadTimeColumn) {
+                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
+                const cellStyle = { alignment: { horizontal: "center", vertical: "center" } };
+                Object.keys(worksheet).forEach(cellRef => {
+                    if (cellRef.startsWith('!')) return;
+                    const cell = worksheet[cellRef];
+                    const address = XLSX.utils.decode_cell(cellRef);
+                    if (address.r < 2) { cell.s = headerStyle; } 
+                    else { cell.s = cellStyle; }
+                });
+            }
+
             const merges = [
-                { s: { r: 0, c: 2 }, e: { r: 0, c: 3 } }, { s: { r: 0, c: 4 }, e: { r: 0, c: 5 } },
-                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } },
-                { s: { r: 0, c: 6 }, e: { r: 1, c: 6 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } },
-                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } },
-                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } },
-                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }
+                { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
+                { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
+                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
+                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
+                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
             ];
-            if (isInapMode) merges.push({ s: { r: 0, c: 13 }, e: { r: 1, c: 13 } });
+            if (showLeadTimeColumn) merges.push({ s: { r: 0, c: 14 }, e: { r: 1, c: 14 } });
             worksheet['!merges'] = merges;
             
             const workbook = XLSX.utils.book_new();
@@ -1560,12 +1780,39 @@
             
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
             const isInapMode = selectedStatus === 'INAP';
+            const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
+            const showLeadTimeColumn = isInapMode || isCombinedMode;
 
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
-            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
+
+            if (isCombinedMode) {
+                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            } else if (selectedStatus !== 'all') {
+                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            }
+
+            if (showLeadTimeColumn) {
+                 filteredData.sort((a, b) => {
+                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[a.keterangan] || 3;
+                    const statusB = statusPriority[b.keterangan] || 3;
+                    const statusComp = statusA - statusB;
+                    if (statusComp !== 0) return statusComp;
+
+                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
+                    if (customerComp !== 0) return customerComp;
+
+                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
+                    if (cityComp !== 0) return cityComp;
+                    
+                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
+                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
+                    return leadTimeB - leadTimeA;
+                });
+            }
 
             doc.text(title, 14, 15);
             doc.setFontSize(10);
@@ -1573,29 +1820,35 @@
             doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
 
             const head = [[
-                { content: 'ANGKUTAN', rowSpan: 2 }, { content: 'FO', rowSpan: 2 },
+                { content: 'No', rowSpan: 2 }, { content: 'ANGKUTAN', rowSpan: 2 }, { content: 'FO', rowSpan: 2 },
                 { content: 'LOKASI MUAT', colSpan: 2 }, { content: 'LOKASI BONGKAR', colSpan: 2 },
                 { content: 'NAMA CUSTOMER', rowSpan: 2 }, { content: 'KOTA', rowSpan: 2 }, { content: 'STATUS', rowSpan: 2 },
                 { content: 'NAMA DRIVER', rowSpan: 2 }, { content: 'NO HP', rowSpan: 2 }, { content: 'PLAT NOMOR', rowSpan: 2 }, { content: 'JENIS TRUCK', rowSpan: 2 },
             ], [ 'TIBA', 'KELUAR', 'TIBA', 'KELUAR' ]];
-            if (isInapMode) head[0].push({ content: 'LEAD TIME INAP', rowSpan: 2 });
+            if (showLeadTimeColumn) head[0].push({ content: 'LEAD TIME', rowSpan: 2 });
 
-            const body = filteredData.map(truck => {
+            const body = filteredData.map((truck, index) => {
                 const row = [
+                    index + 1,
                     truck.angkutan || '-', truck.fo || '-',
                     formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
                     formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
                     truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
                     truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
-                if (isInapMode) row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                if (showLeadTimeColumn) {
+                    row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                }
                 return row;
             });
+            
+            const headStyles = showLeadTimeColumn ? { fillColor: [217, 217, 217], textColor: [0, 0, 0], halign: 'center', valign: 'middle', lineWidth: 0.1, lineColor: [0, 0, 0] } : { fillColor: [79, 70, 229], halign: 'center', valign: 'middle' };
+            const styles = showLeadTimeColumn ? { fontSize: 6, cellPadding: 1.5, halign: 'center', valign: 'middle' } : { fontSize: 6, cellPadding: 1.5 };
 
             doc.autoTable({
                 head: head, body: body, startY: 28, theme: 'grid',
-                headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255], halign: 'center', valign: 'middle', lineWidth: 0.1, lineColor: [255, 255, 255] },
-                styles: { fontSize: 6.5, cellPadding: 1.5 },
+                headStyles: headStyles,
+                styles: styles,
                 didDrawPage: (data) => {
                     doc.setFontSize(10);
                     doc.setTextColor(150);
@@ -1612,12 +1865,39 @@
             const cleanAngkutanName = angkutanName.replace(/ /g, '_');
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
             const isInapMode = selectedStatus === 'INAP';
+            const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
+            const showLeadTimeColumn = isInapMode || isCombinedMode;
 
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
-            if (selectedStatus !== 'all') { filteredData = filteredData.filter(t => t.keterangan === selectedStatus); }
+            
+            if (isCombinedMode) {
+                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            } else if (selectedStatus !== 'all') {
+                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
+            }
+
+            if (showLeadTimeColumn) {
+                 filteredData.sort((a, b) => {
+                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[a.keterangan] || 3;
+                    const statusB = statusPriority[b.keterangan] || 3;
+                    const statusComp = statusA - statusB;
+                    if (statusComp !== 0) return statusComp;
+
+                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
+                    if (customerComp !== 0) return customerComp;
+
+                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
+                    if (cityComp !== 0) return cityComp;
+                    
+                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
+                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
+                    return leadTimeB - leadTimeA;
+                });
+            }
 
             const screenshotContainer = document.createElement('div');
             screenshotContainer.style.position = 'absolute';
@@ -1635,33 +1915,57 @@
             `;
 
             const table = document.createElement('table');
-            table.className = 'w-full text-sm text-left';
-            const originalThead = document.getElementById('summaryTable').querySelector('thead').cloneNode(true);
-            if (isInapMode) {
-                originalThead.querySelector('tr').innerHTML += `<th class="px-6 py-3">LEAD TIME INAP</th>`;
-            }
-            
+            table.style.borderCollapse = 'collapse';
+            const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
-            filteredData.forEach(truck => {
-                const row = document.createElement('tr');
-                row.className = 'bg-white border-b';
-                let rowHTML = `
-                    <td class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td><td class="px-6 py-4">${truck.fo || '-'}</td>
-                    <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_muat)}</td><td class="px-6 py-4">${formatTanggalJam(truck.keluar_lokasi_muat)}</td>
-                    <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td><td class="px-6 py-4">${formatTanggalJam(truck.keluar_lokasi_bongkar)}</td>
-                    <td class="px-6 py-4">${truck.customer || '-'}</td><td class="px-6 py-4">${truck.tujuan || '-'}</td>
-                    <td class="px-6 py-4">${truck.keterangan || '-'}</td><td class="px-6 py-4">${truck.nama_driver || '-'}</td>
-                    <td class="px-6 py-4">${truck.no_hp || '-'}</td><td class="px-6 py-4">${truck.no_mobil || '-'}</td>
-                    <td class="px-6 py-4">${truck.jenis_mobil || '-'}</td>
-                `;
-                if (isInapMode) {
-                    rowHTML += `<td class="px-6 py-4">${calculateLeadTime(truck.tiba_lokasi_bongkar)}</td>`;
+
+            let headers = ["No", "Angkutan", "FO", "Tiba Lokasi Muat", "Keluar Lokasi Muat", "Tiba Lokasi Bongkar", "Keluar Lokasi Bongkar", "Nama Customer", "Kota", "Status", "Nama Driver", "No HP", "Plat Nomor", "Jenis Truck"];
+            if (showLeadTimeColumn) headers.push("Lead Time");
+            
+            const headerRow = document.createElement('tr');
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                th.style.border = '1px solid #ddd';
+                th.style.padding = '8px';
+                th.style.textAlign = 'center';
+                th.style.verticalAlign = 'middle';
+                if (showLeadTimeColumn) {
+                    th.style.backgroundColor = '#d9d9d9';
                 }
-                row.innerHTML = rowHTML;
-                tbody.appendChild(row);
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            filteredData.forEach((truck, index) => {
+                const tr = document.createElement('tr');
+                const rowData = [
+                    index + 1,
+                    truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                ];
+                if (showLeadTimeColumn) {
+                    rowData.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                }
+
+                rowData.forEach(cellData => {
+                    const td = document.createElement('td');
+                    td.textContent = cellData;
+                    td.style.border = '1px solid #ddd';
+                    td.style.padding = '8px';
+                    if (showLeadTimeColumn) {
+                       td.style.textAlign = 'center';
+                       td.style.verticalAlign = 'middle';
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
             });
             
-            table.appendChild(originalThead);
+            table.appendChild(thead);
             table.appendChild(tbody);
             screenshotContainer.appendChild(table);
             document.body.appendChild(screenshotContainer);
@@ -1679,6 +1983,7 @@
                 document.body.removeChild(screenshotContainer);
             }
         };
+        // MODIFIKASI SELESAI
 
         window.exportRitaseToExcel = () => {
             const table = document.getElementById('ritaseTable');
@@ -1701,7 +2006,7 @@
             doc.save(filename);
         };
 
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(contentId).classList.add('active');
@@ -1712,6 +2017,7 @@
             if (contentId === 'statusTruck') displayStatusCards();
             if (contentId === 'ritaseTruck') applyRitaseFiltersAndSort();
             if (contentId === 'logHistory') fetchAndRenderLogs();
+            if (contentId === 'masterCustomer') renderCustomerTable();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
