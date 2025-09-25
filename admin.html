@@ -140,6 +140,9 @@
                     <a href="#" id="nav-masterCustomer" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('masterCustomer')">
                         <i class="fas fa-users w-6 text-center"></i><span class="ml-3">Master Customer</span>
                     </a>
+                    <a href="#" id="nav-masterJenisTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('masterJenisTruck')">
+                        <i class="fas fa-tags w-6 text-center"></i><span class="ml-3">Master Jenis Truck</span>
+                    </a>
                     <a href="#" id="nav-ritaseTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('ritaseTruck')">
                         <i class="fas fa-route w-6 text-center"></i><span class="ml-3">Ritase Truck</span>
                     </a>
@@ -223,8 +226,13 @@
                             <div id="vendor-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             </div>
                         </div>
-
-                    </div>
+                        
+                        <div class="mt-8">
+                            <h3 class="text-xl font-bold text-slate-700 mb-4">Rincian Armada per Jenis Truk</h3>
+                            <div id="jenis-truck-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                </div>
+                        </div>
+                        </div>
 
                     <div id="statusTruck" class="content-section">
                         <div class="bg-white p-6 rounded-xl shadow-md mb-6">
@@ -250,8 +258,6 @@
                                 <select id="newAngkutan" class="w-full p-2 border border-slate-300 rounded-lg"></select>
                                 <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg">
-                                    <option value="LOSSBAK">LOSSBAK</option>
-                                    <option value="WINGBOX">WINGBOX</option>
                                 </select>
                                 <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <input type="text" id="newNoHp" placeholder="No HP Driver" class="w-full p-2 border border-slate-300 rounded-lg">
@@ -308,6 +314,39 @@
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                     <tr>
                                         <th class="px-6 py-3">Nama Customer</th>
+                                        <th class="px-6 py-3">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="masterJenisTruck" class="content-section">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                            <button class="flex items-center gap-2 bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.toggleAddJenisTruckForm()"><i class="fas fa-plus"></i> Tambah Jenis Truck</button>
+                            <div class="relative w-full md:w-1/3">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="fas fa-search text-slate-400"></i></span>
+                                <input type="text" id="jenisTruckSearchInput" onkeyup="window.filterJenisTruckTable()" placeholder="Cari nama jenis truck..." class="w-full p-2 pl-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        
+                        <form class="hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addJenisTruckForm">
+                            <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Jenis Truck Baru</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input type="text" id="newJenisTruckName" placeholder="Nama Jenis Truck (e.g., WINGBOX)" class="w-full p-2 border border-slate-300 rounded-lg md:col-span-2">
+                                <div class="flex items-center gap-2">
+                                    <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addJenisTruck()">Simpan</button>
+                                    <button type="button" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg" onclick="window.toggleAddJenisTruckForm()">Batal</button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
+                            <table id="jenisTruckTable" class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3">Nama Jenis Truck</th>
                                         <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
@@ -559,10 +598,10 @@
 
         window.trucksData = []; 
         window.customersData = [];
+        window.jenisTruckData = [];
         window.allRitaseData = [];
         window.allLogData = [];
-        let jenisMobilOptions = [];
-        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers;
+        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         
         let currentModalTrucks = [];
         let modalSort = { column: 'angkutan', direction: 'asc' };
@@ -626,6 +665,7 @@
             if (unsubscribeFromTrucks) unsubscribeFromTrucks();
             if (unsubscribeFromRitase) unsubscribeFromRitase();
             if (unsubscribeFromCustomers) unsubscribeFromCustomers();
+            if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
             if (user) {
                 try {
                     const userDocSnap = await getDoc(doc(db, "users", user.uid));
@@ -681,7 +721,6 @@
                     displayStatusCards(); 
                  }
                  
-                 jenisMobilOptions = [...new Set(window.trucksData.map(t => t.jenis_mobil))].sort();
                  populateSummaryFilters();
                  populateStatusCardFilters();
                  populateAddFormVendorSelect();
@@ -707,6 +746,17 @@
                     renderCustomerTable();
                 }
             }, (error) => console.error("Customer Listener Error:", error));
+
+            const jenisTruckCollectionRef = collection(db, "jenis_truck");
+            unsubscribeFromJenisTruck = onSnapshot(query(jenisTruckCollectionRef, orderBy("name")), (snapshot) => {
+                window.jenisTruckData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if(document.getElementById('masterJenisTruck').classList.contains('active')) {
+                    renderJenisTruckTable();
+                }
+                populateJenisTruckDropdowns();
+                populateSummaryFilters();
+                populateStatusCardFilters();
+            }, (error) => console.error("Jenis Truck Listener Error:", error));
         }
 
         let currentVendorTrucks = [];
@@ -918,6 +968,37 @@
                     vendorContainer.appendChild(vendorCard);
                 });
             }
+
+            // --- BARIS KODE BARU UNTUK CARD JENIS TRUK ---
+            const jenisTruckContainer = document.getElementById('jenis-truck-details-grid');
+            if (jenisTruckContainer) {
+                jenisTruckContainer.innerHTML = ''; // Hapus kartu sebelumnya
+
+                const jenisTruckCounts = data.reduce((acc, truck) => {
+                    const jenis = truck.jenis_mobil || 'Tanpa Jenis';
+                    acc[jenis] = (acc[jenis] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const sortedJenisTruk = Object.keys(jenisTruckCounts).sort();
+
+                sortedJenisTruk.forEach(jenis => {
+                    const count = jenisTruckCounts[jenis];
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-xl shadow-md flex items-center';
+                    
+                    card.innerHTML = `
+                        <div class="p-3 bg-teal-100 rounded-full">
+                            <i class="fas fa-tags text-2xl text-teal-600"></i>
+                        </div>
+                        <div class="ml-4 overflow-hidden">
+                            <p class="text-slate-500 font-semibold truncate" title="${jenis}">${jenis}</p>
+                            <p class="text-2xl font-bold text-slate-800">${count} Truk</p>
+                        </div>`;
+                    jenisTruckContainer.appendChild(card);
+                });
+            }
+            // --- AKHIR KODE BARU ---
         }
         
         function renderTruckList(dataToRender) {
@@ -998,7 +1079,7 @@
             const createSelect = (options, selectedValue) => `<select class="w-full p-2 border border-slate-300 rounded-lg">${options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('')}</select>`;
             row.querySelectorAll('td[data-field]').forEach(cell => {
                 const field = cell.dataset.field; const value = truck[field] || '';
-                if(field === 'jenis_mobil') cell.innerHTML = createSelect(['LOSSBAK', 'WINGBOX'], value);
+                if(field === 'jenis_mobil') cell.innerHTML = createSelect(window.jenisTruckData.map(j => j.name), value);
                 else if(field === 'keterangan') cell.innerHTML = createSelect(statusOptions, value);
                 else cell.innerHTML = createInput(value);
             });
@@ -1082,12 +1163,37 @@
                 angkutanSelect.value = previouslySelected;
             }
         }
+
+        function populateJenisTruckDropdowns() {
+            const newJenisMobilSelect = document.getElementById('newJenisMobil');
+            if (newJenisMobilSelect) {
+                let optionsHtml = '';
+                window.jenisTruckData.forEach(jenis => {
+                    optionsHtml += `<option value="${jenis.name}">${jenis.name}</option>`;
+                });
+                newJenisMobilSelect.innerHTML = optionsHtml;
+            }
+
+            const editingSelect = document.querySelector('td[data-field="jenis_mobil"] select');
+            if (editingSelect) {
+                const selectedValue = editingSelect.value;
+                let optionsHtml = '';
+                window.jenisTruckData.forEach(jenis => {
+                    const isSelected = jenis.name === selectedValue ? 'selected' : '';
+                    optionsHtml += `<option value="${jenis.name}" ${isSelected}>${jenis.name}</option>`;
+                });
+                editingSelect.innerHTML = optionsHtml;
+            }
+        }
         
         function populateStatusCardFilters() {
             const angkutanSelect = document.getElementById('statusCardFilterAngkutan'), jenisMobilSelect = document.getElementById('statusCardFilterJenisMobil'), statusSelect = document.getElementById('statusCardFilterStatus');
             const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
             angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
-            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            
+            const uniqueJenis = [...new Set(window.jenisTruckData.map(j => j.name))].sort();
+            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; uniqueJenis.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
         }
         
@@ -1095,7 +1201,10 @@
             const angkutanSelect = document.getElementById('summaryFilterAngkutan'), jenisMobilSelect = document.getElementById('summaryFilterJenisMobil'), statusSelect = document.getElementById('summaryFilterStatus');
             const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
             angkutanSelect.innerHTML = '<option value="all">Semua Angkutan</option>'; uniqueAngkutan.forEach(a => angkutanSelect.innerHTML += `<option value="${a}">${a}</option>`);
-            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; jenisMobilOptions.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            
+            const uniqueJenis = [...new Set(window.jenisTruckData.map(j => j.name))].sort();
+            jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; uniqueJenis.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
+            
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; 
             statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
             statusSelect.innerHTML += `<option value="ANTRI BONGKAR + INAP">ANTRI BONGKAR + INAP</option>`;
@@ -1308,7 +1417,7 @@
 
         function renderCustomerTable() {
             const tableBody = document.getElementById('customerTable').querySelector('tbody');
-            tableBody.innerHTML = ''; // Clear existing rows
+            tableBody.innerHTML = '';
             if (window.customersData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-8 text-slate-500">Belum ada data customer.</td></tr>`;
                 return;
@@ -1349,7 +1458,7 @@
             }
             try {
                 await addDoc(collection(db, "customers"), { name: customerName });
-                toggleAddCustomerForm(true); // Close form on success
+                toggleAddCustomerForm(true);
             } catch (error) {
                 console.error("Error adding customer: ", error);
                 alert("Gagal menambahkan customer baru.");
@@ -1403,7 +1512,7 @@
         };
 
         window.cancelCustomerEdit = () => {
-            renderCustomerTable(); // Simplest way to cancel is to re-render the whole table
+            renderCustomerTable();
         };
         
         window.filterCustomerTable = function() {
@@ -1418,6 +1527,116 @@
             });
         }
         // --- END MASTER CUSTOMER FUNCTIONS ---
+
+        // --- MASTER JENIS TRUCK CRUD FUNCTIONS ---
+        function renderJenisTruckTable() {
+            const tableBody = document.getElementById('jenisTruckTable').querySelector('tbody');
+            tableBody.innerHTML = '';
+            if (window.jenisTruckData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-8 text-slate-500">Belum ada data jenis truck.</td></tr>`;
+                return;
+            }
+            window.jenisTruckData.forEach(jenis => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-slate-50';
+                row.setAttribute('data-id', jenis.id);
+                row.innerHTML = `
+                    <td data-field="name" class="px-6 py-4 font-medium">${jenis.name}</td>
+                    <td class="px-6 py-4 action-buttons flex items-center gap-2">
+                        <button class="edit p-2 text-xs text-white bg-amber-500 rounded-lg hover:bg-amber-600" title="Edit" onclick="window.editJenisTruck('${jenis.id}')"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="delete p-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700" title="Hapus" onclick="window.deleteJenisTruck('${jenis.id}', '${jenis.name}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+            filterJenisTruckTable();
+        }
+
+        window.toggleAddJenisTruckForm = (forceClose = false) => {
+            const form = document.getElementById('addJenisTruckForm');
+            const isHidden = form.classList.contains('hidden');
+            if (forceClose || !isHidden) {
+                form.classList.add('hidden');
+            } else {
+                form.reset();
+                form.classList.remove('hidden');
+            }
+        };
+
+        window.addJenisTruck = async () => {
+            const jenisTruckNameInput = document.getElementById('newJenisTruckName');
+            const jenisTruckName = jenisTruckNameInput.value.trim().toUpperCase();
+            if (!jenisTruckName) {
+                alert("Nama jenis truck tidak boleh kosong.");
+                return;
+            }
+            try {
+                await addDoc(collection(db, "jenis_truck"), { name: jenisTruckName });
+                toggleAddJenisTruckForm(true);
+            } catch (error) {
+                console.error("Error adding jenis truck: ", error);
+                alert("Gagal menambahkan jenis truck baru.");
+            }
+        };
+
+        window.deleteJenisTruck = async (id, name) => {
+            if (confirm(`Yakin ingin menghapus jenis truck "${name}"?`)) {
+                try {
+                    await deleteDoc(doc(db, "jenis_truck", id));
+                } catch (error) {
+                    console.error("Error deleting jenis truck: ", error);
+                    alert("Gagal menghapus jenis truck.");
+                }
+            }
+        };
+
+        window.editJenisTruck = (id) => {
+            cancelJenisTruckEdit();
+            const row = document.querySelector(`#jenisTruckTable tr[data-id="${id}"]`);
+            if (!row) return;
+            const nameCell = row.querySelector('td[data-field="name"]');
+            const currentName = nameCell.textContent;
+            nameCell.innerHTML = `<input type="text" class="w-full p-2 border border-slate-300 rounded-lg" value="${currentName}">`;
+            const actionCell = row.querySelector('.action-buttons');
+            actionCell.innerHTML = `
+                <button class="save p-2 text-xs text-white bg-green-600 rounded-lg" onclick="window.saveJenisTruck('${id}')"><i class="fas fa-check"></i></button>
+                <button class="cancel p-2 text-xs text-white bg-gray-500 rounded-lg" onclick="window.cancelJenisTruckEdit()"><i class="fas fa-times"></i></button>
+            `;
+        };
+        
+        window.saveJenisTruck = async (id) => {
+            const row = document.querySelector(`#jenisTruckTable tr[data-id="${id}"]`);
+            if (!row) return;
+            const input = row.querySelector('td[data-field="name"] input');
+            const newName = input.value.trim().toUpperCase();
+            if (!newName) {
+                alert("Nama jenis truck tidak boleh kosong.");
+                return;
+            }
+            try {
+                await updateDoc(doc(db, "jenis_truck", id), { name: newName });
+            } catch (error) {
+                console.error("Error updating jenis truck: ", error);
+                alert("Gagal menyimpan perubahan.");
+            }
+        };
+
+        window.cancelJenisTruckEdit = () => {
+            renderJenisTruckTable();
+        };
+        
+        window.filterJenisTruckTable = function() {
+            const searchTerm = document.getElementById('jenisTruckSearchInput').value.toLowerCase();
+            const tableBody = document.getElementById('jenisTruckTable').querySelector('tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(row => { 
+                const nameCell = row.querySelector('td[data-field="name"]');
+                if (nameCell) {
+                    row.style.display = nameCell.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
+                }
+            });
+        }
+        // --- END MASTER JENIS TRUCK FUNCTIONS ---
 
         let currentFilterColumn = null;
 
@@ -1678,7 +1897,6 @@
             return `${YYYY}-${MM}-${DD}_${HH}-${mm}`;
         }
         
-        // MODIFIKASI DIMULAI: Penyesuaian logika sorting dan lead time pada fungsi export
         window.exportToExcel = () => {
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.value === 'all' ? 'Semua_Angkutan' : selectedAngkutanSelect.value.replace(/ /g, '_');
@@ -1983,7 +2201,6 @@
                 document.body.removeChild(screenshotContainer);
             }
         };
-        // MODIFIKASI SELESAI
 
         window.exportRitaseToExcel = () => {
             const table = document.getElementById('ritaseTable');
@@ -2006,7 +2223,7 @@
             doc.save(filename);
         };
 
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(contentId).classList.add('active');
@@ -2018,6 +2235,7 @@
             if (contentId === 'ritaseTruck') applyRitaseFiltersAndSort();
             if (contentId === 'logHistory') fetchAndRenderLogs();
             if (contentId === 'masterCustomer') renderCustomerTable();
+            if (contentId === 'masterJenisTruck') renderJenisTruckTable();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
