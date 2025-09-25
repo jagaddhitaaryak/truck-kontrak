@@ -232,9 +232,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg">
-                                    <option value="LOSSBAK">LOSSBAK</option>
-                                    <option value="WINGBOX">WINGBOX</option>
-                                </select>
+                                    </select>
                                 <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <input type="text" id="newNoHp" placeholder="No HP Driver" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <div class="flex items-center gap-2 md:col-start-3">
@@ -459,9 +457,10 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, onSnapshot, updateDoc, query, where, getDoc, addDoc, serverTimestamp, getDocs, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromCustomers;
+        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         let trucksData = [];
         let customersData = [];
+        let jenisTruckData = [];
         let allRitaseData = [];
         let allLogData = [];
         let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
@@ -525,6 +524,7 @@
                     if (userDocSnap.exists() && userDocSnap.data().role === 'angkutan') {
                         if (unsubscribeFromTrucks) unsubscribeFromTrucks();
                         if (unsubscribeFromCustomers) unsubscribeFromCustomers();
+                        if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
                         
                         trucksData = []; allRitaseData = []; allLogData = []; activeFilters = {};
                         
@@ -532,6 +532,7 @@
                         document.getElementById('angkutanNameDisplay').textContent = currentUserData.angkutanName;
                         
                         setupCustomerListener();
+                        setupJenisTruckListener();
                         setupTrucksListener(currentUserData.angkutanName);
 
                         document.getElementById('loading-container').classList.add('hidden');
@@ -541,16 +542,19 @@
                     } else { 
                         if (unsubscribeFromTrucks) unsubscribeFromTrucks();
                         if (unsubscribeFromCustomers) unsubscribeFromCustomers();
+                        if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
                         await signOut(auth); 
                     }
                 } catch (error) { 
                     if (unsubscribeFromTrucks) unsubscribeFromTrucks();
                     if (unsubscribeFromCustomers) unsubscribeFromCustomers();
+                    if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
                     await signOut(auth); 
                 }
             } else {
                 if (unsubscribeFromTrucks) unsubscribeFromTrucks();
                 if (unsubscribeFromCustomers) unsubscribeFromCustomers();
+                if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
                 document.getElementById('loading-container').classList.add('hidden');
                 document.getElementById('dashboard-container').classList.add('hidden');
                 document.getElementById('login-container').classList.remove('hidden');
@@ -565,6 +569,36 @@
                     rerenderUpdateStatusCards();
                 }
             });
+        }
+
+        function setupJenisTruckListener() {
+            const jenisTruckRef = query(collection(db, "jenis_truck"), orderBy("name"));
+            unsubscribeFromJenisTruck = onSnapshot(jenisTruckRef, (snapshot) => {
+                jenisTruckData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                populateJenisTruckDropdowns();
+            });
+        }
+
+        function populateJenisTruckDropdowns() {
+            const newJenisMobilSelect = document.getElementById('newJenisMobil');
+            if (newJenisMobilSelect) {
+                let optionsHtml = '';
+                jenisTruckData.forEach(jenis => {
+                    optionsHtml += `<option value="${jenis.name}">${jenis.name}</option>`;
+                });
+                newJenisMobilSelect.innerHTML = optionsHtml;
+            }
+
+            const editingSelect = document.querySelector('td[data-field="jenis_mobil"] select');
+            if (editingSelect) {
+                const selectedValue = editingSelect.value;
+                let optionsHtml = '';
+                jenisTruckData.forEach(jenis => {
+                    const isSelected = jenis.name === selectedValue ? 'selected' : '';
+                    optionsHtml += `<option value="${jenis.name}" ${isSelected}>${jenis.name}</option>`;
+                });
+                editingSelect.innerHTML = optionsHtml;
+            }
         }
 
         function setupTrucksListener(angkutanName) {
@@ -601,7 +635,7 @@
         function populateSummaryFilters() {
             const jenisMobilSelect = document.getElementById('summaryFilterJenisMobil');
             const statusSelect = document.getElementById('summaryFilterStatus');
-            const uniqueJenisMobil = [...new Set(trucksData.map(t => t.jenis_mobil).filter(Boolean))].sort();
+            const uniqueJenisMobil = [...new Set(jenisTruckData.map(j => j.name))].sort();
             jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>';
             uniqueJenisMobil.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
             statusSelect.innerHTML = '<option value="all">Semua Status</option>';
@@ -899,7 +933,6 @@
 
         window.cancelEditDimensions = () => displayDimensiTable(trucksData);
 
-        // MODIFIKASI DIMULAI: Menambahkan fungsi-fungsi untuk Summary Report
         function renderSummaryReport() {
             let filteredData = [...trucksData];
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
@@ -1240,7 +1273,6 @@
                 document.body.removeChild(screenshotContainer);
             }
         };
-        // MODIFIKASI SELESAI
         
         function closeFilterPopup() {
             const popup = document.getElementById('header-filter-popup');
@@ -1622,14 +1654,18 @@
             cancelEdit();
             const row = document.querySelector(`tr[data-id="${firestoreId}"]`); if (!row) return;
             const truck = trucksData.find(t => t.firestoreId === firestoreId); if (!truck) return;
+            
             const createInput = (value) => `<input type="text" class="w-full p-2 border border-slate-300 rounded-lg" value="${value}">`;
-            const createSelect = (selectedValue) => `<select class="w-full p-2 border border-slate-300 rounded-lg">
-                <option value="LOSSBAK" ${'LOSSBAK' === selectedValue ? 'selected' : ''}>LOSSBAK</option>
-                <option value="WINGBOX" ${'WINGBOX' === selectedValue ? 'selected' : ''}>WINGBOX</option>
-            </select>`;
+            
+            const createJenisTruckSelect = (selectedValue) => {
+                let optionsHtml = jenisTruckData.map(jenis => 
+                    `<option value="${jenis.name}" ${jenis.name === selectedValue ? 'selected' : ''}>${jenis.name}</option>`
+                ).join('');
+                return `<select class="w-full p-2 border border-slate-300 rounded-lg">${optionsHtml}</select>`;
+            };
 
             row.querySelector('td[data-field="no_mobil"]').innerHTML = createInput(truck.no_mobil || '');
-            row.querySelector('td[data-field="jenis_mobil"]').innerHTML = createSelect(truck.jenis_mobil);
+            row.querySelector('td[data-field="jenis_mobil"]').innerHTML = createJenisTruckSelect(truck.jenis_mobil);
             row.querySelector('td[data-field="nama_driver"]').innerHTML = createInput(truck.nama_driver || '');
             row.querySelector('td[data-field="no_hp"]').innerHTML = createInput(truck.no_hp || '');
             
