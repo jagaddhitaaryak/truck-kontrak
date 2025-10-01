@@ -467,6 +467,7 @@
         let activeFilters = {};
         let currentModalTrucks = [];
         let modalSort = { column: 'no_mobil', direction: 'asc' };
+        let currentFilterColumn = null;
         const appId = 'truck-dashboard-app';
         const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
         const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
@@ -811,7 +812,30 @@
         };
         
         window.finishDelivery = async (firestoreId) => {
-            if (confirm("Apakah Anda Yakin? Ini akan dihitung sebagai 1 ritase.")) {
+            // --- LOGIKA VALIDASI BARU DIMULAI ---
+            const fieldsToValidate = [
+                { id: `customer-select-${firestoreId}`, name: 'Customer' },
+                { id: `tujuan-input-${firestoreId}`, name: 'Kota' },
+                { id: `tiba-muat-input-${firestoreId}`, name: 'Tiba Lokasi Muat' },
+                { id: `keluar-muat-input-${firestoreId}`, name: 'Keluar Lokasi Muat' },
+                { id: `tiba-bongkar-input-${firestoreId}`, name: 'Tiba Lokasi Bongkar' },
+                { id: `keluar-bongkar-input-${firestoreId}`, name: 'Keluar Lokasi Bongkar' },
+                { id: `driver-input-${firestoreId}`, name: 'Nama Driver' },
+                { id: `hp-input-${firestoreId}`, name: 'No HP' },
+                { id: `fo-input-${firestoreId}`, name: 'FO' }
+            ];
+
+            for (const field of fieldsToValidate) {
+                const element = document.getElementById(field.id);
+                if (!element.value) {
+                    alert(`Data '${field.name}' harus diisi sebelum menyelesaikan delivery.`);
+                    element.focus();
+                    return; // Menghentikan eksekusi fungsi jika ada data yang kosong
+                }
+            }
+            // --- LOGIKA VALIDASI BARU SELESAI ---
+
+            if (confirm("Apakah Anda Yakin? Semua data sudah terisi dan akan dihitung sebagai 1 ritase.")) {
                 const truckDocRef = doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId);
                 const truck = trucksData.find(t => t.firestoreId === firestoreId) || {};
                 const dataTerbaru = {
@@ -1274,6 +1298,7 @@
             }
         };
         
+        // +++ FUNGSI-FUNGSI BARU UNTUK FILTER & SORT HEADER TABEL RITASE +++
         function closeFilterPopup() {
             const popup = document.getElementById('header-filter-popup');
             if (popup) popup.classList.add('hidden');
@@ -1335,6 +1360,25 @@
             closeFilterPopup();
         }
 
+        window.sortRitaseTable = (column) => {
+            if (ritaseSort.column === column) {
+                ritaseSort.direction = ritaseSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                ritaseSort.column = column;
+                ritaseSort.direction = 'asc';
+            }
+            applyRitaseFiltersAndSort();
+        };
+        
+        window.handleHeaderClick = (event, column) => {
+            if (event.shiftKey) {
+                window.sortRitaseTable(column);
+            } else {
+                window.openFilterPopup(event, column);
+            }
+        };
+        // +++ AKHIR FUNGSI-FUNGSI BARU +++
+
         function displayRitaseTable(dataToRender) {
             const tableBody = document.getElementById('ritaseTableBody');
             tableBody.innerHTML = '';
@@ -1369,6 +1413,27 @@
                     header.classList.add(ritaseSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
                 }
             });
+        }
+
+        async function fetchAndRenderRitase() {
+            const tableBody = document.getElementById('ritaseTableBody');
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data ritase...</td></tr>`;
+
+            try {
+                const ritaseRef = collection(db, "completed_deliveries");
+                const q = query(ritaseRef, 
+                    where("angkutanName", "==", currentUserData.angkutanName), 
+                    orderBy("timestamp_selesai", "desc")
+                );
+                
+                const querySnapshot = await getDocs(q);
+                allRitaseData = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
+                
+                applyRitaseFiltersAndSort();
+            } catch (error) {
+                console.error("Gagal memuat data ritase:", error);
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Gagal memuat data. Silakan coba lagi.</td></tr>`;
+            }
         }
 
         function applyRitaseFiltersAndSort() {
@@ -1476,24 +1541,6 @@
             const workbook = XLSX.utils.table_to_book(table, {sheet: "Riwayat Log"});
             const filename = `Riwayat_Log_${cleanAngkutanName}_${getFilenameTimestamp()}.xlsx`;
             XLSX.writeFile(workbook, filename);
-        };
-
-        window.sortRitaseTable = (column) => {
-            if (ritaseSort.column === column) {
-                ritaseSort.direction = ritaseSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                ritaseSort.column = column;
-                ritaseSort.direction = 'asc';
-            }
-            applyRitaseFiltersAndSort();
-        };
-        
-        window.handleHeaderClick = (event, column) => {
-            if (event.shiftKey) {
-                window.sortRitaseTable(column);
-            } else {
-                window.openFilterPopup(event, column);
-            }
         };
 
         window.exportRitaseToExcel = () => {
