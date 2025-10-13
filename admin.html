@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -69,6 +71,15 @@
             margin-bottom: 0.5rem;
         }
         .filter-item { display: block; margin-bottom: 0.5rem; }
+        
+        .group-header {
+            background-color: #e5e7eb; /* slate-200 */
+            color: #1f2937; /* slate-900 */
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -149,6 +160,10 @@
                     <a href="#" id="nav-summaryReport" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('summaryReport')">
                         <i class="fas fa-chart-pie w-6 text-center"></i><span class="ml-3">Summary Report</span>
                     </a>
+                    <a href="#" id="nav-laporanInap" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('laporanInap')">
+                        <i class="fas fa-bed w-6 text-center"></i><span class="ml-3">Summary Inap</span>
+                    </a>
+
                     <a href="#" id="nav-logHistory" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('logHistory')">
                         <i class="fas fa-history w-6 text-center"></i><span class="ml-3">Riwayat Log</span>
                     </a>
@@ -188,15 +203,15 @@
                                     <p id="total-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
-                            <div id="total-angkutan-card" class="bg-sky-600 text-white p-6 rounded-xl shadow-lg flex items-center">
-                                <div class="p-4 bg-sky-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
+                            <div id="total-angkutan-card" class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-green-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
                                 <div class="ml-4">
                                     <p class="font-semibold">Total Vendor Angkutan</p>
                                     <p id="total-angkutan-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
-                            <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
-                                <div class="p-4 bg-green-500 rounded-full">
+                            <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-orange-500 rounded-full">
                                     <i class="fas fa-route text-3xl"></i>
                                 </div>
                                 <div class="ml-4">
@@ -457,6 +472,136 @@
                         </div>
                     </div>
 
+                    
+                    <div id="laporanInap" class="content-section">
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 id="summary-inap-title" class="text-xl font-bold text-slate-700 uppercase">SUMMARY INAP PER CUSTOMER & KOTA</h4>
+                                <button onclick="window.exportInapTableAsImage('inap-by-customer-table', 'Summary Inap per-Customer & Kota')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-by-customer-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-3 w-1/2">Customer</th>
+                                            <th class="px-4 py-3">Kota</th>
+                                            <th class="px-4 py-3 text-center">Total Truck Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-by-customer-table-body"></tbody>
+                                    <tfoot class="bg-slate-50 font-bold">
+                                        <tr>
+                                            <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL</td>
+                                            <td id="inap-grand-total" class="px-4 py-3 text-center text-xl text-red-600">0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xl font-bold text-slate-700">
+                                    INAP : &lt; 3 Hari | TOTAL TRUCK : <span id="total-less-3days" class="text-indigo-600"></span>
+                                </h4>
+                                <button onclick="window.exportInapTableAsImage('inap-table-less-3days-table', 'INAP : < 3 Hari')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-table-less-3days-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">Plat Nomor</th>
+                                            <th class="px-6 py-3">Customer</th>
+                                            <th class="px-6 py-3">Kota</th>
+                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
+                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-table-less-3days"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xl font-bold text-slate-700">
+                                    INAP : 3 - 6 Hari | TOTAL TRUCK : <span id="total-3-6days" class="text-indigo-600"></span>
+                                </h4>
+                                <button onclick="window.exportInapTableAsImage('inap-table-3-6days-table', 'INAP : 3 - 6 Hari')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-table-3-6days-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">Plat Nomor</th>
+                                            <th class="px-6 py-3">Customer</th>
+                                            <th class="px-6 py-3">Kota</th>
+                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
+                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-table-3-6days"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xl font-bold text-slate-700">
+                                    INAP : 6 - 9 Hari | TOTAL TRUCK : <span id="total-6-9days" class="text-indigo-600"></span>
+                                </h4>
+                                <button onclick="window.exportInapTableAsImage('inap-table-6-9days-table', 'INAP : 6 - 9 Hari')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-table-6-9days-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">Plat Nomor</th>
+                                            <th class="px-6 py-3">Customer</th>
+                                            <th class="px-6 py-3">Kota</th>
+                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
+                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-table-6-9days"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xl font-bold text-slate-700">
+                                    INAP : > 9 Hari | TOTAL TRUCK : <span id="total-more-9days" class="text-indigo-600"></span>
+                                </h4>
+                                <button onclick="window.exportInapTableAsImage('inap-table-more-9days-table', 'INAP : > 9 Hari')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-table-more-9days-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                        <tr>
+                                            <th class="px-6 py-3">Plat Nomor</th>
+                                            <th class="px-6 py-3">Customer</th>
+                                            <th class="px-6 py-3">Kota</th>
+                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
+                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-table-more-9days"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="logHistory" class="content-section">
                         <div class="bg-white p-4 rounded-xl shadow-md mb-6">
                             <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Riwayat Log</h4>
@@ -584,8 +729,7 @@
                             <th class="px-4 py-3" data-filter="keterangan" onclick="window.openVendorTruckFilterPopup(event, 'keterangan')">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="vendor-truck-modal-body">
-                    </tbody>
+                    <tbody id="vendor-truck-modal-body"></tbody>
                 </table>
             </div>
         </div>
@@ -615,25 +759,61 @@
         const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
         const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'MUAT': 'bg-blue-100 text-blue-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
         
+        function showSuccessAlert(title, text) {
+            Swal.fire({
+                icon: 'success',
+                title: title,
+                text: text,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        }
+
+        function showErrorAlert(title, text) {
+            Swal.fire({
+                icon: 'error',
+                title: title,
+                text: text,
+                confirmButtonColor: '#ef4444'
+            });
+        }
+
+        function showConfirmAlert(title, text, confirmButtonText, callback) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmButtonText || 'Ya, Lanjutkan!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            });
+        }
+        
         function calculateLeadTime(startTimeString) {
             if (!startTimeString) return '-';
             const startTime = new Date(startTimeString);
             const now = new Date();
             let diff = now - startTime;
-
             if (isNaN(diff) || diff < 0) return 'Invalid Time';
-
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             diff -= days * (1000 * 60 * 60 * 24);
             const hours = Math.floor(diff / (1000 * 60 * 60));
             diff -= hours * (1000 * 60 * 60);
             const minutes = Math.floor(diff / (1000 * 60));
-
             let result = [];
             if (days > 0) result.push(`${days} Hari`);
             if (hours > 0) result.push(`${hours} Jam`);
             if (minutes > 0) result.push(`${minutes} Menit`);
-            
             return result.length > 0 ? result.join(' ') : 'Kurang dari semenit';
         }
         
@@ -643,7 +823,7 @@
             const now = new Date();
             const diff = now - startTime;
             if (isNaN(diff) || diff < 0) return 0;
-            return Math.floor(diff / (1000 * 60)); // Mengembalikan total menit
+            return Math.floor(diff / (1000 * 60));
         }
 
         function formatTanggalJam(isoString) {
@@ -727,6 +907,9 @@
 
                  if (document.getElementById('summaryReport').classList.contains('active')) {
                     renderSummaryReport();
+                 }
+                 if (document.getElementById('laporanInap').classList.contains('active')) {
+                    renderLaporanInap();
                  }
             }, (error) => console.error("Trucks Listener Error:", error));
 
@@ -908,14 +1091,14 @@
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             const totalTrucks = data.length;
-            const activeTrucks = data.filter(t => ['OTW MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'STORING'].includes(t.keterangan)).length;
             const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
             const totalAngkutan = [...new Set(data.map(t => t.angkutan).filter(Boolean))].length;
+            const activeTrucks = data.filter(t => ['OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
 
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
-            document.getElementById('available-truck-count').textContent = availableTrucks;
             document.getElementById('total-angkutan-count').textContent = totalAngkutan;
+            document.getElementById('available-truck-count').textContent = availableTrucks;
 
 
             const container = document.getElementById('status-details-grid');
@@ -969,10 +1152,9 @@
                 });
             }
 
-            // --- BARIS KODE BARU UNTUK CARD JENIS TRUK ---
             const jenisTruckContainer = document.getElementById('jenis-truck-details-grid');
             if (jenisTruckContainer) {
-                jenisTruckContainer.innerHTML = ''; // Hapus kartu sebelumnya
+                jenisTruckContainer.innerHTML = ''; 
 
                 const jenisTruckCounts = data.reduce((acc, truck) => {
                     const jenis = truck.jenis_mobil || 'Tanpa Jenis';
@@ -998,15 +1180,39 @@
                     jenisTruckContainer.appendChild(card);
                 });
             }
-            // --- AKHIR KODE BARU ---
         }
         
         function renderTruckList(dataToRender) {
             const tableBody = document.getElementById('truckTable').querySelector('tbody');
             tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) { tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
-            const sortedData = [...dataToRender].sort((a, b) => (a.angkutan || '').localeCompare(b.angkutan || ''));
-            sortedData.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
+            
+            if (!dataToRender || dataToRender.length === 0) { 
+                tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; 
+                return; 
+            }
+            
+            const groupedData = dataToRender.reduce((acc, truck) => {
+                const angkutan = truck.angkutan || 'Tanpa Angkutan';
+                if (!acc[angkutan]) {
+                    acc[angkutan] = [];
+                }
+                acc[angkutan].push(truck);
+                return acc;
+            }, {});
+
+            const sortedGroups = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
+
+            sortedGroups.forEach(groupName => {
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'group-header';
+                headerRow.innerHTML = `<td colspan="10" class="px-6 py-2">Angkutan: ${groupName} (${groupedData[groupName].length} Truk)</td>`;
+                tableBody.appendChild(headerRow);
+
+                const sortedTrucksInGroup = groupedData[groupName].sort((a, b) => (a.no_mobil || '').localeCompare(b.no_mobil || ''));
+                
+                sortedTrucksInGroup.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
+            });
+
             window.filterTable();
         }
 
@@ -1041,6 +1247,10 @@
             const tableBody = document.getElementById('truckTable').querySelector('tbody');
             const rows = tableBody.querySelectorAll('tr');
             rows.forEach(row => { 
+                if (row.classList.contains('group-header')) {
+                    row.style.display = ''; 
+                    return;
+                }
                 row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
             });
         }
@@ -1058,15 +1268,16 @@
                 tujuan: ""
             };
             if (!newTruck.angkutan || !newTruck.no_mobil || !newTruck.jenis_mobil) {
-                alert("Kolom Angkutan, Plat Nomor, dan Jenis Mobil wajib diisi.");
+                showErrorAlert("Input Tidak Lengkap", "Kolom Angkutan, Plat Nomor, dan Jenis Mobil wajib diisi.");
                 return;
             }
             try {
                 await addDoc(collection(db, `artifacts/${appId}/public/data/trucks`), newTruck);
                 window.toggleAddForm(true);
+                showSuccessAlert("Berhasil", `Truk ${newTruck.no_mobil} berhasil ditambahkan.`);
             } 
             catch (error) {
-                alert("Gagal menyimpan data baru.");
+                showErrorAlert("Gagal Menambahkan", "Gagal menyimpan data baru.");
                 console.error("Add truck error: ", error);
             }
         };
@@ -1077,9 +1288,13 @@
             const truck = window.trucksData.find(t => t.firestoreId === firestoreId); if (!truck) return;
             const createInput = (value, type = 'text') => `<input type="${type}" class="w-full p-2 border border-slate-300 rounded-lg" value="${value}">`;
             const createSelect = (options, selectedValue) => `<select class="w-full p-2 border border-slate-300 rounded-lg">${options.map(opt => `<option value="${opt}" ${opt === selectedValue ? 'selected' : ''}>${opt}</option>`).join('')}</select>`;
+            
+            const uniqueAngkutan = [...new Set(window.trucksData.map(t => t.angkutan).filter(Boolean))].sort();
+            
             row.querySelectorAll('td[data-field]').forEach(cell => {
                 const field = cell.dataset.field; const value = truck[field] || '';
-                if(field === 'jenis_mobil') cell.innerHTML = createSelect(window.jenisTruckData.map(j => j.name), value);
+                if(field === 'angkutan') cell.innerHTML = createSelect(uniqueAngkutan, value);
+                else if(field === 'jenis_mobil') cell.innerHTML = createSelect(window.jenisTruckData.map(j => j.name), value);
                 else if(field === 'keterangan') cell.innerHTML = createSelect(statusOptions, value);
                 else cell.innerHTML = createInput(value);
             });
@@ -1113,23 +1328,38 @@
                                 changedBy: currentUserData.name || 'Admin',
                                 timestamp: serverTimestamp()
                             });
+                            showSuccessAlert("Status Diperbarui", `Status truk ${docSnap.data().no_mobil} diubah dari ${oldStatus} ke ${newStatus}.`);
                         }
                     }
                 }
                 
                 await updateDoc(truckDocRef, updatedData); 
+                showSuccessAlert("Berhasil", `Data truk ${updatedData.no_mobil} berhasil disimpan.`);
 
             } catch (error) { 
                 console.error("Gagal menyimpan data atau membuat log:", error);
-                alert("Gagal menyimpan perubahan."); 
+                showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan data truk.");
             }
         };
 
         window.deleteTruck = async (firestoreId, noMobil) => {
-            if (confirm(`Yakin ingin menghapus truk ${noMobil}?`)) {
-                try { await deleteDoc(doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId)); }
-                catch (error) { alert("Gagal menghapus data."); }
-            }
+            showConfirmAlert(
+                "Konfirmasi Hapus",
+                `Yakin ingin menghapus truk ${noMobil}? Tindakan ini tidak dapat dibatalkan.`,
+                "Ya, Hapus!",
+                async (isConfirmed) => {
+                    if (isConfirmed) {
+                        try { 
+                            await deleteDoc(doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId));
+                            showSuccessAlert("Dihapus!", `Truk ${noMobil} telah berhasil dihapus.`);
+                        }
+                        catch (error) { 
+                            showErrorAlert("Gagal Menghapus", "Terjadi kesalahan saat menghapus data.");
+                            console.error("Delete truck error: ", error);
+                        }
+                    }
+                }
+            );
         };
         
         window.cancelEdit = () => renderTruckList(window.trucksData);
@@ -1252,7 +1482,7 @@
                 <div class="flex justify-between"><span class="text-slate-500">Keluar Bongkar:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.keluar_lokasi_bongkar)}</span></div>
             </div>`;
             
-            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
+            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
         }
         
         window.renderSummaryReport = function() {
@@ -1294,6 +1524,94 @@
             });
         }
         
+        function renderLaporanInap() {
+            const inapTrucks = window.trucksData.filter(truck => 
+                truck.keterangan === 'INAP' && truck.tiba_lokasi_bongkar
+            ).map(truck => {
+                const leadTimeMinutes = calculateLeadTimeInMinutes(truck.tiba_lokasi_bongkar);
+                return { 
+                    ...truck, 
+                    leadTimeMinutes: leadTimeMinutes,
+                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar)
+                };
+            }).sort((a, b) => b.leadTimeMinutes - a.leadTimeMinutes);
+
+            const customerTableBody = document.getElementById('inap-by-customer-table-body');
+            const grandTotalCell = document.getElementById('inap-grand-total');
+            customerTableBody.innerHTML = '';
+
+            const customerCityCounts = inapTrucks.reduce((acc, truck) => {
+                const customer = truck.customer || 'Customer Tidak Diketahui';
+                const city = truck.tujuan || 'Kota Tidak Diketahui';
+                const key = `${customer}|${city.toUpperCase()}`;
+                
+                if (!acc[key]) {
+                    acc[key] = { count: 0, displayCity: city, customerName: customer };
+                }
+                
+                acc[key].count += 1;
+                return acc;
+            }, {});
+
+            const sortedCustomers = Object.values(customerCityCounts).sort((a, b) => {
+                const nameComparison = a.customerName.localeCompare(b.customerName);
+                if (nameComparison !== 0) return nameComparison;
+                return b.count - a.count;
+            });
+            
+            let grandTotal = 0;
+
+            if (sortedCustomers.length === 0) {
+                customerTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-500">Tidak ada truk yang berstatus INAP saat ini.</td></tr>`;
+            } else {
+                sortedCustomers.forEach(item => {
+                    grandTotal += item.count;
+                    customerTableBody.innerHTML += `
+                        <tr class="bg-white border-b hover:bg-slate-50">
+                            <td class="px-4 py-3 font-medium">${item.customerName}</td>
+                            <td class="px-4 py-3">${item.displayCity}</td>
+                            <td class="px-4 py-3 text-center font-bold text-xl text-red-600">${item.count}</td>
+                        </tr>
+                    `;
+                });
+            }
+            grandTotalCell.textContent = grandTotal;
+
+            const LIMIT_3_DAYS = 3 * 24 * 60;
+            const LIMIT_6_DAYS = 6 * 24 * 60;
+            const LIMIT_9_DAYS = 9 * 24 * 60;
+
+            const categories = [
+                { id: 'less-3days', data: inapTrucks.filter(t => t.leadTimeMinutes < LIMIT_3_DAYS) },
+                { id: '3-6days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_3_DAYS && t.leadTimeMinutes < LIMIT_6_DAYS) },
+                { id: '6-9days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_6_DAYS && t.leadTimeMinutes < LIMIT_9_DAYS) },
+                { id: 'more-9days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_9_DAYS) }
+            ];
+
+            categories.forEach(cat => {
+                const tableBody = document.getElementById(`inap-table-${cat.id}`);
+                const totalSpan = document.getElementById(`total-${cat.id}`);
+                tableBody.innerHTML = '';
+                totalSpan.textContent = `(${cat.data.length} Truk)`;
+
+                if (cat.data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-500">Tidak ada truk di kategori ini.</td></tr>`;
+                } else {
+                    cat.data.forEach(truck => {
+                        tableBody.innerHTML += `
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium">${truck.no_mobil || '-'}</td>
+                                <td class="px-6 py-4">${truck.customer || '-'}</td>
+                                <td class="px-6 py-4">${truck.tujuan || '-'}</td>
+                                <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td>
+                                <td class="px-6 py-4 font-bold text-red-600">${truck.leadTimeFormatted}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+        }
+
         function renderModalTable(trucksToRender) {
             const modalList = document.getElementById('modal-truck-list');
             modalList.innerHTML = '';
@@ -1413,8 +1731,6 @@
             document.getElementById('log-modal').classList.add('hidden');
         };
         
-        // --- MASTER CUSTOMER CRUD FUNCTIONS ---
-
         function renderCustomerTable() {
             const tableBody = document.getElementById('customerTable').querySelector('tbody');
             tableBody.innerHTML = '';
@@ -1453,27 +1769,36 @@
             const customerNameInput = document.getElementById('newCustomerName');
             const customerName = customerNameInput.value.trim();
             if (!customerName) {
-                alert("Nama customer tidak boleh kosong.");
+                showErrorAlert("Input Tidak Lengkap", "Nama customer tidak boleh kosong.");
                 return;
             }
             try {
                 await addDoc(collection(db, "customers"), { name: customerName });
                 toggleAddCustomerForm(true);
+                showSuccessAlert("Berhasil", `Customer ${customerName} berhasil ditambahkan.`);
             } catch (error) {
                 console.error("Error adding customer: ", error);
-                alert("Gagal menambahkan customer baru.");
+                showErrorAlert("Gagal Menambahkan", "Gagal menambahkan customer baru.");
             }
         };
 
         window.deleteCustomer = async (id, name) => {
-            if (confirm(`Yakin ingin menghapus customer "${name}"?`)) {
-                try {
-                    await deleteDoc(doc(db, "customers", id));
-                } catch (error) {
-                    console.error("Error deleting customer: ", error);
-                    alert("Gagal menghapus customer.");
+            showConfirmAlert(
+                "Konfirmasi Hapus",
+                `Yakin ingin menghapus customer "${name}"?`,
+                "Ya, Hapus!",
+                async (isConfirmed) => {
+                    if (isConfirmed) {
+                        try {
+                            await deleteDoc(doc(db, "customers", id));
+                            showSuccessAlert("Dihapus!", `Customer ${name} telah berhasil dihapus.`);
+                        } catch (error) {
+                            console.error("Error deleting customer: ", error);
+                            showErrorAlert("Gagal Menghapus", "Gagal menghapus customer.");
+                        }
+                    }
                 }
-            }
+            );
         };
 
         window.editCustomer = (id) => {
@@ -1500,14 +1825,15 @@
             const newName = input.value.trim();
 
             if (!newName) {
-                alert("Nama customer tidak boleh kosong.");
+                showErrorAlert("Input Tidak Lengkap", "Nama customer tidak boleh kosong.");
                 return;
             }
             try {
                 await updateDoc(doc(db, "customers", id), { name: newName });
+                showSuccessAlert("Berhasil", `Nama customer berhasil diubah.`);
             } catch (error) {
                 console.error("Error updating customer: ", error);
-                alert("Gagal menyimpan perubahan.");
+                showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan.");
             }
         };
 
@@ -1526,9 +1852,7 @@
                 }
             });
         }
-        // --- END MASTER CUSTOMER FUNCTIONS ---
 
-        // --- MASTER JENIS TRUCK CRUD FUNCTIONS ---
         function renderJenisTruckTable() {
             const tableBody = document.getElementById('jenisTruckTable').querySelector('tbody');
             tableBody.innerHTML = '';
@@ -1567,27 +1891,36 @@
             const jenisTruckNameInput = document.getElementById('newJenisTruckName');
             const jenisTruckName = jenisTruckNameInput.value.trim().toUpperCase();
             if (!jenisTruckName) {
-                alert("Nama jenis truck tidak boleh kosong.");
+                showErrorAlert("Input Tidak Lengkap", "Nama jenis truck tidak boleh kosong.");
                 return;
             }
             try {
                 await addDoc(collection(db, "jenis_truck"), { name: jenisTruckName });
                 toggleAddJenisTruckForm(true);
+                showSuccessAlert("Berhasil", `Jenis truck ${jenisTruckName} berhasil ditambahkan.`);
             } catch (error) {
                 console.error("Error adding jenis truck: ", error);
-                alert("Gagal menambahkan jenis truck baru.");
+                showErrorAlert("Gagal Menambahkan", "Gagal menambahkan jenis truck baru.");
             }
         };
 
         window.deleteJenisTruck = async (id, name) => {
-            if (confirm(`Yakin ingin menghapus jenis truck "${name}"?`)) {
-                try {
-                    await deleteDoc(doc(db, "jenis_truck", id));
-                } catch (error) {
-                    console.error("Error deleting jenis truck: ", error);
-                    alert("Gagal menghapus jenis truck.");
+            showConfirmAlert(
+                "Konfirmasi Hapus",
+                `Yakin ingin menghapus jenis truck "${name}"?`,
+                "Ya, Hapus!",
+                async (isConfirmed) => {
+                    if (isConfirmed) {
+                        try {
+                            await deleteDoc(doc(db, "jenis_truck", id));
+                            showSuccessAlert("Dihapus!", `Jenis truck ${name} telah berhasil dihapus.`);
+                        } catch (error) {
+                            console.error("Error deleting jenis truck: ", error);
+                            showErrorAlert("Gagal Menghapus", "Gagal menghapus jenis truck.");
+                        }
+                    }
                 }
-            }
+            );
         };
 
         window.editJenisTruck = (id) => {
@@ -1610,14 +1943,15 @@
             const input = row.querySelector('td[data-field="name"] input');
             const newName = input.value.trim().toUpperCase();
             if (!newName) {
-                alert("Nama jenis truck tidak boleh kosong.");
+                showErrorAlert("Input Tidak Lengkap", "Nama jenis truck tidak boleh kosong.");
                 return;
             }
             try {
                 await updateDoc(doc(db, "jenis_truck", id), { name: newName });
+                showSuccessAlert("Berhasil", `Nama jenis truck berhasil diubah.`);
             } catch (error) {
                 console.error("Error updating jenis truck: ", error);
-                alert("Gagal menyimpan perubahan.");
+                showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan.");
             }
         };
 
@@ -1636,7 +1970,6 @@
                 }
             });
         }
-        // --- END MASTER JENIS TRUCK FUNCTIONS ---
 
         let currentFilterColumn = null;
 
@@ -1874,10 +2207,20 @@
 
         function updateRealTimeClock() {
             const clockElement = document.getElementById('export-timestamp');
+            const summaryInapTitle = document.getElementById('summary-inap-title');
+
+            const now = new Date();
+            
             if (clockElement) {
-                const now = new Date();
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
                 clockElement.textContent = now.toLocaleString('id-ID', options);
+            }
+
+            if (summaryInapTitle && document.getElementById('laporanInap').classList.contains('active')) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const dateString = now.toLocaleDateString('id-ID', options).toUpperCase();
+                const timeString = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/\./g, ':');
+                summaryInapTitle.textContent = `SUMMARY INAP PER CUSTOMER & KOTA - ${dateString} pkl ${timeString}`;
             }
         }
 
@@ -1936,53 +2279,65 @@
                 });
             }
 
-            const header1 = ["No", "ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
-            if (showLeadTimeColumn) header1.push("LEAD TIME");
-            const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
-            if (showLeadTimeColumn) header2.push(null);
-            
-            const body = filteredData.map((truck, index) => {
-                const row = [
-                    index + 1,
-                    truck.angkutan || '-', truck.fo || '-',
-                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
-                ];
-                if (showLeadTimeColumn) {
-                    row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
-                }
-                return row;
-            });
-
-            const dataToExport = [header1, header2, ...body];
-            const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+            let worksheet;
+            const workbook = XLSX.utils.book_new();
 
             if (showLeadTimeColumn) {
-                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
-                const cellStyle = { alignment: { horizontal: "center", vertical: "center" } };
-                Object.keys(worksheet).forEach(cellRef => {
-                    if (cellRef.startsWith('!')) return;
-                    const cell = worksheet[cellRef];
-                    const address = XLSX.utils.decode_cell(cellRef);
-                    if (address.r < 2) { cell.s = headerStyle; } 
-                    else { cell.s = cellStyle; }
+                const header = ["No", "ANGKUTAN", "FO", "TIBA LOKASI MUAT", "KELUAR LOKASI MUAT", "TIBA LOKASI BONGKAR", "KELUAR LOKASI BONGKAR", "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK", "LEAD TIME"];
+                
+                const body = filteredData.map((truck, index) => {
+                    return [
+                        index + 1,
+                        truck.angkutan || '-', truck.fo || '-',
+                        formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                        formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                        truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                        truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-',
+                        calculateLeadTime(truck.tiba_lokasi_bongkar)
+                    ];
                 });
+
+                const dataToExport = [header, ...body];
+                worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+
+                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const address = XLSX.utils.encode_cell({ r: 0, c: C });
+                    if (worksheet[address]) {
+                        worksheet[address].s = headerStyle;
+                    }
+                }
+
+            } else {
+                const header1 = ["No", "ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
+                const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
+                
+                const body = filteredData.map((truck, index) => {
+                    return [
+                        index + 1,
+                        truck.angkutan || '-', truck.fo || '-',
+                        formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                        formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                        truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                        truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                    ];
+                });
+
+                const dataToExport = [header1, header2, ...body];
+                worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+                
+                const merges = [
+                    { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
+                    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
+                    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
+                    { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
+                    { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
+                    { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
+                ];
+                worksheet['!merges'] = merges;
             }
 
-            const merges = [
-                { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
-                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
-                { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
-                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
-                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
-                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
-            ];
-            if (showLeadTimeColumn) merges.push({ s: { r: 0, c: 14 }, e: { r: 1, c: 14 } });
-            worksheet['!merges'] = merges;
-            
-            const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Summary Status Truck");
             const filename = `Summary_Status_Truck_${angkutanName}_${getFilenameTimestamp()}.xlsx`;
             XLSX.writeFile(workbook, filename);
@@ -2196,7 +2551,7 @@
                 link.click();
             } catch (error) {
                 console.error("Gagal membuat gambar:", error);
-                alert("Terjadi kesalahan saat membuat gambar laporan.");
+                showErrorAlert("Gagal Membuat Gambar", "Terjadi kesalahan saat membuat gambar laporan.");
             } finally {
                 document.body.removeChild(screenshotContainer);
             }
@@ -2222,8 +2577,58 @@
             const filename = `Laporan_Ritase_Admin_${getFilenameTimestamp()}.pdf`;
             doc.save(filename);
         };
+        
+        window.exportInapTableAsImage = async (tableId, defaultTitle) => {
+            const tableToExport = document.getElementById(tableId);
 
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
+            if (!tableToExport || tableToExport.tagName !== 'TABLE') {
+                showErrorAlert("Gagal", `Elemen tabel dengan ID '${tableId}' tidak ditemukan.`);
+                return;
+            }
+
+            let fullTitle = defaultTitle;
+
+            const headerContainer = tableToExport.closest('.bg-white.p-6')?.querySelector('.flex.justify-between');
+            if (headerContainer) {
+                const h4Element = headerContainer.querySelector('h4');
+                if (h4Element) {
+                    fullTitle = h4Element.innerText.trim();
+                }
+            }
+            
+            const filenamePrefix = defaultTitle.replace(/[\s:<>|/]/g, '_').replace(/_+/g, '_');
+
+            const screenshotContainer = document.createElement('div');
+            screenshotContainer.style.position = 'absolute';
+            screenshotContainer.style.left = '-9999px';
+            screenshotContainer.style.top = '0';
+            screenshotContainer.style.padding = '1.5rem';
+            screenshotContainer.style.backgroundColor = 'white';
+            screenshotContainer.style.width = 'fit-content';
+            screenshotContainer.style.border = '1px solid #e2e8f0';
+            screenshotContainer.style.fontFamily = "'Inter', sans-serif";
+            
+            screenshotContainer.innerHTML = `<div style="margin-bottom: 1rem;"><h4 style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">${fullTitle}</h4></div>`;
+
+            const tableClone = tableToExport.cloneNode(true);
+            screenshotContainer.appendChild(tableClone);
+            document.body.appendChild(screenshotContainer);
+
+            try {
+                const canvas = await html2canvas(screenshotContainer, { scale: 2, useCORS: true });
+                const link = document.createElement('a');
+                link.download = `${filenamePrefix}_${getFilenameTimestamp()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            } catch (error) {
+                console.error("Gagal membuat gambar:", error);
+                showErrorAlert("Gagal Membuat Gambar", "Terjadi kesalahan saat membuat gambar laporan.");
+            } finally {
+                document.body.removeChild(screenshotContainer);
+            }
+        };
+
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', laporanInap: 'Summary Inap', logHistory: 'Riwayat Log' };
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(contentId).classList.add('active');
@@ -2236,13 +2641,31 @@
             if (contentId === 'logHistory') fetchAndRenderLogs();
             if (contentId === 'masterCustomer') renderCustomerTable();
             if (contentId === 'masterJenisTruck') renderJenisTruckTable();
+            if (contentId === 'laporanInap') renderLaporanInap();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             setInterval(updateRealTimeClock, 1000);
             document.getElementById('copyright-year-login-admin').textContent = new Date().getFullYear();
-            document.getElementById('loginButton').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => document.getElementById('loginError').textContent = 'Email atau password salah.'));
-            document.getElementById('logoutButton').addEventListener('click', () => signOut(auth));
+            
+            document.getElementById('loginButton').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => {
+                document.getElementById('loginError').textContent = 'Email atau password salah.';
+                showErrorAlert('Login Gagal', 'Email atau password salah.');
+            }));
+            
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                showConfirmAlert(
+                    "Konfirmasi Logout", 
+                    "Apakah Anda yakin ingin keluar?", 
+                    "Ya, Logout", 
+                    (isConfirmed) => {
+                        if (isConfirmed) {
+                            signOut(auth);
+                        }
+                    }
+                );
+            });
+            
             document.getElementById('copyright-year').textContent = new Date().getFullYear();
             
             document.getElementById('applyDateFilterBtn').addEventListener('click', applyRitaseFiltersAndSort);
