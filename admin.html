@@ -80,6 +80,11 @@
             top: 0;
             z-index: 10;
         }
+        .pagination-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -162,10 +167,6 @@
                     </a>
                     <a href="#" id="nav-laporanInap" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('laporanInap')">
                         <i class="fas fa-bed w-6 text-center"></i><span class="ml-3">Summary Inap</span>
-                    </a>
-
-                    <a href="#" id="nav-logHistory" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('logHistory')">
-                        <i class="fas fa-history w-6 text-center"></i><span class="ml-3">Riwayat Log</span>
                     </a>
                 </nav>
             </aside>
@@ -302,6 +303,7 @@
                                 <tbody></tbody>
                             </table>
                         </div>
+                        <div id="truckTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
 
                     <div id="masterCustomer" class="content-section">
@@ -335,6 +337,7 @@
                                 <tbody></tbody>
                             </table>
                         </div>
+                        <div id="customerTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
 
                     <div id="masterJenisTruck" class="content-section">
@@ -368,6 +371,7 @@
                                 <tbody></tbody>
                             </table>
                         </div>
+                         <div id="jenisTruckTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
 
                     <div id="ritaseTruck" class="content-section">
@@ -416,6 +420,7 @@
                                 <tbody id="ritaseTableBody"></tbody>
                             </table>
                         </div>
+                        <div id="ritaseTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
 
                     <div id="summaryReport" class="content-section">
@@ -602,54 +607,6 @@
                         </div>
                     </div>
 
-                    <div id="logHistory" class="content-section">
-                        <div class="bg-white p-4 rounded-xl shadow-md mb-6">
-                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Riwayat Log</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                                <div>
-                                    <label for="logStartDate" class="block text-sm font-medium text-slate-600 mb-1">Dari Tanggal</label>
-                                    <input type="date" id="logStartDate" class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                                <div>
-                                    <label for="logEndDate" class="block text-sm font-medium text-slate-600 mb-1">Sampai Tanggal</label>
-                                    <input type="date" id="logEndDate" class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                                <div class="md:col-span-2">
-                                     <label for="logSearchInput" class="block text-sm font-medium text-slate-600 mb-1">Cari (Plat, Angkutan, Pengubah)</label>
-                                     <input type="text" id="logSearchInput" placeholder="Masukkan kata kunci..." class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                            </div>
-                             <div class="flex justify-end gap-2 mt-4">
-                                <button id="applyLogFilterBtn" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700">
-                                    <i class="fas fa-filter mr-2"></i>Filter
-                                </button>
-                                <button id="resetLogFilterBtn" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300">
-                                    Reset
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end items-center gap-2 mb-4">
-                            <button onclick="window.exportLogsToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
-                                <i class="fas fa-file-excel"></i> Export Excel
-                            </button>
-                        </div>
-                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-                            <table id="logHistoryTable" class="w-full text-sm text-left text-slate-600">
-                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-                                    <tr>
-                                        <th class="px-6 py-3">Waktu</th>
-                                        <th class="px-6 py-3">Plat Nomor</th>
-                                        <th class="px-6 py-3">Angkutan</th>
-                                        <th class="px-6 py-3">Status Lama</th>
-                                        <th class="px-6 py-3">Status Baru</th>
-                                        <th class="px-6 py-3">Diubah Oleh</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="logHistoryTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
                 </main>
                 <footer class="text-center p-4 text-sm text-slate-500 mt-auto bg-white border-t">&copy; <span id="copyright-year"></span> Jagaddhita Arya Koswara - Logistik IKK</footer>
             </div>
@@ -744,7 +701,6 @@
         window.customersData = [];
         window.jenisTruckData = [];
         window.allRitaseData = [];
-        window.allLogData = [];
         let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         
         let currentModalTrucks = [];
@@ -759,6 +715,15 @@
         const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
         const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'MUAT': 'bg-blue-100 text-blue-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
         
+        // PAGINATION STATE
+        let paginationState = {
+            listTruck: { currentPage: 1, filteredData: [] },
+            masterCustomer: { currentPage: 1, filteredData: [] },
+            masterJenisTruck: { currentPage: 1, filteredData: [] },
+            ritaseTruck: { currentPage: 1, filteredData: [] }
+        };
+        const rowsPerPage = 15;
+
         function showSuccessAlert(title, text) {
             Swal.fire({
                 icon: 'success',
@@ -826,6 +791,15 @@
             return Math.floor(diff / (1000 * 60));
         }
 
+        function calculateLeadTimeInDays(startTimeString) {
+            if (!startTimeString) return 0;
+            const startTime = new Date(startTimeString);
+            const now = new Date();
+            const diff = now - startTime; // difference in milliseconds
+            if (isNaN(diff) || diff < 0) return 0;
+            return diff / (1000 * 60 * 60 * 24); // Convert ms to days
+        }
+
         function formatTanggalJam(isoString) {
             if (!isoString || !isoString.includes('T')) { return '-'; }
             const [tanggalPart, jamPart] = isoString.split('T');
@@ -865,52 +839,94 @@
                 document.getElementById('login-container').classList.remove('hidden');
             }
         });
+
+        function renderPagination(containerId, pageStateKey, renderFunction) {
+            const container = document.getElementById(containerId);
+            const { currentPage, filteredData } = paginationState[pageStateKey];
+            container.innerHTML = '';
+            
+            const totalItems = filteredData.length;
+            if (totalItems <= rowsPerPage) return;
+
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+            const createButton = (text, page, disabled = false) => {
+                const button = document.createElement('button');
+                button.innerHTML = text;
+                button.disabled = disabled;
+                button.className = `pagination-btn px-3 py-1 border rounded-md text-sm font-medium transition ${disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white hover:bg-slate-50'}`;
+                
+                if (page === currentPage && text !== '...' && !String(text).includes('i')) {
+                    button.classList.add('active');
+                }
+                
+                button.onclick = () => {
+                    paginationState[pageStateKey].currentPage = page;
+                    renderFunction();
+                };
+                return button;
+            };
+
+            // Previous button
+            container.appendChild(createButton('<i class="fas fa-chevron-left"></i>', currentPage - 1, currentPage === 1));
+
+            // Page numbers
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) {
+                    container.appendChild(createButton(i, i));
+                }
+            } else {
+                container.appendChild(createButton(1, 1));
+                if (currentPage > 3) container.appendChild(createButton('...', currentPage - 2, true));
+                
+                let startPage = Math.max(2, currentPage - 1);
+                let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+                if (currentPage <= 3) {
+                    endPage = 4;
+                }
+                if (currentPage >= totalPages - 2) {
+                    startPage = totalPages - 3;
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    container.appendChild(createButton(i, i));
+                }
+
+                if (currentPage < totalPages - 2) container.appendChild(createButton('...', currentPage + 2, true));
+                container.appendChild(createButton(totalPages, totalPages));
+            }
+
+            // Next button
+            container.appendChild(createButton('<i class="fas fa-chevron-right"></i>', currentPage + 1, currentPage === totalPages));
+        }
         
         function setupRealtimeListeners() {
             if (!currentUserData) return;
             
             const trucksCollectionRef = collection(db, `artifacts/${appId}/public/data/trucks`);
             unsubscribeFromTrucks = onSnapshot(trucksCollectionRef, (snapshot) => {
-                 let needsFullRender = window.trucksData.length !== snapshot.size;
-                 snapshot.docChanges().forEach((change) => {
-                     const truckData = { ...change.doc.data(), firestoreId: change.doc.id };
-                     const index = window.trucksData.findIndex(t => t.firestoreId === change.doc.id);
-                     if (change.type === "added") {
-                         if (index === -1) window.trucksData.push(truckData);
-                         needsFullRender = true;
-                     }
-                     if (change.type === "modified") {
-                         if (index > -1) {
-                            window.trucksData[index] = truckData;
-                            updateTableRow(truckData);
-                            updateStatusCard(truckData);
-                         } else {
-                            needsFullRender = true;
-                         }
-                     }
-                     if (change.type === "removed") {
-                         if (index > -1) window.trucksData.splice(index, 1);
-                         needsFullRender = true;
-                     }
-                 });
+                window.trucksData = snapshot.docs.map(doc => ({ ...doc.data(), firestoreId: doc.id }));
 
-                 renderHomePage(window.trucksData);
-
-                 if (needsFullRender) { 
-                    renderTruckList(window.trucksData); 
-                    displayStatusCards(); 
-                 }
-                 
-                 populateSummaryFilters();
-                 populateStatusCardFilters();
-                 populateAddFormVendorSelect();
-
-                 if (document.getElementById('summaryReport').classList.contains('active')) {
+                renderHomePage(window.trucksData);
+                
+                if (document.getElementById('listTruck').classList.contains('active')) {
+                    filterTable();
+                }
+                if (document.getElementById('statusTruck').classList.contains('active')) {
+                    displayStatusCards();
+                }
+                if (document.getElementById('summaryReport').classList.contains('active')) {
                     renderSummaryReport();
-                 }
-                 if (document.getElementById('laporanInap').classList.contains('active')) {
+                }
+                if (document.getElementById('laporanInap').classList.contains('active')) {
                     renderLaporanInap();
-                 }
+                }
+                 
+                populateSummaryFilters();
+                populateStatusCardFilters();
+                populateAddFormVendorSelect();
+
             }, (error) => console.error("Trucks Listener Error:", error));
 
             const ritaseCollectionRef = collection(db, "completed_deliveries");
@@ -926,7 +942,7 @@
             unsubscribeFromCustomers = onSnapshot(query(customersCollectionRef, orderBy("name")), (snapshot) => {
                 window.customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if(document.getElementById('masterCustomer').classList.contains('active')) {
-                    renderCustomerTable();
+                    filterCustomerTable();
                 }
             }, (error) => console.error("Customer Listener Error:", error));
 
@@ -934,7 +950,7 @@
             unsubscribeFromJenisTruck = onSnapshot(query(jenisTruckCollectionRef, orderBy("name")), (snapshot) => {
                 window.jenisTruckData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 if(document.getElementById('masterJenisTruck').classList.contains('active')) {
-                    renderJenisTruckTable();
+                    filterJenisTruckTable();
                 }
                 populateJenisTruckDropdowns();
                 populateSummaryFilters();
@@ -1182,38 +1198,25 @@
             }
         }
         
-        function renderTruckList(dataToRender) {
+        function renderTruckList() {
             const tableBody = document.getElementById('truckTable').querySelector('tbody');
             tableBody.innerHTML = '';
+
+            const { currentPage, filteredData } = paginationState.listTruck;
             
-            if (!dataToRender || dataToRender.length === 0) { 
+            if (!filteredData || filteredData.length === 0) { 
                 tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; 
+                renderPagination('truckTablePagination', 'listTruck', renderTruckList);
                 return; 
             }
             
-            const groupedData = dataToRender.reduce((acc, truck) => {
-                const angkutan = truck.angkutan || 'Tanpa Angkutan';
-                if (!acc[angkutan]) {
-                    acc[angkutan] = [];
-                }
-                acc[angkutan].push(truck);
-                return acc;
-            }, {});
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
 
-            const sortedGroups = Object.keys(groupedData).sort((a, b) => a.localeCompare(b));
-
-            sortedGroups.forEach(groupName => {
-                const headerRow = document.createElement('tr');
-                headerRow.className = 'group-header';
-                headerRow.innerHTML = `<td colspan="10" class="px-6 py-2">Angkutan: ${groupName} (${groupedData[groupName].length} Truk)</td>`;
-                tableBody.appendChild(headerRow);
-
-                const sortedTrucksInGroup = groupedData[groupName].sort((a, b) => (a.no_mobil || '').localeCompare(b.no_mobil || ''));
-                
-                sortedTrucksInGroup.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
-            });
-
-            window.filterTable();
+            paginatedData.forEach(truck => tableBody.appendChild(createTableRow(truck)));
+            
+            renderPagination('truckTablePagination', 'listTruck', renderTruckList);
         }
 
         function createTableRow(truck) {
@@ -1244,15 +1247,14 @@
 
         window.filterTable = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const tableBody = document.getElementById('truckTable').querySelector('tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => { 
-                if (row.classList.contains('group-header')) {
-                    row.style.display = ''; 
-                    return;
-                }
-                row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
-            });
+            
+            const filtered = window.trucksData.filter(truck => 
+                Object.values(truck).some(val => String(val).toLowerCase().includes(searchTerm))
+            );
+
+            paginationState.listTruck.filteredData = filtered.sort((a,b) => (a.angkutan || '').localeCompare(b.angkutan || ''));
+            paginationState.listTruck.currentPage = 1;
+            renderTruckList();
         }
         
         window.addTruck = async function() {
@@ -1362,7 +1364,7 @@
             );
         };
         
-        window.cancelEdit = () => renderTruckList(window.trucksData);
+        window.cancelEdit = () => filterTable();
 
         window.toggleAddForm = (forceClose = false) => {
             const form = document.getElementById('addForm');
@@ -1554,9 +1556,11 @@
             }, {});
 
             const sortedCustomers = Object.values(customerCityCounts).sort((a, b) => {
-                const nameComparison = a.customerName.localeCompare(b.customerName);
-                if (nameComparison !== 0) return nameComparison;
-                return b.count - a.count;
+                const countComparison = b.count - a.count;
+                if (countComparison !== 0) {
+                    return countComparison;
+                }
+                return a.customerName.localeCompare(b.customerName);
             });
             
             let grandTotal = 0;
@@ -1734,11 +1738,20 @@
         function renderCustomerTable() {
             const tableBody = document.getElementById('customerTable').querySelector('tbody');
             tableBody.innerHTML = '';
-            if (window.customersData.length === 0) {
+            
+            const { currentPage, filteredData } = paginationState.masterCustomer;
+
+            if (filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-8 text-slate-500">Belum ada data customer.</td></tr>`;
+                renderPagination('customerTablePagination', 'masterCustomer', renderCustomerTable);
                 return;
             }
-            window.customersData.forEach(customer => {
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach(customer => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 row.setAttribute('data-id', customer.id);
@@ -1751,7 +1764,8 @@
                 `;
                 tableBody.appendChild(row);
             });
-            filterCustomerTable();
+
+            renderPagination('customerTablePagination', 'masterCustomer', renderCustomerTable);
         }
 
         window.toggleAddCustomerForm = (forceClose = false) => {
@@ -1838,29 +1852,33 @@
         };
 
         window.cancelCustomerEdit = () => {
-            renderCustomerTable();
+            filterCustomerTable();
         };
         
         window.filterCustomerTable = function() {
             const searchTerm = document.getElementById('customerSearchInput').value.toLowerCase();
-            const tableBody = document.getElementById('customerTable').querySelector('tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => { 
-                const nameCell = row.querySelector('td[data-field="name"]');
-                if (nameCell) {
-                    row.style.display = nameCell.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
-                }
-            });
+            paginationState.masterCustomer.filteredData = window.customersData.filter(c => c.name.toLowerCase().includes(searchTerm));
+            paginationState.masterCustomer.currentPage = 1;
+            renderCustomerTable();
         }
 
         function renderJenisTruckTable() {
             const tableBody = document.getElementById('jenisTruckTable').querySelector('tbody');
             tableBody.innerHTML = '';
-            if (window.jenisTruckData.length === 0) {
+
+            const { currentPage, filteredData } = paginationState.masterJenisTruck;
+
+            if (filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="2" class="text-center p-8 text-slate-500">Belum ada data jenis truck.</td></tr>`;
+                renderPagination('jenisTruckTablePagination', 'masterJenisTruck', renderJenisTruckTable);
                 return;
             }
-            window.jenisTruckData.forEach(jenis => {
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach(jenis => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 row.setAttribute('data-id', jenis.id);
@@ -1873,7 +1891,7 @@
                 `;
                 tableBody.appendChild(row);
             });
-            filterJenisTruckTable();
+            renderPagination('jenisTruckTablePagination', 'masterJenisTruck', renderJenisTruckTable);
         }
 
         window.toggleAddJenisTruckForm = (forceClose = false) => {
@@ -1956,19 +1974,14 @@
         };
 
         window.cancelJenisTruckEdit = () => {
-            renderJenisTruckTable();
+            filterJenisTruckTable();
         };
         
         window.filterJenisTruckTable = function() {
             const searchTerm = document.getElementById('jenisTruckSearchInput').value.toLowerCase();
-            const tableBody = document.getElementById('jenisTruckTable').querySelector('tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => { 
-                const nameCell = row.querySelector('td[data-field="name"]');
-                if (nameCell) {
-                    row.style.display = nameCell.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
-                }
-            });
+            paginationState.masterJenisTruck.filteredData = window.jenisTruckData.filter(j => j.name.toLowerCase().includes(searchTerm));
+            paginationState.masterJenisTruck.currentPage = 1;
+            renderJenisTruckTable();
         }
 
         let currentFilterColumn = null;
@@ -2040,14 +2053,23 @@
             closeFilterPopup();
         }
 
-        function displayRitaseTable(dataToRender) {
+        function displayRitaseTable() {
             const tableBody = document.getElementById('ritaseTableBody');
             tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) {
+
+            const { currentPage, filteredData } = paginationState.ritaseTruck;
+            
+            if (!filteredData || filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
+                renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
                 return;
             }
-            dataToRender.forEach(data => {
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach(data => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 const formattedDate = data.timestamp_selesai?.toDate() 
@@ -2064,6 +2086,7 @@
                 `;
                 tableBody.appendChild(row);
             });
+            renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
         }
 
         function applyRitaseFiltersAndSort() {
@@ -2107,86 +2130,11 @@
                 return ritaseSort.direction === 'asc' ? comparison : -comparison;
             });
 
-            displayRitaseTable(filtered);
+            paginationState.ritaseTruck.filteredData = filtered;
+            paginationState.ritaseTruck.currentPage = 1;
+            displayRitaseTable();
         }
         
-        async function fetchAndRenderLogs() {
-            const tableBody = document.getElementById('logHistoryTableBody');
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data log...</td></tr>`;
-            try {
-                const logsRef = collection(db, "truck_status_logs");
-                const q = query(logsRef, orderBy("timestamp", "desc"));
-                const querySnapshot = await getDocs(q);
-                window.allLogData = querySnapshot.docs.map(doc => ({...doc.data(), docId: doc.id}));
-                applyLogFiltersAndSort();
-            } catch (error) {
-                console.error("Gagal memuat data log:", error);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Gagal memuat data log.</td></tr>`;
-            }
-        }
-
-        function applyLogFiltersAndSort() {
-            let filtered = [...window.allLogData];
-            const startDateString = document.getElementById('logStartDate').value;
-            const endDateString = document.getElementById('logEndDate').value;
-            const searchTerm = document.getElementById('logSearchInput').value.toLowerCase();
-
-            if (startDateString || endDateString) {
-                const startDate = startDateString ? new Date(startDateString) : null;
-                const endDate = endDateString ? new Date(endDateString) : null;
-                if(startDate) startDate.setHours(0, 0, 0, 0);
-                if(endDate) endDate.setHours(23, 59, 59, 999);
-
-                filtered = filtered.filter(item => {
-                    if (!item.timestamp || !item.timestamp.toDate) return false;
-                    const itemDate = item.timestamp.toDate();
-                    if (startDate && itemDate < startDate) return false;
-                    if (endDate && itemDate > endDate) return false;
-                    return true;
-                });
-            }
-
-            if (searchTerm) {
-                filtered = filtered.filter(log => {
-                    return (log.plat_nomor?.toLowerCase().includes(searchTerm) || 
-                            log.angkutanName?.toLowerCase().includes(searchTerm) || 
-                            log.changedBy?.toLowerCase().includes(searchTerm));
-                });
-            }
-            
-            displayLogTable(filtered);
-        }
-        
-        function displayLogTable(dataToRender) {
-            const tableBody = document.getElementById('logHistoryTableBody');
-            tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Tidak ada data log yang cocok.</td></tr>`;
-                return;
-            }
-            dataToRender.forEach(log => {
-                const timestamp = log.timestamp?.toDate() ? log.timestamp.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : '-';
-                const row = `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="px-6 py-4">${timestamp}</td>
-                        <td class="px-6 py-4 font-medium">${log.plat_nomor || '-'}</td>
-                        <td class="px-6 py-4">${log.angkutanName || '-'}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.oldStatus] || ''}">${log.oldStatus || '-'}</span></td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.newStatus] || ''}">${log.newStatus || '-'}</span></td>
-                        <td class="px-6 py-4">${log.changedBy || '-'}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-
-        window.exportLogsToExcel = () => {
-            const table = document.getElementById('logHistoryTable');
-            const workbook = XLSX.utils.table_to_book(table, {sheet: "Riwayat Log"});
-            const filename = `Riwayat_Log_Status_Truck_${getFilenameTimestamp()}.xlsx`;
-            XLSX.writeFile(workbook, filename);
-        };
-
         window.sortRitaseTable = (column) => {
             if (ritaseSort.column === column) {
                 ritaseSort.direction = ritaseSort.direction === 'asc' ? 'desc' : 'asc';
@@ -2261,83 +2209,77 @@
 
             if (showLeadTimeColumn) {
                 filteredData.sort((a, b) => {
-                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
-                    const statusA = statusPriority[a.keterangan] || 3;
-                    const statusB = statusPriority[b.keterangan] || 3;
-                    const statusComp = statusA - statusB;
-                    if (statusComp !== 0) return statusComp;
-
-                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
-                    if (customerComp !== 0) return customerComp;
-
-                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
-                    if (cityComp !== 0) return cityComp;
-                    
                     const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
                     const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
                     return leadTimeB - leadTimeA;
                 });
             }
 
-            let worksheet;
-            const workbook = XLSX.utils.book_new();
-
-            if (showLeadTimeColumn) {
-                const header = ["No", "ANGKUTAN", "FO", "TIBA LOKASI MUAT", "KELUAR LOKASI MUAT", "TIBA LOKASI BONGKAR", "KELUAR LOKASI BONGKAR", "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK", "LEAD TIME"];
-                
-                const body = filteredData.map((truck, index) => {
-                    return [
-                        index + 1,
-                        truck.angkutan || '-', truck.fo || '-',
-                        formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                        formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                        truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                        truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-',
-                        calculateLeadTime(truck.tiba_lokasi_bongkar)
-                    ];
-                });
-
-                const dataToExport = [header, ...body];
-                worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
-
-                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const address = XLSX.utils.encode_cell({ r: 0, c: C });
-                    if (worksheet[address]) {
-                        worksheet[address].s = headerStyle;
-                    }
-                }
-
-            } else {
-                const header1 = ["No", "ANGKUTAN", "FO", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
-                const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
-                
-                const body = filteredData.map((truck, index) => {
-                    return [
-                        index + 1,
-                        truck.angkutan || '-', truck.fo || '-',
-                        formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                        formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                        truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                        truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
-                    ];
-                });
-
-                const dataToExport = [header1, header2, ...body];
-                worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
-                
-                const merges = [
-                    { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
-                    { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
-                    { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
-                    { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
-                    { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
-                    { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
+            const header1 = ["No", "ANGKUTAN", "FO/DN", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
+            if (showLeadTimeColumn) header1.push("LEAD TIME");
+            const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
+            if (showLeadTimeColumn) header2.push(null);
+            
+            const body = filteredData.map((truck, index) => {
+                const row = [
+                    index + 1, truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
-                worksheet['!merges'] = merges;
+                if (showLeadTimeColumn) {
+                    row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
+                }
+                return row;
+            });
+
+            const dataToExport = [header1, header2, ...body];
+            const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+            
+            const merges = [
+                { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
+                { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
+                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
+                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
+                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
+            ];
+            if (showLeadTimeColumn) merges.push({ s: { r: 0, c: 14 }, e: { r: 1, c: 14 } });
+            worksheet['!merges'] = merges;
+            
+            if (isInapMode) {
+                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
+                // Style header
+                header1.forEach((_, colIndex) => {
+                    const address1 = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+                    const address2 = XLSX.utils.encode_cell({ r: 1, c: colIndex });
+                    if(worksheet[address1]) worksheet[address1].s = headerStyle;
+                    if(worksheet[address2]) worksheet[address2].s = headerStyle;
+                });
+
+                filteredData.forEach((truck, index) => {
+                    const leadTimeDays = calculateLeadTimeInDays(truck.tiba_lokasi_bongkar);
+                    let rowColor = "";
+
+                    if (leadTimeDays < 3) rowColor = "C6EFCE"; // Green
+                    else if (leadTimeDays <= 6) rowColor = "BDD7EE"; // Blue
+                    else if (leadTimeDays <= 9) rowColor = "FFEB9C"; // Yellow
+                    else rowColor = "FFC7CE"; // Red
+
+                    if (rowColor) {
+                        const style = { fill: { fgColor: { rgb: rowColor } } };
+                        const rowIndex = index + 2;
+                        for (let C = 0; C < header1.length; C++) {
+                            const address = XLSX.utils.encode_cell({ r: rowIndex, c: C });
+                            if (!worksheet[address]) worksheet[address] = {};
+                            worksheet[address].s = style;
+                        }
+                    }
+                });
             }
 
+            const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Summary Status Truck");
             const filename = `Summary_Status_Truck_${angkutanName}_${getFilenameTimestamp()}.xlsx`;
             XLSX.writeFile(workbook, filename);
@@ -2628,19 +2570,20 @@
             }
         };
 
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', laporanInap: 'Summary Inap', logHistory: 'Riwayat Log' };
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', laporanInap: 'Summary Inap' };
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(contentId).classList.add('active');
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             document.getElementById(`nav-${contentId}`).classList.add('active');
             document.getElementById('page-title').textContent = pageTitles[contentId];
+            
+            if (contentId === 'listTruck') filterTable();
+            if (contentId === 'masterCustomer') filterCustomerTable();
+            if (contentId === 'masterJenisTruck') filterJenisTruckTable();
+            if (contentId === 'ritaseTruck') applyRitaseFiltersAndSort();
             if (contentId === 'summaryReport') renderSummaryReport();
             if (contentId === 'statusTruck') displayStatusCards();
-            if (contentId === 'ritaseTruck') applyRitaseFiltersAndSort();
-            if (contentId === 'logHistory') fetchAndRenderLogs();
-            if (contentId === 'masterCustomer') renderCustomerTable();
-            if (contentId === 'masterJenisTruck') renderJenisTruckTable();
             if (contentId === 'laporanInap') renderLaporanInap();
         }
 
@@ -2673,14 +2616,6 @@
                 document.getElementById('ritaseStartDate').value = '';
                 document.getElementById('ritaseEndDate').value = '';
                 applyRitaseFiltersAndSort();
-            });
-
-            document.getElementById('applyLogFilterBtn').addEventListener('click', applyLogFiltersAndSort);
-            document.getElementById('resetLogFilterBtn').addEventListener('click', () => {
-                document.getElementById('logStartDate').value = '';
-                document.getElementById('logEndDate').value = '';
-                document.getElementById('logSearchInput').value = '';
-                applyLogFiltersAndSort();
             });
 
             document.getElementById('modalSearchInput').addEventListener('input', applyModalFiltersAndSort);
