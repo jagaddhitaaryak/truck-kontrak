@@ -74,6 +74,11 @@
         .modal-body { overflow-y: auto; }
         th[data-sort] { cursor: pointer; }
         th[data-sort]:hover { background-color: #eef2ff; }
+        .pagination-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -152,9 +157,6 @@
                     </a>
                     <a href="#" id="nav-summaryReport" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('summaryReport')">
                         <i class="fas fa-chart-pie w-6 text-center"></i><span class="ml-3">Summary Report</span>
-                    </a>
-                    <a href="#" id="nav-logHistory" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('logHistory')">
-                        <i class="fas fa-history w-6 text-center"></i><span class="ml-3">Riwayat Log</span>
                     </a>
                 </nav>
             </aside>
@@ -258,6 +260,7 @@
                                 <tbody></tbody>
                             </table>
                         </div>
+                        <div id="truckTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
                     
                     <div id="updateDimensi" class="content-section">
@@ -311,6 +314,7 @@
                                 <tbody id="ritaseTableBody"></tbody>
                             </table>
                         </div>
+                        <div id="ritaseTablePagination" class="mt-4 flex justify-center items-center gap-2"></div>
                     </div>
 
                     <div id="summaryReport" class="content-section">
@@ -368,53 +372,6 @@
                             </div>
                         </div>
                     </div>
-                    <div id="logHistory" class="content-section">
-                        <div class="bg-white p-4 rounded-xl shadow-md mb-6">
-                            <h4 class="text-lg font-semibold text-slate-700 mb-4">Filter Riwayat Log</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                                <div>
-                                    <label for="logStartDateAngkutan" class="block text-sm font-medium text-slate-600 mb-1">Dari Tanggal</label>
-                                    <input type="date" id="logStartDateAngkutan" class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                                <div>
-                                    <label for="logEndDateAngkutan" class="block text-sm font-medium text-slate-600 mb-1">Sampai Tanggal</label>
-                                    <input type="date" id="logEndDateAngkutan" class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                                <div class="md:col-span-2">
-                                     <label for="logSearchInputAngkutan" class="block text-sm font-medium text-slate-600 mb-1">Cari (Plat Nomor)</label>
-                                     <input type="text" id="logSearchInputAngkutan" placeholder="Masukkan plat nomor..." class="w-full p-2 border border-slate-300 rounded-lg">
-                                </div>
-                            </div>
-                             <div class="flex justify-end gap-2 mt-4">
-                                <button id="applyLogFilterBtnAngkutan" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700">
-                                    <i class="fas fa-filter mr-2"></i>Filter
-                                </button>
-                                <button id="resetLogFilterBtnAngkutan" class="bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg hover:bg-slate-300">
-                                    Reset
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end items-center gap-2 mb-4">
-                            <button onclick="window.exportLogsToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
-                                <i class="fas fa-file-excel"></i> Export Excel
-                            </button>
-                        </div>
-                        <div class="bg-white rounded-xl shadow-md overflow-x-auto">
-                            <table id="logHistoryTable" class="w-full text-sm text-left text-slate-600">
-                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-                                    <tr>
-                                        <th class="px-6 py-3">Waktu</th>
-                                        <th class="px-6 py-3">Plat Nomor</th>
-                                        <th class="px-6 py-3">Status Lama</th>
-                                        <th class="px-6 py-3">Status Baru</th>
-                                        <th class="px-6 py-3">Diubah Oleh</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="logHistoryTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
                     </main>
                 <footer class="text-center p-4 text-sm text-slate-500 mt-auto bg-white border-t">&copy; <span id="copyright-year"></span> Jagaddhita Arya Koswara - Logistik IKK</footer>
             </div>
@@ -464,7 +421,6 @@
         let customersData = [];
         let jenisTruckData = [];
         let allRitaseData = [];
-        let allLogData = [];
         let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
         let activeFilters = {};
         let currentModalTrucks = [];
@@ -479,9 +435,12 @@
             tiba_lokasi_muat: "", keluar_lokasi_muat: "", tiba_lokasi_bongkar: "", keluar_lokasi_bongkar: "" 
         };
 
-        // =========================================================================
-        // START: HELPER SWEETALERT2
-        // =========================================================================
+        // PAGINATION STATE
+        let paginationState = {
+            listTruck: { currentPage: 1, filteredData: [] },
+            ritaseTruck: { currentPage: 1, filteredData: [] }
+        };
+        const rowsPerPage = 15;
 
         function showSuccessAlert(title, text) {
             Swal.fire({
@@ -523,10 +482,6 @@
             });
         }
         
-        // =========================================================================
-        // END: HELPER SWEETALERT2
-        // =========================================================================
-
         function calculateLeadTimeInMinutes(startTimeString) {
             if (!startTimeString) return 0;
             const startTime = new Date(startTimeString);
@@ -562,7 +517,6 @@
             return `${tanggal}/${bulan}/${tahun}, ${jamPart}`;
         }
         
-        // Helper untuk validasi alur waktu (Waktu sebelumnya <= Waktu saat ini)
         function isValidTimeFlow(t1, t2) {
              if (!t1 || !t2) return true; 
              const time1 = new Date(t1);
@@ -586,7 +540,7 @@
                         if (unsubscribeFromCustomers) unsubscribeFromCustomers();
                         if (unsubscribeFromJenisTruck) unsubscribeFromJenisTruck();
                         
-                        trucksData = []; allRitaseData = []; allLogData = []; activeFilters = {};
+                        trucksData = []; allRitaseData = []; activeFilters = {};
                         
                         currentUserData = userDocSnap.data();
                         document.getElementById('angkutanNameDisplay').textContent = currentUserData.angkutanName;
@@ -620,6 +574,67 @@
                 document.getElementById('login-container').classList.remove('hidden');
             }
         });
+
+        function renderPagination(containerId, pageStateKey, renderFunction) {
+            const container = document.getElementById(containerId);
+            const { currentPage, filteredData } = paginationState[pageStateKey];
+            container.innerHTML = '';
+            
+            const totalItems = filteredData.length;
+            if (totalItems <= rowsPerPage) return;
+
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+
+            const createButton = (text, page, disabled = false) => {
+                const button = document.createElement('button');
+                button.innerHTML = text;
+                button.disabled = disabled;
+                button.className = `pagination-btn px-3 py-1 border rounded-md text-sm font-medium transition ${disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white hover:bg-slate-50'}`;
+                
+                if (page === currentPage && text !== '...' && !String(text).includes('i')) {
+                    button.classList.add('active');
+                }
+                
+                button.onclick = () => {
+                    paginationState[pageStateKey].currentPage = page;
+                    renderFunction();
+                };
+                return button;
+            };
+
+            // Previous button
+            container.appendChild(createButton('<i class="fas fa-chevron-left"></i>', currentPage - 1, currentPage === 1));
+
+            // Page numbers
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) {
+                    container.appendChild(createButton(i, i));
+                }
+            } else {
+                container.appendChild(createButton(1, 1));
+                if (currentPage > 3) container.appendChild(createButton('...', currentPage - 2, true));
+                
+                let startPage = Math.max(2, currentPage - 1);
+                let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+                if (currentPage <= 3) {
+                    endPage = 4;
+                }
+                if (currentPage >= totalPages - 2) {
+                    startPage = totalPages - 3;
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    container.appendChild(createButton(i, i));
+                }
+
+                if (currentPage < totalPages - 2) container.appendChild(createButton('...', currentPage + 2, true));
+                container.appendChild(createButton(totalPages, totalPages));
+            }
+
+            // Next button
+            container.appendChild(createButton('<i class="fas fa-chevron-right"></i>', currentPage + 1, currentPage === totalPages));
+        }
 
         function setupCustomerListener() {
             const customersRef = query(collection(db, "customers"), orderBy("name"));
@@ -677,7 +692,7 @@
                 }
 
                 if (document.getElementById('listTruck').classList.contains('active')) {
-                    renderTruckList(trucksData);
+                    filterTable();
                 }
                 
                 if (document.getElementById('summaryReport').classList.contains('active')) {
@@ -689,7 +704,6 @@
         function rerenderUpdateStatusCards() {
              const container = document.getElementById('truckListContainer');
              container.innerHTML = '';
-             // Tampilkan SEMUA truk, termasuk yang TERSEDIA, agar bisa di-update
              trucksData.forEach(truck => container.appendChild(createTruckCard(truck)));
 
              if (trucksData.length === 0) {
@@ -708,7 +722,6 @@
             statusSelect.innerHTML += `<option value="ANTRI BONGKAR + INAP">ANTRI BONGKAR + INAP</option>`;
         }
         
-        // PERUBAHAN: Logika kalkulasi activeTrucks diperbarui
         function renderHomePage(data) {
             if (!data) return;
             document.getElementById('welcome-title').textContent = `Selamat Datang, ${currentUserData.angkutanName}!`;
@@ -1484,7 +1497,6 @@
             }
         };
         
-        // +++ FUNGSI-FUNGSI BARU UNTUK FILTER & SORT HEADER TABEL RITASE +++
         function closeFilterPopup() {
             const popup = document.getElementById('header-filter-popup');
             if (popup) popup.classList.add('hidden');
@@ -1563,16 +1575,23 @@
                 window.openFilterPopup(event, column);
             }
         };
-        // +++ AKHIR FUNGSI-FUNGSI BARU +++
 
-        function displayRitaseTable(dataToRender) {
+        function displayRitaseTable() {
             const tableBody = document.getElementById('ritaseTableBody');
             tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) {
+            const { currentPage, filteredData } = paginationState.ritaseTruck;
+
+            if (!filteredData || filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
+                renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
                 return;
             }
-            dataToRender.forEach(data => {
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach(data => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 const formattedDate = data.timestamp_selesai?.toDate() 
@@ -1588,6 +1607,7 @@
                 `;
                 tableBody.appendChild(row);
             });
+            renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
         }
         
         function updateSortIndicators() {
@@ -1655,80 +1675,13 @@
                 const comparison = String(valA || '').localeCompare(String(valB || ''), undefined, { numeric: true });
                 return ritaseSort.direction === 'asc' ? comparison : -comparison;
             });
-            displayRitaseTable(filtered);
+
+            paginationState.ritaseTruck.filteredData = filtered;
+            paginationState.ritaseTruck.currentPage = 1;
+            displayRitaseTable();
             updateSortIndicators();
         }
         
-        async function fetchAndRenderLogs() {
-            const tableBody = document.getElementById('logHistoryTableBody');
-            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data log...</td></tr>`;
-            try {
-                const logsRef = collection(db, "truck_status_logs");
-                const q = query(logsRef, where("angkutanName", "==", currentUserData.angkutanName), orderBy("timestamp", "desc"));
-                const querySnapshot = await getDocs(q);
-                window.allLogData = querySnapshot.docs.map(doc => ({...doc.data(), docId: doc.id}));
-                applyLogFiltersAndSort();
-            } catch (error) {
-                console.error("Gagal memuat data log:", error);
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Gagal memuat data log.</td></tr>`;
-            }
-        }
-
-        function applyLogFiltersAndSort() {
-            let filtered = [...window.allLogData];
-            const startDateString = document.getElementById('logStartDateAngkutan').value;
-            const endDateString = document.getElementById('logEndDateAngkutan').value;
-            const searchTerm = document.getElementById('logSearchInputAngkutan').value.toLowerCase();
-            if (startDateString || endDateString) {
-                const startDate = startDateString ? new Date(startDateString) : null;
-                const endDate = endDateString ? new Date(endDateString) : null;
-                if(startDate) startDate.setHours(0, 0, 0, 0);
-                if(endDate) endDate.setHours(23, 59, 59, 999);
-                filtered = filtered.filter(item => {
-                    if (!item.timestamp || !item.timestamp.toDate) return false;
-                    const itemDate = item.timestamp.toDate();
-                    if (startDate && itemDate < startDate) return false;
-                    if (endDate && itemDate > endDate) return false;
-                    return true;
-                });
-            }
-            if (searchTerm) {
-                filtered = filtered.filter(log => (log.plat_nomor?.toLowerCase().includes(searchTerm)));
-            }
-            displayLogTable(filtered);
-        }
-        
-        function displayLogTable(dataToRender) {
-            const tableBody = document.getElementById('logHistoryTableBody');
-            tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">Tidak ada data log yang cocok.</td></tr>`;
-                return;
-            }
-            dataToRender.forEach(log => {
-                const timestamp = log.timestamp?.toDate() ? log.timestamp.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : '-';
-                const row = `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="px-6 py-4">${timestamp}</td>
-                        <td class="px-6 py-4 font-medium">${log.plat_nomor || '-'}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.oldStatus] || ''}">${log.oldStatus || '-'}</span></td>
-                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[log.newStatus] || ''}">${log.newStatus || '-'}</span></td>
-                        <td class="px-6 py-4">${log.changedBy || '-'}</td>
-                    </tr>
-                `;
-                tableBody.innerHTML += row;
-            });
-        }
-
-        window.exportLogsToExcel = () => {
-            const angkutanName = currentUserData.angkutanName || 'Report';
-            const cleanAngkutanName = angkutanName.replace(/ /g, '_');
-            const table = document.getElementById('logHistoryTable');
-            const workbook = XLSX.utils.table_to_book(table, {sheet: "Riwayat Log"});
-            const filename = `Riwayat_Log_${cleanAngkutanName}_${getFilenameTimestamp()}.xlsx`;
-            XLSX.writeFile(workbook, filename);
-        };
-
         window.exportRitaseToExcel = () => {
             const table = document.getElementById('ritaseTable');
             const workbook = XLSX.utils.table_to_book(table, {sheet: "Laporan Ritase"});
@@ -1775,7 +1728,7 @@
             return `${YYYY}-${MM}-${DD}_${HH}-${mm}`;
         }
         
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck (View Only)', updateStatus: 'Update Status Truck', listTruck: 'List Truck Anda', updateDimensi: 'Update Dimensi Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', logHistory: 'Riwayat Log' };
+        const pageTitles = { home: 'Home', statusTruck: 'Status Truck (View Only)', updateStatus: 'Update Status Truck', listTruck: 'List Truck Anda', updateDimensi: 'Update Dimensi Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report' };
         
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
@@ -1783,17 +1736,17 @@
             document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
             document.getElementById(`nav-${contentId}`).classList.add('active');
             document.getElementById('page-title').textContent = pageTitles[contentId];
+
+            if (contentId === 'listTruck') filterTable();
+            if (contentId === 'ritaseTruck') fetchAndRenderRitase();
             if (contentId === 'summaryReport') {
                 document.getElementById('summaryFilterJenisMobil').value = 'all';
                 document.getElementById('summaryFilterStatus').value = 'all';
                 renderSummaryReport();
             } 
-            else if (contentId === 'ritaseTruck') fetchAndRenderRitase();
             else if (contentId === 'updateStatus') { rerenderUpdateStatusCards(); }
-            else if (contentId === 'listTruck') renderTruckList(trucksData);
             else if (contentId === 'statusTruck') displayStatusCards(trucksData);
             else if (contentId === 'updateDimensi') displayDimensiTable(trucksData);
-            else if (contentId === 'logHistory') fetchAndRenderLogs();
         };
 
         window.toggleAddForm = (forceClose = false) => {
@@ -1834,23 +1787,30 @@
         
         window.filterTable = function() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const tableBody = document.getElementById('truckTable').querySelector('tbody');
-            const rows = tableBody.querySelectorAll('tr');
-            rows.forEach(row => { 
-                row.style.display = row.textContent.toLowerCase().includes(searchTerm) ? '' : 'none'; 
-            });
+            paginationState.listTruck.filteredData = trucksData.filter(truck => 
+                Object.values(truck).some(val => String(val).toLowerCase().includes(searchTerm))
+            );
+            paginationState.listTruck.currentPage = 1;
+            renderTruckList();
         }
 
-        function renderTruckList(dataToRender) {
+        function renderTruckList() {
             const tableBody = document.getElementById('truckTable').querySelector('tbody');
             tableBody.innerHTML = '';
-            if (!dataToRender || dataToRender.length === 0) {
+            const { currentPage, filteredData } = paginationState.listTruck;
+
+            if (!filteredData || filteredData.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-slate-500">Belum ada data truk. Silakan tambahkan.</td></tr>`;
+                renderPagination('truckTablePagination', 'listTruck', renderTruckList);
                 return;
             }
-            const sortedData = [...dataToRender].sort((a, b) => (a.no_mobil || '').localeCompare(b.no_mobil || ''));
-            sortedData.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
-            window.filterTable();
+            
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = filteredData.slice(start, end);
+
+            paginatedData.forEach((truck) => tableBody.appendChild(createTableRow(truck)));
+            renderPagination('truckTablePagination', 'listTruck', renderTruckList);
         }
 
         function createTableRow(truck) {
@@ -1875,7 +1835,7 @@
                 </td>`;
         }
         
-        window.cancelEdit = () => renderTruckList(trucksData);
+        window.cancelEdit = () => filterTable();
 
         window.deleteTruck = async (firestoreId, noMobil) => {
             showConfirmAlert(
@@ -1965,14 +1925,6 @@
                 document.getElementById('ritaseStartDate').value = '';
                 document.getElementById('ritaseEndDate').value = '';
                 applyRitaseFiltersAndSort();
-            });
-
-            document.getElementById('applyLogFilterBtnAngkutan').addEventListener('click', applyLogFiltersAndSort);
-            document.getElementById('resetLogFilterBtnAngkutan').addEventListener('click', () => {
-                document.getElementById('logStartDateAngkutan').value = '';
-                document.getElementById('logEndDateAngkutan').value = '';
-                document.getElementById('logSearchInputAngkutan').value = '';
-                applyLogFiltersAndSort();
             });
 
             document.getElementById('summaryFilterJenisMobil').addEventListener('change', renderSummaryReport);
