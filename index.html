@@ -853,9 +853,10 @@
             buttonElement.disabled = true; buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
             
             const newStatus = document.getElementById(`status-select-${firestoreId}`).value;
-            
+            let dataToUpdate;
+
             if (newStatus === 'TERSEDIA') {
-                const dataToUpdate = { ...dataToReset, 
+                dataToUpdate = { ...dataToReset, 
                     nama_driver: document.getElementById(`driver-input-${firestoreId}`).value,
                     no_hp: document.getElementById(`hp-input-${firestoreId}`).value
                  };
@@ -914,7 +915,7 @@
                     return;
                 }
 
-                var dataToUpdate = {
+                dataToUpdate = {
                     keterangan: newStatus,
                     nama_driver: document.getElementById(`driver-input-${firestoreId}`).value,
                     no_hp: document.getElementById(`hp-input-${firestoreId}`).value,
@@ -932,23 +933,12 @@
             const truckDocRef = doc(db, `artifacts/${appId}/public/data/trucks`, firestoreId);
             
             try {
-                const docSnap = await getDoc(truckDocRef);
-                if (docSnap.exists()) {
-                    const oldStatus = docSnap.data().keterangan;
-                    if (oldStatus !== newStatus) {
-                        await addDoc(collection(db, "truck_status_logs"), {
-                            truckId: firestoreId, plat_nomor: docSnap.data().no_mobil, angkutanName: docSnap.data().angkutan,
-                            oldStatus: oldStatus, newStatus: newStatus, changedBy: currentUserData.angkutanName, timestamp: serverTimestamp()
-                        });
-                    }
-                }
-
                 await updateDoc(truckDocRef, dataToUpdate);
                 showSuccessAlert("Berhasil", "Status truk berhasil diperbarui.");
                 buttonElement.innerHTML = `✓ Berhasil`;
                 setTimeout(() => { buttonElement.innerHTML = 'Update Semua Info'; buttonElement.disabled = false; }, 2000);
             } catch (error) { 
-                console.error("Gagal update atau membuat log:", error);
+                console.error("Gagal update:", error);
                 showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan.");
                 buttonElement.innerHTML = 'Update Semua Info'; 
                 buttonElement.disabled = false; 
@@ -1033,12 +1023,6 @@
                                 timestamp_selesai: serverTimestamp()
                             };
                             await addDoc(collection(db, "completed_deliveries"), ritaseData);
-                            
-                            await addDoc(collection(db, "truck_status_logs"), {
-                                truckId: firestoreId, plat_nomor: truck.no_mobil, angkutanName: currentUserData.angkutanName,
-                                oldStatus: truck.keterangan, newStatus: "TERSEDIA",
-                                changedBy: currentUserData.angkutanName + ' (Otomatis Selesai)', timestamp: serverTimestamp()
-                            });
                             
                             const finalResetData = { ...dataToReset, 
                                 nama_driver: currentData.nama_driver,
