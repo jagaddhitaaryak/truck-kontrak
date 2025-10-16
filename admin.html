@@ -488,7 +488,7 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table id="inap-by-customer-table" class="w-full text-sm text-left text-slate-600">
-                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <thead class="text-xs text-white uppercase bg-slate-800">
                                         <tr>
                                             <th class="px-4 py-3 w-1/2">Customer</th>
                                             <th class="px-4 py-3">Kota</th>
@@ -496,12 +496,12 @@
                                         </tr>
                                     </thead>
                                     <tbody id="inap-by-customer-table-body"></tbody>
-                                    <tfoot class="bg-slate-50 font-bold">
-                                        <tr>
-                                            <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL</td>
-                                            <td id="inap-grand-total" class="px-4 py-3 text-center text-xl text-red-600">0</td>
-                                        </tr>
-                                    </tfoot>
+                                        <tfoot class="bg-slate-800 font-bold text-white">
+                                            <tr>
+                                                <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL</td>
+                                                <td id="inap-grand-total" class="px-4 py-3 text-center text-xl">0</td>
+                                            </tr>
+                                        </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -517,16 +517,18 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table id="inap-table-less-3days-table" class="w-full text-sm text-left text-slate-600">
-                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <thead class="bg-slate-800 text-white font-bold">
                                         <tr>
-                                            <th class="px-6 py-3">Plat Nomor</th>
-                                            <th class="px-6 py-3">Customer</th>
-                                            <th class="px-6 py-3">Kota</th>
-                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
-                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                            <th class="px-6 py-3 text-left">NAMA CUSTOMER</th>
+                                            <th class="px-6 py-3 text-left">KOTA</th>
+                                            <th class="px-6 py-3 text-left">ANGKUTAN</th>
+                                            <th class="px-6 py-3 text-left">PLAT NOMOR</th>
+                                            <th class="px-6 py-3 text-left">LAMA INAP</th>
+                                            <th class="px-6 py-3 text-center">JUMLAH</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inap-table-less-3days"></tbody>
+                                    <tfoot id="inap-tfoot-less-3days"></tfoot>
                                 </table>
                             </div>
                         </div>
@@ -542,16 +544,18 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table id="inap-table-3-6days-table" class="w-full text-sm text-left text-slate-600">
-                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <thead class="bg-slate-800 text-white font-bold">
                                         <tr>
-                                            <th class="px-6 py-3">Plat Nomor</th>
-                                            <th class="px-6 py-3">Customer</th>
-                                            <th class="px-6 py-3">Kota</th>
-                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
-                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                            <th class="px-6 py-3 text-left">NAMA CUSTOMER</th>
+                                            <th class="px-6 py-3 text-left">KOTA</th>
+                                            <th class="px-6 py-3 text-left">ANGKUTAN</th>
+                                            <th class="px-6 py-3 text-left">PLAT NOMOR</th>
+                                            <th class="px-6 py-3 text-left">LAMA INAP</th>
+                                            <th class="px-6 py-3 text-center">JUMLAH</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inap-table-3-6days"></tbody>
+                                    <tfoot id="inap-tfoot-3-6days"></tfoot>
                                 </table>
                             </div>
                         </div>
@@ -567,16 +571,18 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table id="inap-table-6-9days-table" class="w-full text-sm text-left text-slate-600">
-                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <thead class="bg-slate-800 text-white font-bold">
                                         <tr>
-                                            <th class="px-6 py-3">Plat Nomor</th>
-                                            <th class="px-6 py-3">Customer</th>
-                                            <th class="px-6 py-3">Kota</th>
-                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
-                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                            <th class="px-6 py-3 text-left">NAMA CUSTOMER</th>
+                                            <th class="px-6 py-3 text-left">KOTA</th>
+                                            <th class="px-6 py-3 text-left">ANGKUTAN</th>
+                                            <th class="px-6 py-3 text-left">PLAT NOMOR</th>
+                                            <th class="px-6 py-3 text-left">LAMA INAP</th>
+                                            <th class="px-6 py-3 text-center">JUMLAH</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inap-table-6-9days"></tbody>
+                                    <tfoot id="inap-tfoot-6-9days"></tfoot>
                                 </table>
                             </div>
                         </div>
@@ -592,19 +598,55 @@
                             </div>
                             <div class="overflow-x-auto">
                                 <table id="inap-table-more-9days-table" class="w-full text-sm text-left text-slate-600">
-                                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <thead class="bg-slate-800 text-white font-bold">
                                         <tr>
-                                            <th class="px-6 py-3">Plat Nomor</th>
-                                            <th class="px-6 py-3">Customer</th>
-                                            <th class="px-6 py-3">Kota</th>
-                                            <th class="px-6 py-3">Tiba Lokasi Bongkar</th>
-                                            <th class="px-6 py-3">Lead Time Inap</th>
+                                            <th class="px-6 py-3 text-left">NAMA CUSTOMER</th>
+                                            <th class="px-6 py-3 text-left">KOTA</th>
+                                            <th class="px-6 py-3 text-left">ANGKUTAN</th>
+                                            <th class="px-6 py-3 text-left">PLAT NOMOR</th>
+                                            <th class="px-6 py-3 text-left">LAMA INAP</th>
+                                            <th class="px-6 py-3 text-center">JUMLAH</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inap-table-more-9days"></tbody>
+                                    <tfoot id="inap-tfoot-more-9days"></tfoot>
                                 </table>
                             </div>
                         </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-md mt-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xl font-bold text-slate-700">DETAIL STATUS TRUCK INAP</h4>
+                                <button onclick="window.exportInapTableAsImage('inap-detail-table', 'Detail Status Truck Inap')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-detail-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-white uppercase bg-slate-800">
+                                        <tr>
+                                            <th class="px-4 py-3">No</th>
+                                            <th class="px-4 py-3">Angkutan</th>
+                                            <th class="px-4 py-3">FO</th>
+                                            <th class="px-4 py-3">Tiba Lokasi Muat</th>
+                                            <th class="px-4 py-3">Keluar Lokasi Muat</th>
+                                            <th class="px-4 py-3">Tiba Lokasi Bongkar</th>
+                                            <th class="px-4 py-3">Keluar Lokasi Bongkar</th>
+                                            <th class="px-4 py-3">Nama Customer</th>
+                                            <th class="px-4 py-3">Kota</th>
+                                            <th class="px-4 py-3">Status</th>
+                                            <th class="px-4 py-3">Nama Driver</th>
+                                            <th class="px-4 py-3">No HP</th>
+                                            <th class="px-4 py-3">Plat Nomor</th>
+                                            <th class="px-4 py-3">Jenis Truck</th>
+                                            <th class="px-4 py-3">Lama Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-detail-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
 
                 </main>
@@ -646,7 +688,7 @@
             <h3 id="log-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Log Perubahan Status</h3>
             <div class="modal-body">
                 <table class="w-full text-sm text-left text-slate-600">
-                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                    <thead class="text-xs text-white uppercase bg-slate-800">
                         <tr>
                             <th class="px-4 py-3">Waktu</th>
                             <th class="px-4 py-3">Status Lama</th>
@@ -1526,6 +1568,95 @@
             });
         }
         
+        function renderGroupedInapTable(tableBodyId, tfootId, data) {
+            const tableBody = document.getElementById(tableBodyId);
+            const tfoot = document.getElementById(tfootId);
+            tableBody.innerHTML = '';
+            tfoot.innerHTML = ''; 
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4 text-slate-500">Tidak ada truk di kategori ini.</td></tr>`;
+                return;
+            }
+
+            const groupedByCustomer = data.reduce((acc, truck) => {
+                const customer = truck.customer || 'Customer Tidak Diketahui';
+                if (!acc[customer]) { acc[customer] = []; }
+                acc[customer].push(truck);
+                return acc;
+            }, {});
+
+            let grandTotal = 0;
+            const sortedCustomers = Object.keys(groupedByCustomer).sort();
+
+            sortedCustomers.forEach(customerName => {
+                const trucksForCustomer = groupedByCustomer[customerName];
+                let customerTotal = 0;
+
+                const groupedByCity = trucksForCustomer.reduce((acc, truck) => {
+                    const city = truck.tujuan || 'Kota Tidak Diketahui';
+                    if (!acc[city]) { acc[city] = []; }
+                    acc[city].push(truck);
+                    return acc;
+                }, {});
+
+                const sortedCities = Object.keys(groupedByCity).sort();
+                
+                let isFirstRowOfCustomer = true;
+                sortedCities.forEach(cityName => {
+                    const trucksInCity = groupedByCity[cityName];
+                    const cityTotal = trucksInCity.length;
+                    customerTotal += cityTotal;
+
+                    trucksInCity.forEach((truck, index) => {
+                        const row = document.createElement('tr');
+                        row.className = 'bg-white border-b';
+                        
+                        row.innerHTML = `
+                            <td class="px-6 py-2 font-semibold">${isFirstRowOfCustomer && index === 0 ? customerName : ''}</td>
+                            <td class="px-6 py-2">${index === 0 ? cityName : ''}</td>
+                            <td class="px-6 py-2">${truck.angkutan || '-'}</td>
+                            <td class="px-6 py-2">${truck.no_mobil || '-'}</td>
+                            <td class="px-6 py-2">${truck.leadTimeFormatted}</td>
+                            <td class="px-6 py-2 text-center">1</td>
+                        `;
+                        tableBody.appendChild(row);
+                        isFirstRowOfCustomer = false;
+                    });
+
+                    // City Total Row
+                    const cityTotalRow = document.createElement('tr');
+                    cityTotalRow.className = 'bg-slate-100 font-bold';
+                    cityTotalRow.innerHTML = `
+                        <td></td>
+                        <td class="px-6 py-2 text-left">${cityName} TOTAL</td>
+                        <td colspan="3"></td>
+                        <td class="px-6 py-2 text-center text-red-600">${cityTotal}</td>
+                    `;
+                    tableBody.appendChild(cityTotalRow);
+                });
+
+                // Customer Total Row
+                const customerTotalRow = document.createElement('tr');
+                customerTotalRow.className = 'bg-slate-200 font-extrabold text-slate-800';
+                customerTotalRow.innerHTML = `
+                    <td class="px-6 py-2 text-left" colspan="5">${customerName} TOTAL</td>
+                    <td class="px-6 py-2 text-center">${customerTotal}</td>
+                `;
+                tableBody.appendChild(customerTotalRow);
+            });
+            grandTotal = data.length;
+
+            // Grand Total Row
+            tfoot.innerHTML = `
+                <tr class="bg-slate-800 font-bold text-white">
+                    <td class="px-6 py-3 text-left" colspan="5">GRAND TOTAL</td>
+                    <td class="px-6 py-3 text-center text-lg">${grandTotal}</td>
+                </tr>
+            `;
+        }
+
+
         function renderLaporanInap() {
             const inapTrucks = window.trucksData.filter(truck => 
                 truck.keterangan === 'INAP' && truck.tiba_lokasi_bongkar
@@ -1534,7 +1665,8 @@
                 return { 
                     ...truck, 
                     leadTimeMinutes: leadTimeMinutes,
-                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar)
+                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar),
+                    leadTimeDays: calculateLeadTimeInDays(truck.tiba_lokasi_bongkar)
                 };
             }).sort((a, b) => b.leadTimeMinutes - a.leadTimeMinutes);
 
@@ -1581,39 +1713,66 @@
             }
             grandTotalCell.textContent = grandTotal;
 
-            const LIMIT_3_DAYS = 3 * 24 * 60;
-            const LIMIT_6_DAYS = 6 * 24 * 60;
-            const LIMIT_9_DAYS = 9 * 24 * 60;
+            const LIMIT_3_DAYS = 3;
+            const LIMIT_6_DAYS = 6;
+            const LIMIT_9_DAYS = 9;
 
             const categories = [
-                { id: 'less-3days', data: inapTrucks.filter(t => t.leadTimeMinutes < LIMIT_3_DAYS) },
-                { id: '3-6days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_3_DAYS && t.leadTimeMinutes < LIMIT_6_DAYS) },
-                { id: '6-9days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_6_DAYS && t.leadTimeMinutes < LIMIT_9_DAYS) },
-                { id: 'more-9days', data: inapTrucks.filter(t => t.leadTimeMinutes >= LIMIT_9_DAYS) }
+                { id: 'less-3days', data: inapTrucks.filter(t => t.leadTimeDays < LIMIT_3_DAYS), tableBodyId: 'inap-table-less-3days', tfootId: 'inap-tfoot-less-3days' },
+                { id: '3-6days', data: inapTrucks.filter(t => t.leadTimeDays >= LIMIT_3_DAYS && t.leadTimeDays < LIMIT_6_DAYS), tableBodyId: 'inap-table-3-6days', tfootId: 'inap-tfoot-3-6days' },
+                { id: '6-9days', data: inapTrucks.filter(t => t.leadTimeDays >= LIMIT_6_DAYS && t.leadTimeDays < LIMIT_9_DAYS), tableBodyId: 'inap-table-6-9days', tfootId: 'inap-tfoot-6-9days' },
+                { id: 'more-9days', data: inapTrucks.filter(t => t.leadTimeDays >= LIMIT_9_DAYS), tableBodyId: 'inap-table-more-9days', tfootId: 'inap-tfoot-more-9days' }
             ];
 
             categories.forEach(cat => {
-                const tableBody = document.getElementById(`inap-table-${cat.id}`);
                 const totalSpan = document.getElementById(`total-${cat.id}`);
-                tableBody.innerHTML = '';
                 totalSpan.textContent = `(${cat.data.length} Truk)`;
-
-                if (cat.data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-4 text-slate-500">Tidak ada truk di kategori ini.</td></tr>`;
-                } else {
-                    cat.data.forEach(truck => {
-                        tableBody.innerHTML += `
-                            <tr class="bg-white border-b hover:bg-slate-50">
-                                <td class="px-6 py-4 font-medium">${truck.no_mobil || '-'}</td>
-                                <td class="px-6 py-4">${truck.customer || '-'}</td>
-                                <td class="px-6 py-4">${truck.tujuan || '-'}</td>
-                                <td class="px-6 py-4">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td>
-                                <td class="px-6 py-4 font-bold text-red-600">${truck.leadTimeFormatted}</td>
-                            </tr>
-                        `;
-                    });
-                }
+                renderGroupedInapTable(cat.tableBodyId, cat.tfootId, cat.data);
             });
+            
+            const detailTableBody = document.getElementById('inap-detail-table-body');
+            detailTableBody.innerHTML = '';
+            if (inapTrucks.length === 0) {
+                detailTableBody.innerHTML = `<tr><td colspan="15" class="text-center p-4 text-slate-500">Tidak ada truk inap untuk ditampilkan.</td></tr>`;
+            } else {
+                inapTrucks.forEach((truck, index) => {
+                    const row = document.createElement('tr');
+                    const leadTimeDays = truck.leadTimeDays;
+                    let bgColorClass = '';
+
+                    if (leadTimeDays > 9) {
+                        bgColorClass = 'bg-red-100 text-red-900';
+                    } else if (leadTimeDays >= 6) {
+                        bgColorClass = 'bg-orange-100 text-orange-900';
+                    } else if (leadTimeDays >= 3) {
+                        bgColorClass = 'bg-yellow-100 text-yellow-900';
+                    } else { 
+                        bgColorClass = 'bg-green-100 text-green-900';
+                    }
+
+                    row.className = `border-b ${bgColorClass}`;
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${index + 1}</td>
+                        <td class="px-4 py-2">${truck.angkutan || '-'}</td>
+                        <td class="px-4 py-2">${truck.fo || '-'}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${formatTanggalJam(truck.tiba_lokasi_muat)}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${formatTanggalJam(truck.keluar_lokasi_muat)}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">${formatTanggalJam(truck.keluar_lokasi_bongkar)}</td>
+                        <td class="px-4 py-2">${truck.customer || '-'}</td>
+                        <td class="px-4 py-2">${truck.tujuan || '-'}</td>
+                        <td class="px-4 py-2"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[truck.keterangan] || ''}">${truck.keterangan}</span></td>
+                        <td class="px-4 py-2">${truck.nama_driver || '-'}</td>
+                        <td class="px-4 py-2">${truck.no_hp || '-'}</td>
+                        <td class="px-4 py-2">${truck.no_mobil || '-'}</td>
+                        <td class="px-4 py-2">${truck.jenis_mobil || '-'}</td>
+                        <td class="px-4 py-2 font-semibold">${truck.leadTimeFormatted}</td>
+                    `;
+
+                    detailTableBody.appendChild(row);
+                });
+            }
         }
 
         function renderModalTable(trucksToRender) {
@@ -2423,7 +2582,7 @@
             screenshotContainer.style.width = 'fit-content';
             
             screenshotContainer.innerHTML = `
-                <div style="margin-bottom: 1rem;">
+                <div style="margin-bottom: 1rem; text-align: center;">
                     <h4 style="font-size: 1.25rem; font-weight: 700; color: #334155;">Summary Report - ${angkutanName}</h4>
                     <p style="font-size: 0.875rem; color: #64748b;">${document.getElementById('export-timestamp').textContent}</p>
                 </div>
@@ -2550,7 +2709,7 @@
             screenshotContainer.style.border = '1px solid #e2e8f0';
             screenshotContainer.style.fontFamily = "'Inter', sans-serif";
             
-            screenshotContainer.innerHTML = `<div style="margin-bottom: 1rem;"><h4 style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">${fullTitle}</h4></div>`;
+            screenshotContainer.innerHTML = `<div style="margin-bottom: 1rem; display: flex; justify-content: center;"><h4 style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">${fullTitle}</h4></div>`;
 
             const tableClone = tableToExport.cloneNode(true);
             screenshotContainer.appendChild(tableClone);
