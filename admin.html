@@ -1044,40 +1044,40 @@
             }, (error) => console.error("Jenis Truck Listener Error:", error));
         }
 
-        async function fetchAllTrucksLastPosition() {
-            // BARU: Memanggil perantara aman Anda di Vercel
-            const API_URL = 'https://proxy-gps-vercel.vercel.app/api/gps';
-            
-            document.getElementById('gps-loading-indicator').classList.remove('hidden');
-            document.getElementById('refresh-gps-btn').disabled = true;
+                async function fetchAllTrucksLastPosition() {
+                    // BARU: Memanggil perantara aman Anda di Vercel
+                    const API_URL = 'https://proxy-gps-anda.vercel.app/api/gps'; // <== GANTI DENGAN URL VERCEL ANDA
 
-            try {
-                // Token sudah aman di server Vercel, tidak ada lagi di sini
-                const response = await fetch(API_URL, {
-                    method: 'POST', 
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({}) // Body kosong, sesuai yang diharapkan proxy
-                });
+                    document.getElementById('gps-loading-indicator').classList.remove('hidden');
+                    document.getElementById('refresh-gps-btn').disabled = true;
 
+                    try {
+                        // Tidak ada lagi token di sini, jauh lebih aman!
+                        const response = await fetch(API_URL, {
+                            method: 'POST', // Fungsi perantara Anda juga mengharapkan POST
+                
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
                 if (!response.ok) {
-                    throw new Error(`Permintaan proxy gagal dengan status ${response.status}`);
+                    throw new Error(`API request failed with status ${response.status}`);
                 }
                 
                 const result = await response.json();
                 
-                if (result && result.data) {
-                    return result.data;
+                if (result && result.Data) {
+                    return result.Data;
                 } else {
                     console.warn("API response format is not as expected:", result);
-                    showErrorAlert("Format Data Salah", "Format data dari proxy GPS tidak sesuai harapan.");
+                    showErrorAlert("Format Data Salah", "Format data dari API GPS tidak sesuai harapan.");
                     return [];
                 }
 
             } catch (error) {
-                console.error("Error fetching GPS data via proxy:", error);
-                showErrorAlert("Gagal Mengambil Data", "Tidak dapat mengambil data dari proxy. Periksa konsol untuk detail.");
+                console.error("Error fetching GPS data:", error);
+                showErrorAlert("Gagal Mengambil Data", "Tidak dapat mengambil data dari API GPS. Periksa konsol untuk detail.");
                 return [];
             } finally {
                 document.getElementById('gps-loading-indicator').classList.add('hidden');
