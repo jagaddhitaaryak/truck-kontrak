@@ -10,8 +10,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -85,6 +89,14 @@
             color: white;
             border-color: #4f46e5;
         }
+        /* Custom styles for GPS Monitoring Page */
+        .gps-truck-item:hover {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .gps-truck-item.active {
+            background-color: #e0e7ff; /* indigo-100 */
+            border-left-color: #4f46e5; /* indigo-600 */
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -146,6 +158,9 @@
                 <nav class="flex-grow px-4 py-4 overflow-y-auto">
                     <a href="#" id="nav-home" class="sidebar-link flex items-center px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('home')">
                         <i class="fas fa-home w-6 text-center"></i><span class="ml-3">Home</span>
+                    </a>
+                    <a href="#" id="nav-realtimeMonitoring" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('realtimeMonitoring')">
+                        <i class="fas fa-map-marked-alt w-6 text-center"></i><span class="ml-3">Realtime Monitoring</span>
                     </a>
                     <a href="#" id="nav-statusTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('statusTruck')">
                         <i class="fas fa-eye w-6 text-center"></i><span class="ml-3">Status Truck</span>
@@ -248,7 +263,33 @@
                             <div id="jenis-truck-details-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 </div>
                         </div>
+                    </div>
+                    
+                    <div id="realtimeMonitoring" class="content-section">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                            <div class="p-4 border-b flex justify-between items-center">
+                                <h4 class="text-lg font-bold text-slate-800">Realtime GPS Monitoring</h4>
+                                <div class="flex items-center gap-4">
+                                    <span id="gps-loading-indicator" class="hidden text-sm text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...</span>
+                                    <button id="refresh-gps-btn" onclick="window.updateTrucksOnRealtimeMap()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm flex items-center gap-2">
+                                        <i class="fas fa-sync-alt"></i> Refresh
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col md:flex-row" style="height: 78vh;">
+                                <div id="map-container" class="w-full md:w-3/4 h-64 md:h-full">
+                                    <div id="realtimemap" class="w-full h-full"></div>
+                                </div>
+                                <div id="gps-truck-list-panel" class="w-full md:w-1/4 h-full bg-slate-50 border-l overflow-y-auto">
+                                    <div class="p-4 border-b">
+                                        <input type="text" id="gps-search-input" placeholder="Cari plat nomor..." class="w-full p-2 border rounded-lg">
+                                    </div>
+                                    <div id="gps-truck-list" class="divide-y">
+                                        </div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
                     <div id="statusTruck" class="content-section">
                         <div class="bg-white p-6 rounded-xl shadow-md mb-6">
@@ -739,12 +780,15 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, query, orderBy, where, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         window.trucksData = []; 
         window.customersData = [];
         window.jenisTruckData = [];
         window.allRitaseData = [];
-        let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromRitase, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         
+        let realtimeMap;
+        let realtimeTruckMarkers = {};
+
         let currentModalTrucks = [];
         let modalSort = { column: 'angkutan', direction: 'asc' };
         let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
@@ -1000,6 +1044,142 @@
             }, (error) => console.error("Jenis Truck Listener Error:", error));
         }
 
+        async function fetchAllTrucksLastPosition() {
+            // BARU: Memanggil perantara aman Anda di Vercel
+            const API_URL = 'https://proxy-gps-vercel.vercel.app/api/gps';
+            
+            document.getElementById('gps-loading-indicator').classList.remove('hidden');
+            document.getElementById('refresh-gps-btn').disabled = true;
+
+            try {
+                // Token sudah aman di server Vercel, tidak ada lagi di sini
+                const response = await fetch(API_URL, {
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({}) // Body kosong, sesuai yang diharapkan proxy
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Permintaan proxy gagal dengan status ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result && result.data) {
+                    return result.data;
+                } else {
+                    console.warn("API response format is not as expected:", result);
+                    showErrorAlert("Format Data Salah", "Format data dari proxy GPS tidak sesuai harapan.");
+                    return [];
+                }
+
+            } catch (error) {
+                console.error("Error fetching GPS data via proxy:", error);
+                showErrorAlert("Gagal Mengambil Data", "Tidak dapat mengambil data dari proxy. Periksa konsol untuk detail.");
+                return [];
+            } finally {
+                document.getElementById('gps-loading-indicator').classList.add('hidden');
+                document.getElementById('refresh-gps-btn').disabled = false;
+            }
+        }
+
+        function initializeRealtimeMap() {
+            if (realtimeMap) return;
+
+            realtimeMap = L.map('realtimemap').setView([-2.5489, 118.0149], 5); // Center of Indonesia
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(realtimeMap);
+        }
+        
+        window.updateTrucksOnRealtimeMap = async function() {
+            const gpsData = await fetchAllTrucksLastPosition();
+            const listContainer = document.getElementById('gps-truck-list');
+            listContainer.innerHTML = ''; // Clear previous list
+            
+            // Clear existing markers from the map
+            for (const key in realtimeTruckMarkers) {
+                realtimeMap.removeLayer(realtimeTruckMarkers[key]);
+            }
+            realtimeTruckMarkers = {};
+
+            if (gpsData.length === 0) {
+                listContainer.innerHTML = `<p class="p-4 text-slate-500 text-center">Tidak ada data truk aktif yang ditemukan.</p>`;
+                return;
+            }
+            
+            const sortedGpsData = gpsData.sort((a, b) => (a.VechileNo || '').localeCompare(b.VechileNo || ''));
+
+            sortedGpsData.forEach(truck => {
+                const lat = parseFloat(truck.Lat);
+                const lon = parseFloat(truck.Lon);
+
+                if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+                     const isEngineOn = truck.Acc === "1";
+                     const iconUrl = isEngineOn 
+                        ? 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png'
+                        : 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png';
+                    
+                    const truckIcon = new L.Icon({
+                        iconUrl: iconUrl,
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    });
+
+                    const popupContent = `
+                        <div class="font-sans">
+                            <b class="text-base">${truck.VechileNo}</b><br>
+                            <b>Status:</b> ${truck.Status}<br>
+                            <b>Kecepatan:</b> ${truck.Speed} km/j<br>
+                            <b>Mesin:</b> ${isEngineOn ? '<span class="text-green-600 font-semibold">ON</span>' : '<span class="text-red-600 font-semibold">OFF</span>'}<br>
+                            <b>Terakhir Update:</b><br>${new Date(truck.DeviceTime).toLocaleString('id-ID')}
+                        </div>`;
+
+                    const marker = L.marker([lat, lon], {icon: truckIcon})
+                        .addTo(realtimeMap)
+                        .bindPopup(popupContent);
+                    
+                    realtimeTruckMarkers[truck.VechileNo] = marker;
+                    
+                    // Add to side panel
+                    const truckItem = document.createElement('div');
+                    truckItem.className = 'gps-truck-item p-4 border-l-4 border-transparent cursor-pointer flex justify-between items-center';
+                    truckItem.setAttribute('data-plate', truck.VechileNo);
+                    truckItem.onclick = () => {
+                        realtimeMap.flyTo([lat, lon], 16);
+                        marker.openPopup();
+                        document.querySelectorAll('.gps-truck-item').forEach(el => el.classList.remove('active'));
+                        truckItem.classList.add('active');
+                    };
+                    
+                    truckItem.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${truck.VechileNo}</p>
+                            <p class="text-sm text-slate-500">${truck.Status}</p>
+                            <p class="text-xs text-slate-400">${new Date(truck.DeviceTime).toLocaleString('id-ID')}</p>
+                        </div>
+                        <div class="text-right">
+                             <p class="font-semibold text-lg ${isEngineOn ? 'text-green-600' : 'text-red-600'}">${isEngineOn ? '<i class="fas fa-check-circle"></i> ON' : '<i class="fas fa-times-circle"></i> OFF'}</p>
+                             <p class="text-sm text-slate-600">${truck.Speed} km/j</p>
+                        </div>`;
+                    listContainer.appendChild(truckItem);
+                }
+            });
+
+            // Fit map to show all markers
+            const group = new L.featureGroup(Object.values(realtimeTruckMarkers));
+            if (Object.keys(realtimeTruckMarkers).length > 0) {
+                 realtimeMap.fitBounds(group.getBounds().pad(0.2));
+            }
+        }
+        
         let currentVendorTrucks = [];
         let vendorTruckModalSort = { column: 'no_mobil', direction: 'asc' };
 
@@ -2729,7 +2909,7 @@
             }
         };
 
-        const pageTitles = { home: 'Home', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', laporanInap: 'Summary Inap' };
+        const pageTitles = { home: 'Home', realtimeMonitoring: 'Realtime Monitoring', statusTruck: 'Status Truck', listTruck: 'List Truck', masterCustomer: 'Master Customer', masterJenisTruck: 'Master Jenis Truck', ritaseTruck: 'Laporan Ritase Truck', summaryReport: 'Summary Report', laporanInap: 'Summary Inap' };
         window.showContent = (contentId) => {
             document.querySelectorAll('.content-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(contentId).classList.add('active');
@@ -2744,6 +2924,13 @@
             if (contentId === 'summaryReport') renderSummaryReport();
             if (contentId === 'statusTruck') displayStatusCards();
             if (contentId === 'laporanInap') renderLaporanInap();
+            if (contentId === 'realtimeMonitoring') {
+                initializeRealtimeMap();
+                setTimeout(() => {
+                    realtimeMap.invalidateSize();
+                    window.updateTrucksOnRealtimeMap();
+                }, 200);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -2779,6 +2966,18 @@
 
             document.getElementById('modalSearchInput').addEventListener('input', applyModalFiltersAndSort);
             document.getElementById('modalFilterAngkutan').addEventListener('change', applyModalFiltersAndSort);
+
+            document.getElementById('gps-search-input').addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.gps-truck-item').forEach(item => {
+                    const plate = item.getAttribute('data-plate').toLowerCase();
+                    if (plate.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
 
             document.addEventListener('click', (event) => {
                 const popup = document.getElementById('header-filter-popup');
