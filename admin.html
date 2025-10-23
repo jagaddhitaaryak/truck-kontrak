@@ -1098,6 +1098,7 @@
         
         window.updateTrucksOnRealtimeMap = async function() {
             const gpsData = await fetchAllTrucksLastPosition();
+            console.log("Data GPS yang diterima:", gpsData);
             const listContainer = document.getElementById('gps-truck-list');
             listContainer.innerHTML = ''; // Clear previous list
             
@@ -3016,3 +3017,4 @@
     </script>
 </body>
 </html>
+
