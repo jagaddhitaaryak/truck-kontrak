@@ -1044,31 +1044,36 @@
             }, (error) => console.error("Jenis Truck Listener Error:", error));
         }
 
-                async function fetchAllTrucksLastPosition() {
-                    // BARU: Memanggil perantara aman Anda di Vercel
-                    const API_URL = 'https://proxy-gps-vercel.vercel.app/api/gps'; // <== GANTI DENGAN URL VERCEL ANDA
+        async function fetchAllTrucksLastPosition() {
+            // ===================================================================
+            // PERUBAHAN PENTING: Ganti URL ini dengan URL Vercel Anda yang sebenarnya
+            // ===================================================================
+            const API_URL = 'https://URL-PROYEK-VERCEL-ANDA.vercel.app/api/gps'; // <== GANTI DENGAN URL VERCEL ANDA
+            // ===================================================================
 
-                    document.getElementById('gps-loading-indicator').classList.remove('hidden');
-                    document.getElementById('refresh-gps-btn').disabled = true;
+            document.getElementById('gps-loading-indicator').classList.remove('hidden');
+            document.getElementById('refresh-gps-btn').disabled = true;
 
-                    try {
-                        // Tidak ada lagi token di sini, jauh lebih aman!
-                        const response = await fetch(API_URL, {
-                            method: 'POST', // Fungsi perantara Anda juga mengharapkan POST
+            try {
+                // Memanggil proxy Vercel Anda, bukan API EasyGo secara langsung
+                const response = await fetch(API_URL, {
+                    method: 'POST', // Fungsi perantara Anda juga mengharapkan POST
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
                 if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
+                    // Jika proxy Vercel Anda mengembalikan error (misal 500 atau 405)
+                    const errorData = await response.json();
+                    throw new Error(`Proxy Error: ${errorData.error || response.statusText}`);
                 }
-                
+        
                 const result = await response.json();
-                
+                console.log("DATA LENGKAP DARI API:", result.Data);
+        
                 if (result && result.Data) {
-                    return result.Data;
+                    return result.Data; // Sukses
                 } else {
                     console.warn("API response format is not as expected:", result);
                     showErrorAlert("Format Data Salah", "Format data dari API GPS tidak sesuai harapan.");
@@ -1077,7 +1082,9 @@
 
             } catch (error) {
                 console.error("Error fetching GPS data:", error);
-                showErrorAlert("Gagal Mengambil Data", "Tidak dapat mengambil data dari API GPS. Periksa konsol untuk detail.");
+                // Ini akan menangkap error CORS (jika konfigurasi Vercel salah)
+                // atau error 500 dari Vercel
+                showErrorAlert("Gagal Mengambil Data", `Tidak dapat mengambil data dari API GPS. Pastikan konfigurasi CORS di Vercel sudah benar dan URL proxy sudah diganti. Error: ${error.message}`);
                 return [];
             } finally {
                 document.getElementById('gps-loading-indicator').classList.add('hidden');
@@ -1095,6 +1102,127 @@
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             }).addTo(realtimeMap);
         }
+
+        // ===================================================================
+        // KODE BARU DITAMBAHKAN: Fungsi untuk menampilkan Modal Detail Truk
+        // ===================================================================
+        function showTruckDetailModal(truck) {
+            const isEngineOn = truck.Acc === "1";
+            const engineStatusText = isEngineOn ? 'ON (Nyala)' : 'OFF (Mati)';
+            const engineStatusColor = isEngineOn ? '#16a34a' : '#dc2626'; // tailwind green-600 or red-600
+
+            // Format Waktu sesuai gambar: "23 Oktober 2025 pukul 21.26.18"
+            let gpsTime = 'N/A';
+            if (truck.DeviceTime) {
+                try {
+                    // 'id-ID' locale biasanya menghasilkan format "23 Oktober 2025 21.26.18"
+                    let dateStr = new Date(truck.DeviceTime).toLocaleString('id-ID', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                        timeZone: 'Asia/Jakarta' // Pastikan zona waktu konsisten
+                    });
+                    // Ganti spasi pertama antara tanggal dan jam dengan " pukul "
+                    gpsTime = dateStr.replace(' ', ' pukul '); 
+                } catch (e) {
+                    console.error("Invalid date format:", truck.DeviceTime);
+                    gpsTime = truck.DeviceTime; // fallback jika format tidak valid
+                }
+            }
+
+            // Format Kecepatan (menangani 'undefined' seperti di gambar)
+            let speed;
+            if (typeof truck.Speed === 'undefined') {
+                speed = 'undefined km/j'; // Persis seperti di gambar
+            } else if (truck.Speed === null) {
+                speed = 'N/A';
+            } else {
+                speed = `${truck.Speed} km/j`;
+            }
+                
+            // Format Arah (Heading)
+            // Asumsi field dari API adalah 'Direction'
+            const heading = (typeof truck.Direction === 'undefined' || truck.Direction === null)
+                ? 'N/A'
+                : `${truck.Direction}°`;
+                
+            // PENTING: Asumsi nama field dari API berdasarkan gambar Anda
+            // Sesuaikan 'UnitID', 'PhoneNumber', 'Distance', 'Address' 
+            // jika nama field di API Anda berbeda
+            const unitId = truck.UnitID || 'N/A';
+            const phone = truck.PhoneNumber || truck.SimNo || 'N/A'; // Coba 'SimNo' jika 'PhoneNumber' tidak ada
+            const distance = truck.Distance || '0.00';
+            const address = truck.Address || 'N/A'; // Asumsi field 'Address' ada di API
+
+            // Buat HTML untuk SweetAlert
+            const modalHtml = `
+                <div class="text-left text-sm text-slate-700" style="font-family: 'Inter', sans-serif;">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4">${truck.VechileNo || 'Detail Truk'}</h2>
+                    <div class="space-y-2">
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Unit ID:</span>
+                            <span class="font-bold">${unitId}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Nomor Plat:</span>
+                            <span class="font-bold">${truck.VechileNo || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Waktu Data GPS:</span>
+                            <span class="font-bold">${gpsTime}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Status Mesin (ACC):</span>
+                            <span class="font-bold" style="color: ${engineStatusColor};">
+                                ${engineStatusText} 
+                                <span style="display: inline-block; width: 12px; height: 12px; background-color: ${engineStatusColor}; border-radius: 50%; vertical-align: middle;"></span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Nomor Telepon:</span>
+                            <span class="font-bold">${phone}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Posisi (Lat, Lon):</span>
+                            <span class="font-bold">${truck.Lat}, ${truck.Lon}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Kecepatan:</span>
+                            <span class="font-bold">${speed}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Arah (Heading):</span>
+                            <span class="font-bold">${heading}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-slate-500">Jarak dari Titik Acuan:</span>
+                            <span class="font-bold">${distance} km</span>
+                        </div>
+                        <div class="flex flex-col text-left pt-2">
+                            <span class="font-semibold text-slate-500 mb-1">Alamat (Perkiraan):</span>
+                            <span class="font-bold">${address}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                html: modalHtml,
+                showCloseButton: true,
+                showConfirmButton: false, // Tidak perlu tombol OK
+                width: '600px', // Atur lebar modal
+                customClass: {
+                    popup: 'font-sans' // Pastikan font konsisten
+                }
+            });
+        }
+        // ===================================================================
+        // AKHIR DARI KODE BARU
+        // ===================================================================
         
         window.updateTrucksOnRealtimeMap = async function() {
             const gpsData = await fetchAllTrucksLastPosition();
@@ -1134,18 +1262,23 @@
                         shadowSize: [41, 41]
                     });
 
-                    const popupContent = `
-                        <div class="font-sans">
-                            <b class="text-base">${truck.VechileNo}</b><br>
-                            <b>Status:</b> ${truck.Status}<br>
-                            <b>Kecepatan:</b> ${truck.Speed} km/j<br>
-                            <b>Mesin:</b> ${isEngineOn ? '<span class="text-green-600 font-semibold">ON</span>' : '<span class="text-red-600 font-semibold">OFF</span>'}<br>
-                            <b>Terakhir Update:</b><br>${new Date(truck.DeviceTime).toLocaleString('id-ID')}
-                        </div>`;
+                    // ===================================================================
+                    // KODE DIUBAH: Hapus popupContent dan bindPopup
+                    // ===================================================================
+                    // const popupContent = ... (INI DIHAPUS)
 
                     const marker = L.marker([lat, lon], {icon: truckIcon})
-                        .addTo(realtimeMap)
-                        .bindPopup(popupContent);
+                        .addTo(realtimeMap);
+                        // .bindPopup(popupContent); // <-- INI DIHAPUS
+                    
+                    // TAMBAHKAN INI: Event click pada marker
+                    marker.on('click', () => {
+                        // Panggil modal kustom baru, kirimkan seluruh data 'truck'
+                        showTruckDetailModal(truck); 
+                    });
+                    // ===================================================================
+                    // AKHIR PERUBAHAN
+                    // ===================================================================
                     
                     realtimeTruckMarkers[truck.VechileNo] = marker;
                     
@@ -1155,7 +1288,14 @@
                     truckItem.setAttribute('data-plate', truck.VechileNo);
                     truckItem.onclick = () => {
                         realtimeMap.flyTo([lat, lon], 16);
-                        marker.openPopup();
+                        
+                        // ===================================================================
+                        // KODE DIUBAH: Panggil modal, bukan popup
+                        // ===================================================================
+                        // marker.openPopup(); // <-- INI DIGANTI
+                        showTruckDetailModal(truck); // <-- DENGAN INI
+                        // ===================================================================
+
                         document.querySelectorAll('.gps-truck-item').forEach(el => el.classList.remove('active'));
                         truckItem.classList.add('active');
                     };
@@ -2669,11 +2809,6 @@
                 });
             }
 
-            doc.text(title, 14, 15);
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
-
             const head = [[
                 { content: 'No', rowSpan: 2 }, { content: 'ANGKUTAN', rowSpan: 2 }, { content: 'FO', rowSpan: 2 },
                 { content: 'LOKASI MUAT', colSpan: 2 }, { content: 'LOKASI BONGKAR', colSpan: 2 },
@@ -3017,4 +3152,3 @@
     </script>
 </body>
 </html>
-
