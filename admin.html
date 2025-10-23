@@ -1067,8 +1067,8 @@
                 
                 const result = await response.json();
                 
-                if (result && result.data) {
-                    return result.data;
+                if (result && result.Data) {
+                    return result.Data;
                 } else {
                     console.warn("API response format is not as expected:", result);
                     showErrorAlert("Format Data Salah", "Format data dari API GPS tidak sesuai harapan.");
@@ -3016,4 +3016,5 @@
     </script>
 </body>
 </html>
+
 
