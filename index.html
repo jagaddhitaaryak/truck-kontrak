@@ -234,10 +234,10 @@
                         <form class="add-form hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addForm">
                             <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Truk Baru</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newNoMobil" placeholder="Plat Nomor" class="w-full p-2 border border-slate-300 rounded-lg" oninput="this.value = this.value.toUpperCase()">
                                 <select id="newJenisMobil" class="w-full p-2 border border-slate-300 rounded-lg">
                                     </select>
-                                <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <input type="text" id="newNamaDriver" placeholder="Nama Driver" class="w-full p-2 border border-slate-300 rounded-lg" oninput="this.value = this.value.toUpperCase()">
                                 <input type="text" id="newNoHp" placeholder="No HP Driver" class="w-full p-2 border border-slate-300 rounded-lg">
                                 <div class="flex items-center gap-2 md:col-start-3">
                                     <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addTruck()">Simpan</button>
@@ -427,9 +427,11 @@
         let modalSort = { column: 'no_mobil', direction: 'asc' };
         let currentFilterColumn = null;
         const appId = 'truck-dashboard-app';
-        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
-        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
-        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'MUAT': 'bg-blue-100 text-blue-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+
+        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
+        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
+        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+
         const dataToReset = { 
             keterangan: "TERSEDIA", fo: "", customer: "", tujuan: "", waktu: "",
             tiba_lokasi_muat: "", keluar_lokasi_muat: "", tiba_lokasi_bongkar: "", keluar_lokasi_bongkar: "" 
@@ -791,15 +793,15 @@
                     <div class="space-y-3">
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Status</label><select id="status-select-${truck.firestoreId}" class="w-full p-2 border border-slate-300 rounded-lg">${statusOptionsHtml}</select></div>
                         ${customerFieldHtml}
-                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Kota</label><input type="text" id="tujuan-input-${truck.firestoreId}" value="${truck.tujuan || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''}></div>
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Kota</label><input type="text" id="tujuan-input-${truck.firestoreId}" value="${truck.tujuan || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''} oninput="this.value = this.value.toUpperCase()"></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Tiba Lokasi Muat</label><input type="datetime-local" id="tiba-muat-input-${truck.firestoreId}" value="${truck.tiba_lokasi_muat || ''}" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''}></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Keluar Lokasi Muat</label><input type="datetime-local" id="keluar-muat-input-${truck.firestoreId}" value="${truck.keluar_lokasi_muat || ''}" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''}></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Tiba Lokasi Bongkar</label><input type="datetime-local" id="tiba-bongkar-input-${truck.firestoreId}" value="${truck.tiba_lokasi_bongkar || ''}" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''}></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Keluar Lokasi Bongkar</label><input type="datetime-local" id="keluar-bongkar-input-${truck.firestoreId}" value="${truck.keluar_lokasi_bongkar || ''}" class="w-full p-2 border border-slate-300 rounded-lg" ${isAvailable ? 'disabled' : ''}></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">Terakhir Update Status</label><input type="datetime-local" id="waktu-input-${truck.firestoreId}" value="${truck.waktu || ''}" class="w-full p-2 border border-slate-300 rounded-lg bg-slate-100" readonly></div>
-                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Nama Driver</label><input type="text" id="driver-input-${truck.firestoreId}" value="${truck.nama_driver || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg"></div>
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">Nama Driver</label><input type="text" id="driver-input-${truck.firestoreId}" value="${truck.nama_driver || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg" oninput="this.value = this.value.toUpperCase()"></div>
                         <div><label class="block text-sm font-medium text-slate-600 mb-1">No HP</label><input type="text" id="hp-input-${truck.firestoreId}" value="${truck.no_hp || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg"></div>
-                        <div><label class="block text-sm font-medium text-slate-600 mb-1">FO/DN</label><input type="text" id="fo-input-${truck.firestoreId}" value="${truck.fo || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg" ${foDisabledAttr} ${foRequiredAttr}></div>
+                        <div><label class="block text-sm font-medium text-slate-600 mb-1">FO/DN</label><input type="text" id="fo-input-${truck.firestoreId}" value="${truck.fo || ''}" placeholder="-" class="w-full p-2 border border-slate-300 rounded-lg" ${foDisabledAttr} ${foRequiredAttr} oninput="this.value = this.value.toUpperCase()"></div>
                     </div>
                 </div>
                 <div class="mt-4">
