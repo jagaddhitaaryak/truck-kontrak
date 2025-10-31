@@ -97,6 +97,135 @@
             background-color: #e0e7ff; /* indigo-100 */
             border-left-color: #4f46e5; /* indigo-600 */
         }
+        /* BARU: Aturan untuk sidebar collapse */
+        #sidebar.sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        #sidebar.sidebar-collapsed .sidebar-text {
+            display: none;
+        }
+        #sidebar.sidebar-collapsed .sidebar-link {
+            justify-content: center;
+        }
+        #sidebar.sidebar-collapsed .sidebar-link .ml-3 { /* Dibutuhkan untuk override span */
+            margin-left: 0;
+        }
+        #sidebar.sidebar-collapsed .sidebar-toggle-icon-collapse {
+            display: none;
+        }
+        #sidebar.sidebar-collapsed .sidebar-toggle-icon-expand {
+            display: block;
+        }
+        #sidebar.sidebar-collapsed h1 {
+            justify-content: center;
+        }
+        /* Transisi */
+        #sidebar {
+            transition: width 0.2s ease-in-out;
+        }
+        /* ================= KODE FINAL UNTUK LAYOUT PROYEKTOR (Full Box) ================= */
+
+        /* Kode ini hanya aktif saat sidebar di-hide (.sidebar-collapsed) */
+
+        /* === 1. Reset Card Padding & Alignment === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 > div,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .status-card,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid > div {
+            padding: 0; /* Hapus padding asli card (p-6) */
+            align-items: stretch; /* Paksa anak-anaknya (icon, text) untuk setinggi card */
+        }
+
+        /* === 2. Pusatkan Icon & Beri Jarak === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .p-4,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .status-card .p-3,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid .p-3 {
+            align-self: center; /* Buat icon tetap di tengah (vertikal) */
+            margin: 1.5rem 0.5rem 1.5rem 1.5rem; /* Margin kanan dikurangi jadi 0.5rem (8px) */
+            flex-shrink: 0; /* Mencegah icon penyok */
+        }
+        
+        /* === 3. Atur Kontainer Teks (Judul + Angka) === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .ml-4 {
+            flex: 1; 
+            display: flex; 
+            align-items: stretch; /* Buat Judul & Angka setinggi kontainer */
+            margin-left: 0; /* Jarak icon sudah diatur */
+            min-width: 0; 
+        }
+        
+        /* === 4. Atur Blok Judul === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 p.font-semibold,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #status-details-grid p.text-slate-500,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #vendor-details-grid p.text-slate-500,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid p.text-slate-500 {
+            /* 'display: flex;' dan 'align-items: center;' DIHAPUS agar teks bisa wrap */
+            padding: 1.5rem 0.5rem 1.5rem 0; /* Padding kiri 0, kanan 0.5rem */
+            
+            font-size: 2rem; 
+            font-weight: 600; 
+            white-space: normal;  
+            line-height: 1.1;     
+            min-width: 0;
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        /* === 5. Atur Blok Angka (Kotak Abu-abu) === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 p.text-3xl,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #status-details-grid p.text-2xl,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #vendor-details-grid p.text-2xl,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid p.text-2xl {
+            /* Layout */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; 
+            margin-left: auto;  
+            white-space: nowrap; 
+            width: 12rem; /* 192px - Atur LEBAR TETAP */
+            padding: 1rem 0; /* Hapus padding kiri-kanan, ganti dengan width */
+
+            /* Font */
+            font-size: 4.5rem; /* 72px - SANGAT BESAR */
+            line-height: 1;
+            font-weight: 700;
+            color: #1f2937; /* Teks hitam */
+
+            /* Style Kotak */
+            background-color: #e5e7eb; /* Kotak abu-abu (bg-gray-200) */
+            border-top-right-radius: 0.75rem; 
+            border-bottom-right-radius: 0.75rem;
+        }
+        
+        /* === 6. Perbaikan Warna Kotak untuk 4 Card di Atas === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .bg-indigo-600 p.text-3xl { background-color: rgba(255,255,255,0.25); color: white; }
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .bg-green-600 p.text-3xl { background-color: rgba(255,255,255,0.25); color: white; }
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .bg-orange-600 p.text-3xl { background-color: rgba(255,255,255,0.25); color: white; }
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .bg-slate-700 p.text-3xl { background-color: rgba(255,255,255,0.25); color: white; }
+
+
+        /* === 7. Sembunyikan "Truk" === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .text-suffix-truk { display: none; }
+        
+        /* === 8. Judul Bagian === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home h3.text-xl {
+            font-size: 2.25rem; 
+            line-height: 2.5rem;
+            margin-bottom: 1.5rem; 
+        }
+        
+        /* === 9. Hapus 'overflow-hidden' dari kontainer teks === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .ml-4.overflow-hidden {
+            overflow: visible; 
+        }
+        
+        /* ======================= AKHIR DARI KODE BARU ======================= */
+        
+        /* ======================= AKHIR DARI KODE BARU ======================= */
+        /* === BARU: Sembunyikan suffix "Truk" saat di-hide === */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home .text-suffix-truk {
+            display: none;
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -152,38 +281,45 @@
         <div class="relative min-h-screen lg:flex">
             <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col">
                 <div class="h-16 flex items-center justify-between px-4 border-b border-slate-700 flex-shrink-0">
-                    <h1 class="text-2xl font-bold tracking-wider"><i class="fas fa-truck-moving mr-2"></i>LOG IKK</h1>
-                    <button id="sidebar-close-btn" class="lg:hidden text-2xl text-slate-400 hover:text-white">&times;</button>
+                     <h1 class="text-2xl font-bold tracking-wider flex items-center"><i class="fas fa-truck-moving w-6 text-center"></i><span class="ml-3 sidebar-text">LOG IKK</span></h1>
+                     <button id="sidebar-close-btn" class="lg:hidden text-2xl text-slate-400 hover:text-white">&times;</button>
                 </div>
                 <nav class="flex-grow px-4 py-4 overflow-y-auto">
                     <a href="#" id="nav-home" class="sidebar-link flex items-center px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('home')">
-                        <i class="fas fa-home w-6 text-center"></i><span class="ml-3">Home</span>
+                        <i class="fas fa-home w-6 text-center"></i><span class="ml-3 sidebar-text">Home</span>
                     </a>
                     <a href="#" id="nav-realtimeMonitoring" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('realtimeMonitoring')">
-                        <i class="fas fa-map-marked-alt w-6 text-center"></i><span class="ml-3">Realtime Monitoring</span>
+                        <i class="fas fa-map-marked-alt w-6 text-center"></i><span class="ml-3 sidebar-text">Realtime Monitoring</span>
                     </a>
                     <a href="#" id="nav-statusTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('statusTruck')">
-                        <i class="fas fa-eye w-6 text-center"></i><span class="ml-3">Status Truck</span>
+                        <i class="fas fa-eye w-6 text-center"></i><span class="ml-3 sidebar-text">Status Truck</span>
                     </a>
                     <a href="#" id="nav-listTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('listTruck')">
-                        <i class="fas fa-list-ul w-6 text-center"></i><span class="ml-3">List Truck</span>
+                        <i class="fas fa-list-ul w-6 text-center"></i><span class="ml-3 sidebar-text">List Truck</span>
                     </a>
                     <a href="#" id="nav-masterCustomer" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('masterCustomer')">
-                        <i class="fas fa-users w-6 text-center"></i><span class="ml-3">Master Customer</span>
+                        <i class="fas fa-users w-6 text-center"></i><span class="ml-3 sidebar-text">Master Customer</span>
                     </a>
                     <a href="#" id="nav-masterJenisTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('masterJenisTruck')">
-                        <i class="fas fa-tags w-6 text-center"></i><span class="ml-3">Master Jenis Truck</span>
+                        <i class="fas fa-tags w-6 text-center"></i><span class="ml-3 sidebar-text">Master Jenis Truck</span>
                     </a>
                     <a href="#" id="nav-ritaseTruck" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('ritaseTruck')">
-                        <i class="fas fa-route w-6 text-center"></i><span class="ml-3">Ritase Truck</span>
+                        <i class="fas fa-route w-6 text-center"></i><span class="ml-3 sidebar-text">Ritase Truck</span>
                     </a>
                     <a href="#" id="nav-summaryReport" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('summaryReport')">
-                        <i class="fas fa-chart-pie w-6 text-center"></i><span class="ml-3">Summary Report</span>
+                        <i class="fas fa-chart-pie w-6 text-center"></i><span class="ml-3 sidebar-text">Summary Report</span>
                     </a>
                     <a href="#" id="nav-laporanInap" class="sidebar-link flex items-center mt-2 px-4 py-3 rounded-lg font-semibold hover:bg-slate-700" onclick="window.showContent('laporanInap')">
-                        <i class="fas fa-bed w-6 text-center"></i><span class="ml-3">Summary Inap</span>
+                        <i class="fas fa-bed w-6 text-center"></i><span class="ml-3 sidebar-text">Summary Inap</span>
                     </a>
                 </nav>
+
+                <div class="border-t border-slate-700 p-4 flex-shrink-0 hidden lg:flex">
+                    <button id="sidebar-toggle-btn" class="w-full flex items-center justify-start text-slate-400 hover:text-white" title="Toggle Sidebar">
+                        <i class="fas fa-chevron-left w-6 text-center sidebar-toggle-icon-collapse"></i>
+                        <i class="fas fa-chevron-right w-6 text-center sidebar-toggle-icon-expand hidden"></i>
+                    </button>
+                </div>
             </aside>
 
             <div class="flex-1 flex flex-col overflow-hidden">
@@ -797,9 +933,9 @@
         let currentVendorTruckFilterColumn = null;
 
         const appId = 'truck-dashboard-app';
-        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
-        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'MUAT': { icon: 'fa-box-open', color: 'blue' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
-        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'MUAT': 'bg-blue-100 text-blue-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
+        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
+        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
         
         // PAGINATION STATE
         let paginationState = {
@@ -1030,7 +1166,7 @@
                 if(document.getElementById('masterCustomer').classList.contains('active')) {
                     filterCustomerTable();
                 }
-            }, (error) => console.error("Customer Listener Error:", error));
+            }, (error) => console.error("Customer Listener E rror:", error));
 
             const jenisTruckCollectionRef = collection(db, "jenis_truck");
             unsubscribeFromJenisTruck = onSnapshot(query(jenisTruckCollectionRef, orderBy("name")), (snapshot) => {
@@ -1057,7 +1193,7 @@
             try {
                 // Memanggil proxy Vercel Anda, bukan API EasyGo secara langsung
                 const response = await fetch(API_URL, {
-                    method: 'POST', // Fungsi perantara Anda juga mengharapkan POST
+                    method: 'POST', //   Fungsi perantara Anda juga mengharapkan POST
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -1472,7 +1608,7 @@
             const totalTrucks = data.length;
             const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
             const totalAngkutan = [...new Set(data.map(t => t.angkutan).filter(Boolean))].length;
-            const activeTrucks = data.filter(t => ['OTW MUAT', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
+            const activeTrucks = data.filter(t => ['OTW MUAT', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
 
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
@@ -1525,7 +1661,7 @@
                         </div>
                         <div class="ml-4 overflow-hidden">
                             <p class="text-slate-500 font-semibold truncate" title="${vendorName}">${vendorName}</p>
-                            <p class="text-2xl font-bold text-slate-800">${count} Truk</p>
+                            <p class="text-2xl font-bold text-slate-800">${count}<span class="text-suffix-truk"> Truk</span></p>
                         </div>`;
                     vendorContainer.appendChild(vendorCard);
                 });
@@ -1554,7 +1690,7 @@
                         </div>
                         <div class="ml-4 overflow-hidden">
                             <p class="text-slate-500 font-semibold truncate" title="${jenis}">${jenis}</p>
-                            <p class="text-2xl font-bold text-slate-800">${count} Truk</p>
+                            <p class="text-2xl font-bold text-slate-800">${count}<span class="text-suffix-truk"> Truk</span></p>
                         </div>`;
                     jenisTruckContainer.appendChild(card);
                 });
@@ -1727,7 +1863,7 @@
             );
         };
         
-        window.cancelEdit = () => filterTable();
+        window.cancelEdit = () => renderTruckList();
 
         window.toggleAddForm = (forceClose = false) => {
             const form = document.getElementById('addForm');
@@ -2332,7 +2468,7 @@
         };
 
         window.cancelCustomerEdit = () => {
-            filterCustomerTable();
+            renderCustomerTable();
         };
         
         window.filterCustomerTable = function() {
@@ -2454,7 +2590,7 @@
         };
 
         window.cancelJenisTruckEdit = () => {
-            filterJenisTruckTable();
+            renderJenisTruckTable();
         };
         
         window.filterJenisTruckTable = function() {
@@ -3072,6 +3208,37 @@
         document.addEventListener('DOMContentLoaded', () => {
             setInterval(updateRealTimeClock, 1000);
             document.getElementById('copyright-year-login-admin').textContent = new Date().getFullYear();
+
+            // ===================================================================
+            // INI KODE BARU YANG DITAMBAHKAN
+            // ===================================================================
+            const desktopSidebar = document.getElementById('sidebar');
+            const desktopToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebarStateKey = 'adminSidebarCollapsed'; // Key unik untuk admin
+
+            if (desktopToggleBtn) {
+                // 1. Cek status dari localStorage saat load
+                if (localStorage.getItem(sidebarStateKey) === 'true') {
+                    desktopSidebar.classList.add('sidebar-collapsed');
+                }
+
+                // 2. Tambah event listener untuk tombol
+                desktopToggleBtn.addEventListener('click', () => {
+                    desktopSidebar.classList.toggle('sidebar-collapsed');
+                    const isCollapsed = desktopSidebar.classList.contains('sidebar-collapsed');
+                    localStorage.setItem(sidebarStateKey, isCollapsed);
+                    
+                    // Penting: Trigger map resize jika halaman map sedang aktif
+                    if (document.getElementById('realtimeMonitoring').classList.contains('active') && typeof realtimeMap !== 'undefined' && realtimeMap) {
+                        setTimeout(() => {
+                            realtimeMap.invalidateSize();
+                        }, 250); // Sesuaikan dengan durasi transisi CSS
+                    }
+                });
+            }
+            // ===================================================================
+            // AKHIR DARI KODE BARU
+            // ===================================================================
             
             document.getElementById('loginButton').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(e => {
                 document.getElementById('loginError').textContent = 'Email atau password salah.';
@@ -3122,6 +3289,7 @@
                 }
             });
 
+            // Ini adalah kode LAMA Anda untuk sidebar mobile
             const sidebar = document.getElementById('sidebar');
             const openBtn = document.getElementById('sidebar-open-btn');
             const closeBtn = document.getElementById('sidebar-close-btn');
@@ -3150,6 +3318,6 @@
             });
         });
     </script>
+
 </body>
 </html>
-
