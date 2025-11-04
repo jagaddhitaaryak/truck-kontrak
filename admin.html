@@ -135,13 +135,11 @@
             align-items: stretch; /* Paksa anak-anaknya (icon, text) untuk setinggi card */
         }
 
-        /* === 2. Pusatkan Icon & Beri Jarak === */
+        /* === 2. SEMBUNYIKAN Icon === */
         #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .p-4,
         #sidebar.sidebar-collapsed ~ .flex-1 #home .status-card .p-3,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid .p-3 {
-            align-self: center; /* Buat icon tetap di tengah (vertikal) */
-            margin: 1.5rem 0.5rem 1.5rem 1.5rem; /* Margin kanan dikurangi jadi 0.5rem (8px) */
-            flex-shrink: 0; /* Mencegah icon penyok */
+            display: none; /* Icon disembunyikan */
         }
         
         /* === 3. Atur Kontainer Teks (Judul + Angka) === */
@@ -153,14 +151,20 @@
             min-width: 0; 
         }
         
-        /* === 4. Atur Blok Judul === */
+        /* === 4. Atur Blok Judul (CENTERED) === */
         #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 p.font-semibold,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #status-details-grid p.text-slate-500,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #vendor-details-grid p.text-slate-500,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid p.text-slate-500 {
-            /* 'display: flex;' dan 'align-items: center;' DIHAPUS agar teks bisa wrap */
-            padding: 1.5rem 0.5rem 1.5rem 0; /* Padding kiri 0, kanan 0.5rem */
+            /* BARU: Dibuat flex & center */
+            display: flex;
+            align-items: center;     /* Rata tengah vertikal */
+            justify-content: center; /* Rata tengah horizontal */
+            text-align: center;      /* Rata tengah untuk teks yang wrap */
+            flex: 1;                 /* Ambil sisa ruang di sebelah angka */
+            padding: 1rem 0.5rem;    /* Padding internal (atas-bawah | kiri-kanan) */
             
+            /* Properti lama dipertahankan */
             font-size: 2rem; 
             font-weight: 600; 
             white-space: normal;  
@@ -358,7 +362,7 @@
                             <div id="total-angkutan-card" class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
                                 <div class="p-4 bg-green-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
                                 <div class="ml-4">
-                                    <p class="font-semibold">Total Vendor Angkutan</p>
+                                    <p class="font-semibold">Total Vendor</p>
                                     <p id="total-angkutan-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
@@ -933,10 +937,9 @@
         let currentVendorTruckFilterColumn = null;
 
         const appId = 'truck-dashboard-app';
-        const statusOptions = ['TERSEDIA', 'OTW MUAT', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
-        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MUAT': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
-        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MUAT': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
-        
+        const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
+        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MILL': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
+        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MILL': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
         // PAGINATION STATE
         let paginationState = {
             listTruck: { currentPage: 1, filteredData: [] },
@@ -1608,7 +1611,7 @@
             const totalTrucks = data.length;
             const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
             const totalAngkutan = [...new Set(data.map(t => t.angkutan).filter(Boolean))].length;
-            const activeTrucks = data.filter(t => ['OTW MUAT', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
+            const activeTrucks = data.filter(t => ['OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
 
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
@@ -3318,6 +3321,5 @@
             });
         });
     </script>
-
 </body>
 </html>
