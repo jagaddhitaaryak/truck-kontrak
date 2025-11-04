@@ -135,11 +135,13 @@
             align-items: stretch; /* Paksa anak-anaknya (icon, text) untuk setinggi card */
         }
 
-        /* === 2. SEMBUNYIKAN Icon === */
+        /* === 2. Pusatkan Icon & Beri Jarak === */
         #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 .p-4,
         #sidebar.sidebar-collapsed ~ .flex-1 #home .status-card .p-3,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid .p-3 {
-            display: none; /* Icon disembunyikan */
+            align-self: center; /* Buat icon tetap di tengah (vertikal) */
+            margin: 1.5rem 0.5rem 1.5rem 1.5rem; /* Atur jarak icon */
+            flex-shrink: 0; /* Mencegah icon penyok */
         }
         
         /* === 3. Atur Kontainer Teks (Judul + Angka) === */
@@ -151,20 +153,19 @@
             min-width: 0; 
         }
         
-        /* === 4. Atur Blok Judul (CENTERED) === */
+        /* === 4. Atur Blok Judul (Layout & Centering) === */
+        /* Blok ini mengatur layout untuk SEMUA kartu, termasuk 4 kartu atas */
         #sidebar.sidebar-collapsed ~ .flex-1 #home .grid.mb-8 p.font-semibold,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #status-details-grid p.text-slate-500,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #vendor-details-grid p.text-slate-500,
         #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid p.text-slate-500 {
-            /* BARU: Dibuat flex & center */
             display: flex;
-            align-items: center;     /* Rata tengah vertikal */
-            justify-content: center; /* Rata tengah horizontal */
-            text-align: center;      /* Rata tengah untuk teks yang wrap */
-            flex: 1;                 /* Ambil sisa ruang di sebelah angka */
-            padding: 1rem 0.5rem;    /* Padding internal (atas-bawah | kiri-kanan) */
+            align-items: center;     
+            justify-content: center; 
+            text-align: center;      
+            flex: 1;                 
+            padding: 1rem 0.5rem;    
             
-            /* Properti lama dipertahankan */
             font-size: 2rem; 
             font-weight: 600; 
             white-space: normal;  
@@ -172,6 +173,15 @@
             min-width: 0;
             overflow: visible;
             text-overflow: clip;
+            /* Garis 'color: #1f2937;' DIHAPUS dari sini */
+        }
+
+        /* === 4B. Atur Warna Hitam (Hanya Kartu Rincian) === */
+        /* Blok ini HANYA menargetkan kartu rincian agar berwarna hitam */
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #status-details-grid p.text-slate-500,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #vendor-details-grid p.text-slate-500,
+        #sidebar.sidebar-collapsed ~ .flex-1 #home #jenis-truck-details-grid p.text-slate-500 {
+            color: #1f2937; /* Warna hitam (slate-900) */
         }
 
         /* === 5. Atur Blok Angka (Kotak Abu-abu) === */
@@ -193,7 +203,7 @@
             font-size: 4.5rem; /* 72px - SANGAT BESAR */
             line-height: 1;
             font-weight: 700;
-            color: #1f2937; /* Teks hitam */
+            color: #2735F5; /* Teks hitam */
 
             /* Style Kotak */
             background-color: #e5e7eb; /* Kotak abu-abu (bg-gray-200) */
@@ -940,6 +950,17 @@
         const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
         const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MILL': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
         const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MILL': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+
+        // --- TAMBAHKAN BLOK INI ---
+        const vendorNameMapping = {
+            "PT. ALIEF SUKSES BERDIKARI": "ALIEF",
+            "PT. SEMEN INDONESIA LOGISTIK": "SILOG",
+            "PT. SINAR MAJU JAYA": "SMJ",
+            "PT. TIARA FAJAR TRANSPORTINDO": "TFT",
+            "PT. TRANSPORTASI NUSANTARA JAYA": "TNJ",
+            "PT. YUSHAR PUTERA JAYA": "YUSHAR"
+        };
+
         // PAGINATION STATE
         let paginationState = {
             listTruck: { currentPage: 1, filteredData: [] },
@@ -1653,17 +1674,31 @@
 
                 sortedVendors.forEach(vendorName => {
                     const count = vendorCounts[vendorName];
+
+                    // === LOGIKA BARU DIMULAI DI SINI ===
+                    // Cek apakah sidebar sedang disembunyikan
+                    const isCollapsed = document.getElementById('sidebar').classList.contains('sidebar-collapsed');
+                    
+                    // Tentukan nama yang akan ditampilkan
+                    // Jika disembunyikan, cari nama pendek. Jika tidak ketemu, pakai nama asli.
+                    let displayName = vendorName;
+                    if (isCollapsed && vendorNameMapping[vendorName]) {
+                        displayName = vendorNameMapping[vendorName];
+                    }
+                    // === LOGIKA BARU SELESAI ===
                     
                     const vendorCard = document.createElement('div');
                     vendorCard.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
                     vendorCard.style.cursor = 'pointer';
-                    vendorCard.onclick = () => window.showTrucksByVendor(vendorName);
+                    vendorCard.onclick = () => window.showTrucksByVendor(vendorName); // OnClick tetap pakai nama asli
+                    
+                    // Gunakan 'displayName' untuk teks, tapi 'vendorName' untuk 'title' (tooltip)
                     vendorCard.innerHTML = `
                         <div class="p-3 bg-sky-100 rounded-full">
                             <i class="fas fa-building text-2xl text-sky-600"></i>
                         </div>
                         <div class="ml-4 overflow-hidden">
-                            <p class="text-slate-500 font-semibold truncate" title="${vendorName}">${vendorName}</p>
+                            <p class="text-slate-500 font-semibold truncate" title="${vendorName}">${displayName}</p>
                             <p class="text-2xl font-bold text-slate-800">${count}<span class="text-suffix-truk"> Truk</span></p>
                         </div>`;
                     vendorContainer.appendChild(vendorCard);
@@ -3231,6 +3266,11 @@
                     const isCollapsed = desktopSidebar.classList.contains('sidebar-collapsed');
                     localStorage.setItem(sidebarStateKey, isCollapsed);
                     
+                    // === TAMBAHKAN BARIS INI ===
+                    // Panggil ulang renderHomePage untuk memperbarui nama vendor
+                    renderHomePage(window.trucksData); 
+                    // === BATAS TAMBAHAN ===
+
                     // Penting: Trigger map resize jika halaman map sedang aktif
                     if (document.getElementById('realtimeMonitoring').classList.contains('active') && typeof realtimeMap !== 'undefined' && realtimeMap) {
                         setTimeout(() => {
@@ -3321,5 +3361,6 @@
             });
         });
     </script>
+
 </body>
 </html>
