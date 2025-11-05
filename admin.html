@@ -381,7 +381,7 @@
                                     <i class="fas fa-route text-3xl"></i>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="font-semibold">Truk Sedang Jalan</p>
+                                    <p class="font-semibold">Truk Dijalan</p>
                                     <p id="active-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
@@ -509,7 +509,11 @@
                         <form class="hidden bg-white p-6 rounded-xl shadow-md mb-6" id="addCustomerForm">
                             <h4 class="text-xl font-bold text-slate-700 mb-4">Tambah Customer Baru</h4>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <input type="text" id="newCustomerName" placeholder="Nama Customer" class="w-full p-2 border border-slate-300 rounded-lg md:col-span-2">
+                                <input type="text" id="newCustomerName" placeholder="Nama Customer" class="w-full p-2 border border-slate-300 rounded-lg">
+                                <select id="newCustomerType" class="w-full p-2 border border-slate-300 rounded-lg">
+                                    <option value="BU17">BU17</option>
+                                    <option value="CMI">CMI</option>
+                                </select>
                                 <div class="flex items-center gap-2">
                                     <button type="button" class="w-full bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-indigo-700" onclick="window.addCustomer()">Simpan</button>
                                     <button type="button" class="w-full bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-lg" onclick="window.toggleAddCustomerForm()">Batal</button>
@@ -522,6 +526,7 @@
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-100">
                                     <tr>
                                         <th class="px-6 py-3">Nama Customer</th>
+                                        <th class="px-6 py-3">Tipe</th>
                                         <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
@@ -670,15 +675,17 @@
 
                     
                     <div id="laporanInap" class="content-section">
+                        <h4 id="summary-inap-title" class="text-xl font-bold text-slate-700 uppercase mb-4">SUMMARY INAP PER CUSTOMER & KOTA</h4>
+
                         <div class="bg-white p-6 rounded-xl shadow-md mb-8">
                             <div class="flex justify-between items-center mb-4">
-                                <h4 id="summary-inap-title" class="text-xl font-bold text-slate-700 uppercase">SUMMARY INAP PER CUSTOMER & KOTA</h4>
-                                <button onclick="window.exportInapTableAsImage('inap-by-customer-table', 'Summary Inap per-Customer & Kota')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                <h4 class="text-lg font-bold text-slate-800">SUMMARY INAP - BU17</h4>
+                                <button onclick="window.exportInapTableAsImage('inap-bu17-table', 'Summary Inap - BU17')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
                                     <i class="fas fa-image"></i> Export Gambar
                                 </button>
                             </div>
                             <div class="overflow-x-auto">
-                                <table id="inap-by-customer-table" class="w-full text-sm text-left text-slate-600">
+                                <table id="inap-bu17-table" class="w-full text-sm text-left text-slate-600">
                                     <thead class="text-xs text-white uppercase bg-slate-800">
                                         <tr>
                                             <th class="px-4 py-3 w-1/2">Customer</th>
@@ -686,13 +693,40 @@
                                             <th class="px-4 py-3 text-center">Total Truck Inap</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="inap-by-customer-table-body"></tbody>
-                                        <tfoot class="bg-slate-800 font-bold text-white">
-                                            <tr>
-                                                <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL</td>
-                                                <td id="inap-grand-total" class="px-4 py-3 text-center text-xl">0</td>
-                                            </tr>
-                                        </tfoot>
+                                    <tbody id="inap-by-customer-table-body-bu17"></tbody>
+                                    <tfoot class="bg-slate-800 font-bold text-white">
+                                        <tr>
+                                            <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL (BU17)</td>
+                                            <td id="inap-grand-total-bu17" class="px-4 py-3 text-center text-xl">0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-lg font-bold text-slate-800">SUMMARY INAP - CMI</h4>
+                                <button onclick="window.exportInapTableAsImage('inap-cmi-table', 'Summary Inap - CMI')" class="flex items-center gap-2 bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-image"></i> Export Gambar
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="inap-cmi-table" class="w-full text-sm text-left text-slate-600">
+                                    <thead class="text-xs text-white uppercase bg-slate-800">
+                                        <tr>
+                                            <th class="px-4 py-3 w-1/2">Customer</th>
+                                            <th class="px-4 py-3">Kota</th>
+                                            <th class="px-4 py-3 text-center">Total Truck Inap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inap-by-customer-table-body-cmi"></tbody>
+                                    <tfoot class="bg-slate-800 font-bold text-white">
+                                        <tr>
+                                            <td class="px-4 py-3 text-left" colspan="2">GRAND TOTAL (CMI)</td>
+                                            <td id="inap-grand-total-cmi" class="px-4 py-3 text-center text-xl">0</td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>
@@ -925,6 +959,28 @@
         </div>
     </div>
 
+    <div id="inap-status-modal" class="modal-overlay hidden" onclick="window.closeInapStatusModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="window.closeInapStatusModal()">&times;</span>
+        <h3 id="inap-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Daftar Truk Inap</h3>
+        <div class="modal-body">
+            <table class="w-full text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-3" data-sort="angkutan" onclick="window.sortInapModalTable('angkutan')">Angkutan</th>
+                        <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortInapModalTable('no_mobil')">Plat Nomor</th>
+                        <th class="px-4 py-3" data-sort="customer" onclick="window.sortInapModalTable('customer')">Nama Customer</th>
+                        <th class="px-4 py-3" data-sort="tujuan" onclick="window.sortInapModalTable('tujuan')">Kota</th>
+                        <th class="px-4 py-3" data-sort="leadTimeMinutes" onclick="window.sortInapModalTable('leadTimeMinutes')">Lama Inap</th>
+                    </tr>
+                </thead>
+                <tbody id="inap-modal-truck-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -935,6 +991,37 @@
         window.customersData = [];
         window.jenisTruckData = [];
         window.allRitaseData = [];
+
+        // --- TAMBAHKAN BARIS INI ---
+        window.customerTypeMap = new Map();
+        // --- BATAS TAMBAHAN ---
+
+        // --- TAMBAHKAN FUNGSI BARU INI ---
+        function getDynamicStatus(truck) {
+            if (!truck) return 'N/A';
+            const originalStatus = truck.keterangan;
+
+            // Jika status bukan INAP, kembalikan apa adanya
+            if (originalStatus !== 'INAP') {
+                return originalStatus;
+            }
+            
+            // Jika INAP, cek tipe customer
+            const customerName = truck.customer;
+            if (!customerName) {
+                return 'INAP (Lainnya)'; // INAP, tapi tidak ada customer
+            }
+
+            const customerType = window.customerTypeMap.get(customerName);
+            if (customerType === 'BU17') {
+                return 'INAP BU17';
+            } else if (customerType === 'CMI') {
+                return 'INAP CMI';
+            } else {
+                return 'INAP (Lainnya)'; // INAP, customer ada, tapi tipenya tidak diset
+            }
+        }
+        // --- BATAS FUNGSI BARU ---
         
         let realtimeMap;
         let realtimeTruckMarkers = {};
@@ -945,6 +1032,12 @@
         let activeFilters = {};
         let vendorTruckModalFilters = {};
         let currentVendorTruckFilterColumn = null;
+
+        // --- TAMBAHKAN DUA BARIS DI BAWAH INI ---
+        let currentInapModalTrucks = []; // Data untuk modal INAP baru
+        let inapModalSort = { column: 'leadTimeMinutes', direction: 'desc' }; // Default sort (paling lama di atas)
+        // --- BATAS TAMBAHAN ---
+
 
         const appId = 'truck-dashboard-app';
         const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
@@ -1186,10 +1279,40 @@
 
             const customersCollectionRef = collection(db, "customers");
             unsubscribeFromCustomers = onSnapshot(query(customersCollectionRef, orderBy("name")), (snapshot) => {
-                window.customersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                window.customerTypeMap.clear(); // Bersihkan map lama
+                window.customersData = snapshot.docs.map(doc => {
+                    const data = { id: doc.id, ...doc.data() };
+                    window.customerTypeMap.set(data.name, data.customer_type); // Isi map
+                    return data;
+                });
+
                 if(document.getElementById('masterCustomer').classList.contains('active')) {
                     filterCustomerTable();
                 }
+
+                // --- TAMBAHAN PENTING ---
+                // Panggil ulang renderHomePage SETELAH customer map siap.
+                // Ini untuk memperbaiki race condition (masalah timing)
+                // Kita cek dulu apakah data truk sudah ada
+                if (window.trucksData && window.trucksData.length > 0) {
+                    // Panggil ulang semua fungsi render yang bergantung pada customer map
+                    
+                    if (document.getElementById('home').classList.contains('active')) {
+                         renderHomePage(window.trucksData);
+                    }
+                    if (document.getElementById('statusTruck').classList.contains('active')) {
+                        displayStatusCards(window.trucksData);
+                    }
+                    if (document.getElementById('summaryReport').classList.contains('active')) {
+                        renderSummaryReport();
+                    }
+                    if (document.getElementById('laporanInap').classList.contains('active')) {
+                        renderLaporanInap();
+                    }
+                }
+                // --- BATAS TAMBAHAN ---
+
             }, (error) => console.error("Customer Listener E rror:", error));
 
             const jenisTruckCollectionRef = collection(db, "jenis_truck");
@@ -1642,11 +1765,18 @@
 
             const container = document.getElementById('status-details-grid');
             container.innerHTML = '';
-            statusOptions.forEach(status => {
-                const count = data.filter(truck => truck.keterangan === status).length;
+
+            // 1. Fungsi helper untuk buat kartu (agar tidak duplikat kode)
+            const createStatusCard = (status, count) => {
                 if (count === 0) return;
                 
-                const info = statusInfo[status] || { icon: 'fa-question-circle', color: 'gray' };
+                // Tentukan info asli (untuk warna/icon)
+                let originalStatus = status;
+                if (status.startsWith('INAP')) {
+                    originalStatus = 'INAP';
+                }
+                
+                const info = statusInfo[originalStatus] || { icon: 'fa-question-circle', color: 'gray' };
                 const card = document.createElement('div');
                 card.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
                 card.style.cursor = 'pointer';
@@ -1658,7 +1788,24 @@
                     </div>`;
                 card.onclick = () => window.showTrucksByStatus(status);
                 container.appendChild(card);
+            };
+
+            // 2. Loop untuk semua status KECUALI INAP
+            statusOptions.forEach(status => {
+                if (status === 'INAP') return; // Skip INAP
+                const count = data.filter(truck => truck.keterangan === status).length;
+                createStatusCard(status, count);
             });
+
+            // 3. Hitung dan buat kartu INAP secara manual
+            const inapBU17Count = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17').length;
+            createStatusCard('INAP BU17', inapBU17Count);
+            
+            const inapCMICount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI').length;
+            createStatusCard('INAP CMI', inapCMICount);
+
+            const inapLainnyaCount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)').length;
+            createStatusCard('INAP (Lainnya)', inapLainnyaCount);
 
             const vendorContainer = document.getElementById('vendor-details-grid');
             if (vendorContainer) {
@@ -1975,7 +2122,14 @@
             jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; uniqueJenis.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
             
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; 
-            statusOptions.forEach(s => statusSelect.innerHTML += `<option value="${s}">${s}</option>`);
+            statusOptions.forEach(s => {
+                if (s === 'INAP') return; // Skip INAP standar
+                statusSelect.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+            // Tambah status INAP baru secara manual
+            statusSelect.innerHTML += `<option value="INAP BU17">INAP BU17</option>`;
+            statusSelect.innerHTML += `<option value="INAP CMI">INAP CMI</option>`;
+            statusSelect.innerHTML += `<option value="INAP (Lainnya)">INAP (Lainnya)</option>`;
             statusSelect.innerHTML += `<option value="ANTRI BONGKAR + INAP">ANTRI BONGKAR + INAP</option>`;
         }
         
@@ -2021,30 +2175,82 @@
                 <div class="flex justify-between"><span class="text-slate-500">Keluar Bongkar:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.keluar_lokasi_bongkar)}</span></div>
             </div>`;
             
-            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
+            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
         }
         
         window.renderSummaryReport = function() {
-            let filteredData = [...window.trucksData];
             const selectedAngkutan = document.getElementById('summaryFilterAngkutan').value;
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
+
+            // --- LOGIKA BARU UNTUK CEK STATUS INAP ---
+            const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
+            const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
+            // --- BATAS LOGIKA BARU ---
+
+            let filteredData = [...window.trucksData];
             if (selectedAngkutan !== 'all') filteredData = filteredData.filter(t => t.angkutan === selectedAngkutan);
             if (selectedJenisMobil !== 'all') filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil);
             
-            if (selectedStatus === 'ANTRI BONGKAR + INAP') {
+            if (selectedStatus === 'INAP BU17') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            } else if (selectedStatus === 'INAP CMI') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            } else if (selectedStatus === 'INAP (Lainnya)') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            } else if (selectedStatus === 'ANTRI BONGKAR + INAP') {
                 filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
             } else if (selectedStatus !== 'all') {
                 filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
             }
-            
-            const tableBody = document.getElementById('summaryTableBody'); tableBody.innerHTML = '';
-            if (filteredData.length === 0) { tableBody.innerHTML = `<tr><td colspan="13" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`; return; }
+
+            // --- LOGIKA BARU UNTUK SORTIR ---
+            if (showLeadTimeColumn) {
+                filteredData.sort((a, b) => {
+                    // Sortir INAP dulu, baru ANTRI BONGKAR
+                    const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[getDynamicStatus(a)] || 3;
+                    const statusB = statusPriority[getDynamicStatus(b)] || 3;
+                    const statusComp = statusA - statusB;
+                    if (statusComp !== 0) return statusComp;
+                    
+                    // Lalu sortir berdasarkan lead time terlama
+                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
+                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
+                    return leadTimeB - leadTimeA;
+                });
+            }
+            // --- BATAS LOGIKA SORTIR ---
+
+            const tableHeaderRow = document.getElementById('summaryTable').querySelector('thead tr');
+            const tableBody = document.getElementById('summaryTableBody');
+            tableBody.innerHTML = '';
+
+            // --- LOGIKA BARU UNTUK ATUR HEADER TABEL ---
+            const leadTimeTh = tableHeaderRow.querySelector('th.lead-time-col');
+            if (leadTimeTh) {
+                leadTimeTh.remove(); // Hapus header lama jika ada
+            }
+            if (showLeadTimeColumn) {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 lead-time-col'; // Tambah kelas agar mudah ditemukan
+                th.textContent = 'LEAD TIME';
+                tableHeaderRow.appendChild(th);
+            }
+            // --- BATAS LOGIKA HEADER ---
+
+            if (filteredData.length === 0) {
+                const colspan = showLeadTimeColumn ? 14 : 13; // Sesuaikan colspan
+                tableBody.innerHTML = `<tr><td colspan="${colspan}" class="text-center p-8 text-slate-500">Tidak ada data.</td></tr>`;
+                return;
+            }
             
             const formatWaktuTabel = (waktu) => waktu ? waktu.replace('T', ' ') : '-';
             filteredData.forEach(truck => {
                 const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
-                tableBody.innerHTML += `
+                
+                // --- KODE ROW DIBUAT DENGAN 'let' AGAR BISA DITAMBAH ---
+                let rowHtml = `
                 <tr class="bg-white border-b">
                     <td class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td>
                     <td class="px-6 py-4">${truck.fo || '-'}</td>
@@ -2054,12 +2260,21 @@
                     <td class="px-6 py-4">${formatWaktuTabel(truck.keluar_lokasi_bongkar)}</td>
                     <td class="px-6 py-4">${truck.customer || '-'}</td>
                     <td class="px-6 py-4">${truck.tujuan || '-'}</td>
-                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${truck.keterangan || '-'}</span></td>
+                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || '-'}</span></td>
                     <td class="px-6 py-4">${truck.nama_driver || '-'}</td>
                     <td class="px-6 py-4">${truck.no_hp || '-'}</td>
                     <td class="px-6 py-4">${truck.no_mobil || '-'}</td>
                     <td class="px-6 py-4">${truck.jenis_mobil || '-'}</td>
-                </tr>`;
+                `;
+
+                // --- LOGIKA BARU UNTUK TAMBAH SEL LEAD TIME ---
+                if (showLeadTimeColumn) {
+                    rowHtml += `<td class="px-6 py-4 font-semibold">${calculateLeadTime(truck.tiba_lokasi_bongkar)}</td>`;
+                }
+                // --- BATAS LOGIKA SEL ---
+
+                rowHtml += `</tr>`;
+                tableBody.innerHTML += rowHtml;
             });
         }
         
@@ -2074,75 +2289,107 @@
                 return;
             }
 
-            const groupedByCustomer = data.reduce((acc, truck) => {
-                const customer = truck.customer || 'Customer Tidak Diketahui';
-                if (!acc[customer]) { acc[customer] = []; }
-                acc[customer].push(truck);
-                return acc;
-            }, {});
+            // 1. Definisikan warna soft (Tailwind classes)
+            const bgBU17 = 'bg-orange-50'; // Soft Oranye
+            const bgCMI = 'bg-green-50';   // Soft Hijau
+            const bgOther = 'bg-white';    // Default
+
+            // 2. Pisahkan data menjadi tiga grup
+            const bu17Trucks = data.filter(t => t.dynamicStatus === 'INAP BU17');
+            const cmiTrucks = data.filter(t => t.dynamicStatus === 'INAP CMI');
+            const otherTrucks = data.filter(t => t.dynamicStatus !== 'INAP BU17' && t.dynamicStatus !== 'INAP CMI');
 
             let grandTotal = 0;
-            const sortedCustomers = Object.keys(groupedByCustomer).sort();
 
-            sortedCustomers.forEach(customerName => {
-                const trucksForCustomer = groupedByCustomer[customerName];
-                let customerTotal = 0;
+            // 3. Buat fungsi helper untuk me-render grup (agar tidak duplikat kode)
+            //    Fungsi ini berisi logika lama Anda (group by customer, lalu city)
+            const renderTruckGroup = (truckList, groupName, headerBgClass, rowBgClass) => {
+                if (truckList.length === 0) return; // Lewati jika grup ini kosong
 
-                const groupedByCity = trucksForCustomer.reduce((acc, truck) => {
-                    const city = truck.tujuan || 'Kota Tidak Diketahui';
-                    if (!acc[city]) { acc[city] = []; }
-                    acc[city].push(truck);
+                // Tambahkan baris header untuk grup (misal "BU17")
+                const groupHeaderRow = document.createElement('tr');
+                groupHeaderRow.className = `${headerBgClass} font-bold text-slate-700`; // Latar belakang lebih tebal
+                
+                // [PERBAIKAN] Poin 1: Tambahkan 'text-center' dan 'py-3' untuk centering
+                groupHeaderRow.innerHTML = `<td class="px-6 py-3 text-center" colspan="6">${groupName} (${truckList.length} Truk)</td>`;
+                tableBody.appendChild(groupHeaderRow);
+
+                const groupedByCustomer = truckList.reduce((acc, truck) => {
+                    const customer = truck.customer || 'Customer Tidak Diketahui';
+                    if (!acc[customer]) { acc[customer] = []; }
+                    acc[customer].push(truck);
                     return acc;
                 }, {});
 
-                const sortedCities = Object.keys(groupedByCity).sort();
-                
-                let isFirstRowOfCustomer = true;
-                sortedCities.forEach(cityName => {
-                    const trucksInCity = groupedByCity[cityName];
-                    const cityTotal = trucksInCity.length;
-                    customerTotal += cityTotal;
+                const sortedCustomers = Object.keys(groupedByCustomer).sort();
 
-                    trucksInCity.forEach((truck, index) => {
-                        const row = document.createElement('tr');
-                        row.className = 'bg-white border-b';
-                        
-                        row.innerHTML = `
-                            <td class="px-6 py-2 font-semibold">${isFirstRowOfCustomer && index === 0 ? customerName : ''}</td>
-                            <td class="px-6 py-2">${index === 0 ? cityName : ''}</td>
-                            <td class="px-6 py-2">${truck.angkutan || '-'}</td>
-                            <td class="px-6 py-2">${truck.no_mobil || '-'}</td>
-                            <td class="px-6 py-2">${truck.leadTimeFormatted}</td>
-                            <td class="px-6 py-2 text-center">1</td>
+                sortedCustomers.forEach(customerName => {
+                    const trucksForCustomer = groupedByCustomer[customerName];
+                    let customerTotal = 0;
+
+                    const groupedByCity = trucksForCustomer.reduce((acc, truck) => {
+                        const city = truck.tujuan || 'Kota Tidak Diketahui';
+                        if (!acc[city]) { acc[city] = []; }
+                        acc[city].push(truck);
+                        return acc;
+                    }, {});
+
+                    const sortedCities = Object.keys(groupedByCity).sort();
+                    
+                    let isFirstRowOfCustomer = true;
+                    sortedCities.forEach(cityName => {
+                        const trucksInCity = groupedByCity[cityName];
+                        const cityTotal = trucksInCity.length;
+                        customerTotal += cityTotal;
+
+                        trucksInCity.forEach((truck, index) => {
+                            const row = document.createElement('tr');
+                            // Terapkan warna background di sini
+                            row.className = `${rowBgClass} border-b`;
+                            
+                            row.innerHTML = `
+                                <td class="px-6 py-2 font-semibold">${isFirstRowOfCustomer && index === 0 ? customerName : ''}</td>
+                                <td class="px-6 py-2">${index === 0 ? cityName : ''}</td>
+                                <td class="px-6 py-2">${truck.angkutan || '-'}</td>
+                                <td class="px-6 py-2">${truck.no_mobil || '-'}</td>
+                                <td class="px-6 py-2">${truck.leadTimeFormatted}</td>
+                                <td class="px-6 py-2 text-center">1</td>
+                            `;
+                            tableBody.appendChild(row);
+                            isFirstRowOfCustomer = false;
+                        });
+
+                        // City Total Row
+                        const cityTotalRow = document.createElement('tr');
+                        // Terapkan warna background di sini juga
+                        cityTotalRow.className = `${rowBgClass} font-bold border-b`;
+                        cityTotalRow.innerHTML = `
+                            <td></td>
+                            <td class="px-6 py-2 text-left">${cityName} TOTAL</td>
+                            <td colspan="3"></td>
+                            <td class="px-6 py-2 text-center text-red-600">${cityTotal}</td>
                         `;
-                        tableBody.appendChild(row);
-                        isFirstRowOfCustomer = false;
+                        tableBody.appendChild(cityTotalRow);
                     });
 
-                    // City Total Row
-                    const cityTotalRow = document.createElement('tr');
-                    cityTotalRow.className = 'bg-slate-100 font-bold';
-                    cityTotalRow.innerHTML = `
-                        <td></td>
-                        <td class="px-6 py-2 text-left">${cityName} TOTAL</td>
-                        <td colspan="3"></td>
-                        <td class="px-6 py-2 text-center text-red-600">${cityTotal}</td>
+                    // Customer Total Row (biarkan warna ini agar menonjol)
+                    const customerTotalRow = document.createElement('tr');
+                    customerTotalRow.className = 'bg-slate-200 font-extrabold text-slate-800';
+                    customerTotalRow.innerHTML = `
+                        <td class="px-6 py-2 text-left" colspan="5">${customerName} TOTAL</td>
+                        <td class="px-6 py-2 text-center">${customerTotal}</td>
                     `;
-                    tableBody.appendChild(cityTotalRow);
+                    tableBody.appendChild(customerTotalRow);
                 });
+            };
 
-                // Customer Total Row
-                const customerTotalRow = document.createElement('tr');
-                customerTotalRow.className = 'bg-slate-200 font-extrabold text-slate-800';
-                customerTotalRow.innerHTML = `
-                    <td class="px-6 py-2 text-left" colspan="5">${customerName} TOTAL</td>
-                    <td class="px-6 py-2 text-center">${customerTotal}</td>
-                `;
-                tableBody.appendChild(customerTotalRow);
-            });
+            // 4. Render setiap grup berdasarkan urutan yang diminta
+            renderTruckGroup(bu17Trucks, 'BU17', 'bg-orange-200', bgBU17);
+            renderTruckGroup(cmiTrucks, 'CMI', 'bg-green-200', bgCMI);
+            renderTruckGroup(otherTrucks, 'INAP (LAINNYA)', 'bg-slate-100', bgOther);
+            
+            // 5. Hitung dan render Grand Total
             grandTotal = data.length;
-
-            // Grand Total Row
             tfoot.innerHTML = `
                 <tr class="bg-slate-800 font-bold text-white">
                     <td class="px-6 py-3 text-left" colspan="5">GRAND TOTAL</td>
@@ -2152,21 +2399,10 @@
         }
 
 
-        function renderLaporanInap() {
-            const inapTrucks = window.trucksData.filter(truck => 
-                truck.keterangan === 'INAP' && truck.tiba_lokasi_bongkar
-            ).map(truck => {
-                const leadTimeMinutes = calculateLeadTimeInMinutes(truck.tiba_lokasi_bongkar);
-                return { 
-                    ...truck, 
-                    leadTimeMinutes: leadTimeMinutes,
-                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar),
-                    leadTimeDays: calculateLeadTimeInDays(truck.tiba_lokasi_bongkar)
-                };
-            }).sort((a, b) => b.leadTimeMinutes - a.leadTimeMinutes);
-
-            const customerTableBody = document.getElementById('inap-by-customer-table-body');
-            const grandTotalCell = document.getElementById('inap-grand-total');
+        // --- TAMBAHKAN FUNGSI HELPER BARU DI SINI ---
+        function renderInapSummaryTable(tableBodyId, grandTotalId, inapTrucks) {
+            const customerTableBody = document.getElementById(tableBodyId);
+            const grandTotalCell = document.getElementById(grandTotalId);
             customerTableBody.innerHTML = '';
 
             const customerCityCounts = inapTrucks.reduce((acc, truck) => {
@@ -2193,7 +2429,7 @@
             let grandTotal = 0;
 
             if (sortedCustomers.length === 0) {
-                customerTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-500">Tidak ada truk yang berstatus INAP saat ini.</td></tr>`;
+                customerTableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-500">Tidak ada truk yang berstatus INAP di kategori ini.</td></tr>`;
             } else {
                 sortedCustomers.forEach(item => {
                     grandTotal += item.count;
@@ -2207,6 +2443,32 @@
                 });
             }
             grandTotalCell.textContent = grandTotal;
+        }
+        // --- BATAS FUNGSI HELPER BARU ---
+
+
+        function renderLaporanInap() {
+            const inapTrucks = window.trucksData.filter(truck => 
+                truck.keterangan === 'INAP' && truck.tiba_lokasi_bongkar
+            ).map(truck => {
+                const leadTimeMinutes = calculateLeadTimeInMinutes(truck.tiba_lokasi_bongkar);
+                return { 
+                    ...truck, 
+                    leadTimeMinutes: leadTimeMinutes,
+                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar),
+                    leadTimeDays: calculateLeadTimeInDays(truck.tiba_lokasi_bongkar),
+                    dynamicStatus: getDynamicStatus(truck) 
+                };
+            }).sort((a, b) => b.leadTimeMinutes - a.leadTimeMinutes);
+
+            // 1. Bagi data INAP menjadi 3 kategori
+            const inapBU17 = inapTrucks.filter(t => t.dynamicStatus === 'INAP BU17');
+            const inapCMI = inapTrucks.filter(t => t.dynamicStatus === 'INAP CMI');
+            const inapLainnya = inapTrucks.filter(t => t.dynamicStatus === 'INAP (Lainnya)');
+
+            // 2. Panggil helper baru kita untuk setiap tabel
+            renderInapSummaryTable('inap-by-customer-table-body-bu17', 'inap-grand-total-bu17', inapBU17);
+            renderInapSummaryTable('inap-by-customer-table-body-cmi', 'inap-grand-total-cmi', inapCMI);
 
             const LIMIT_3_DAYS = 3;
             const LIMIT_6_DAYS = 6;
@@ -2219,9 +2481,35 @@
                 { id: 'more-9days', data: inapTrucks.filter(t => t.leadTimeDays >= LIMIT_9_DAYS), tableBodyId: 'inap-table-more-9days', tfootId: 'inap-tfoot-more-9days' }
             ];
 
+            const titleMap = {
+                'less-3days': 'INAP : < 3 HARI',
+                '3-6days': 'INAP : 3 - 6 HARI',
+                '6-9days': 'INAP : 6 - 9 HARI',
+                'more-9days': 'INAP : > 9 HARI'
+            };
+
             categories.forEach(cat => {
                 const totalSpan = document.getElementById(`total-${cat.id}`);
-                totalSpan.textContent = `(${cat.data.length} Truk)`;
+                // [PERBAIKAN] Cek jika totalSpan ada sebelum mengakses parentElement
+                if (totalSpan) {
+                    const h4 = totalSpan.parentElement; // Dapatkan elemen <h4>
+                    const baseTitle = titleMap[cat.id];
+
+                    const bu17Count = cat.data.filter(t => t.dynamicStatus === 'INAP BU17').length;
+                    const cmiCount = cat.data.filter(t => t.dynamicStatus === 'INAP CMI').length;
+                    const totalCount = cat.data.length;
+
+                    // [PERBAIKAN] Tambahkan style="color:..." agar bisa dibaca oleh html2canvas
+                    const newTitle = `
+                        ${baseTitle} | 
+                        <span class="text-orange-600" style="color: #ea580c;">BU17 : ${bu17Count} TRUK</span> | 
+                        <span class="text-green-600" style="color: #16a34a;">CMI : ${cmiCount} TRUK</span> | 
+                        TOTAL : ${totalCount} TRUK
+                    `;
+                    
+                    h4.innerHTML = newTitle;
+                }
+                
                 renderGroupedInapTable(cat.tableBodyId, cat.tfootId, cat.data);
             });
             
@@ -2257,10 +2545,10 @@
                         <td class="px-4 py-2 whitespace-nowrap">${formatTanggalJam(truck.keluar_lokasi_bongkar)}</td>
                         <td class="px-4 py-2">${truck.customer || '-'}</td>
                         <td class="px-4 py-2">${truck.tujuan || '-'}</td>
-                        <td class="px-4 py-2"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[truck.keterangan] || ''}">${truck.keterangan}</span></td>
+                        <td class="px-4 py-2"><span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadgeMap[truck.keterangan] || ''}">${getDynamicStatus(truck)}</span></td>
                         <td class="px-4 py-2">${truck.nama_driver || '-'}</td>
                         <td class="px-4 py-2">${truck.no_hp || '-'}</td>
-                        <td class="px-4 py-2">${truck.no_mobil || '-'}</td>
+                        <td class_name="px-4 py-2">${truck.no_mobil || '-'}</td>
                         <td class="px-4 py-2">${truck.jenis_mobil || '-'}</td>
                         <td class="px-4 py-2 font-semibold">${truck.leadTimeFormatted}</td>
                     `;
@@ -2326,11 +2614,23 @@
         };
 
         window.showTrucksByStatus = (status) => {
+            // [PERBAIKAN] Cek apakah status yang diklik adalah status INAP
+            if (status.startsWith('INAP')) {
+                // Jika ya, panggil fungsi modal INAP yang baru
+                showInapStatusModal(status);
+                return; // Hentikan eksekusi di sini
+            }
+
+            // --- Kode di bawah ini adalah kode LAMA Anda, untuk status NON-INAP ---
+            // Ini hanya akan berjalan jika status BUKAN INAP
             const modal = document.getElementById('status-modal');
             const modalTitle = document.getElementById('modal-title');
             const filterDropdown = document.getElementById('modalFilterAngkutan');
             const searchInput = document.getElementById('modalSearchInput');
+            
+            // Logika filter LAMA (hanya untuk status non-inap)
             currentModalTrucks = window.trucksData.filter(truck => truck.keterangan === status);
+
             modalTitle.textContent = `Daftar Truk: ${status}`;
             const uniqueAngkutan = [...new Set(currentModalTrucks.map(t => t.angkutan))].sort();
             filterDropdown.innerHTML = '<option value="">Semua Angkutan</option>';
@@ -2345,6 +2645,106 @@
         window.closeModal = () => {
             document.getElementById('status-modal').classList.add('hidden');
         }
+
+        // Fungsi untuk menutup modal INAP yang baru
+        window.closeInapStatusModal = () => {
+            document.getElementById('inap-status-modal').classList.add('hidden');
+        }
+
+        // Fungsi untuk menampilkan modal INAP (dipanggil oleh showTrucksByStatus)
+        function showInapStatusModal(status) {
+            const modal = document.getElementById('inap-status-modal');
+            const modalTitle = document.getElementById('inap-modal-title');
+            
+            modalTitle.textContent = `Daftar Truk: ${status}`;
+
+            let filteredTrucks;
+            // 1. Filter truk berdasarkan status INAP yang diklik
+            if (status === 'INAP BU17') {
+                filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP BU17'
+                );
+            } else if (status === 'INAP CMI') {
+                filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP CMI'
+                );
+            } else { // INAP (Lainnya)
+                 filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP (Lainnya)'
+                );
+            }
+
+            // 2. Hitung lead time untuk setiap truk yang difilter
+            currentInapModalTrucks = filteredTrucks.map(truck => {
+                return {
+                    ...truck,
+                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar),
+                    leadTimeMinutes: calculateLeadTimeInMinutes(truck.tiba_lokasi_bongkar)
+                };
+            });
+
+            // 3. Atur sorting default (sesuai permintaan: lama > baru)
+            inapModalSort = { column: 'leadTimeMinutes', direction: 'desc' };
+            
+            // 4. Render tabel
+            renderInapModalTable();
+            
+            // 5. Tampilkan modal
+            modal.classList.remove('hidden');
+        }
+
+        // Fungsi untuk me-render isi tabel modal INAP
+        function renderInapModalTable() {
+            const modalList = document.getElementById('inap-modal-truck-list');
+            modalList.innerHTML = '';
+
+            // Terapkan sorting
+            const sortedData = [...currentInapModalTrucks].sort((a, b) => {
+                const col = inapModalSort.column;
+                const dir = inapModalSort.direction === 'asc' ? 1 : -1;
+                
+                const valA = a[col] || (col === 'leadTimeMinutes' ? 0 : '');
+                const valB = b[col] || (col === 'leadTimeMinutes' ? 0 : '');
+
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return (valA - valB) * dir;
+                }
+                
+                return String(valA).localeCompare(String(valB), undefined, { numeric: true }) * dir;
+            });
+
+            if (sortedData.length === 0) {
+                modalList.innerHTML = '<tr><td colspan="5" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>';
+                return;
+            }
+
+            // [REVISI] Urutan kolom di 'row.innerHTML' diubah
+            sortedData.forEach(truck => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3">${truck.angkutan || '-'}</td>
+                    <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
+                    <td class="px-4 py-3">${truck.customer || '-'}</td>
+                    <td class="px-4 py-3">${truck.tujuan || '-'}</td>
+                    <td class="px-4 py-3 font-semibold">${truck.leadTimeFormatted || '-'}</td>
+                `;
+                modalList.appendChild(row);
+            });
+        }
+
+        // Fungsi untuk sorting saat header tabel modal INAP diklik
+        window.sortInapModalTable = (column) => {
+            if (inapModalSort.column === column) {
+                inapModalSort.direction = inapModalSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                inapModalSort.column = column;
+                inapModalSort.direction = 'asc';
+            }
+            renderInapModalTable();
+        };
+
+        // --- BATAS FUNGSI BARU ---
 
         window.showStatusLog = async (truckId, platNomor) => {
             const modal = document.getElementById('log-modal');
@@ -2410,12 +2810,13 @@
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 row.setAttribute('data-id', customer.id);
                 row.innerHTML = `
-                    <td data-field="name" class="px-6 py-4 font-medium">${customer.name}</td>
-                    <td class="px-6 py-4 action-buttons flex items-center gap-2">
-                        <button class="edit p-2 text-xs text-white bg-amber-500 rounded-lg hover:bg-amber-600" title="Edit" onclick="window.editCustomer('${customer.id}')"><i class="fas fa-pencil-alt"></i></button>
-                        <button class="delete p-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700" title="Hapus" onclick="window.deleteCustomer('${customer.id}', '${customer.name}')"><i class="fas fa-trash"></i></button>
-                    </td>
-                `;
+                <td data-field="name" class="px-6 py-4 font-medium">${customer.name}</td>
+                <td data-field="customer_type" class="px-6 py-4">${customer.customer_type || 'N/A'}</td>
+                <td class="px-6 py-4 action-buttons flex items-center gap-2">
+                    <button class="edit p-2 text-xs text-white bg-amber-500 rounded-lg hover:bg-amber-600" title="Edit" onclick="window.editCustomer('${customer.id}')"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete p-2 text-xs text-white bg-red-600 rounded-lg hover:bg-red-700" title="Hapus" onclick="window.deleteCustomer('${customer.id}', '${customer.name}')"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
                 tableBody.appendChild(row);
             });
 
@@ -2435,15 +2836,19 @@
 
         window.addCustomer = async () => {
             const customerNameInput = document.getElementById('newCustomerName');
+            const customerTypeSelect = document.getElementById('newCustomerType');
             const customerName = customerNameInput.value.trim();
+            const customerType = customerTypeSelect.value; // Ambil nilai tipe
+
             if (!customerName) {
                 showErrorAlert("Input Tidak Lengkap", "Nama customer tidak boleh kosong.");
                 return;
             }
             try {
-                await addDoc(collection(db, "customers"), { name: customerName });
+                // Simpan tipe customer ke database
+                await addDoc(collection(db, "customers"), { name: customerName, customer_type: customerType });
                 toggleAddCustomerForm(true);
-                showSuccessAlert("Berhasil", `Customer ${customerName} berhasil ditambahkan.`);
+                showSuccessAlert("Berhasil", `Customer ${customerName} (Tipe: ${customerType}) berhasil ditambahkan.`);
             } catch (error) {
                 console.error("Error adding customer: ", error);
                 showErrorAlert("Gagal Menambahkan", "Gagal menambahkan customer baru.");
@@ -2478,6 +2883,13 @@
             const currentName = nameCell.textContent;
             nameCell.innerHTML = `<input type="text" class="w-full p-2 border border-slate-300 rounded-lg" value="${currentName}">`;
 
+            const typeCell = row.querySelector('td[data-field="customer_type"]');
+            const currentType = typeCell.textContent.trim();
+            typeCell.innerHTML = `<select class="w-full p-2 border border-slate-300 rounded-lg">
+                                    <option value="BU17" ${currentType === 'BU17' ? 'selected' : ''}>BU17</option>
+                                    <option value="CMI" ${currentType === 'CMI' ? 'selected' : ''}>CMI</option>
+                                  </select>`;
+
             const actionCell = row.querySelector('.action-buttons');
             actionCell.innerHTML = `
                 <button class="save p-2 text-xs text-white bg-green-600 rounded-lg" onclick="window.saveCustomer('${id}')"><i class="fas fa-check"></i></button>
@@ -2486,24 +2898,26 @@
         };
         
         window.saveCustomer = async (id) => {
-            const row = document.querySelector(`#customerTable tr[data-id="${id}"]`);
-            if (!row) return;
+        const row = document.querySelector(`#customerTable tr[data-id="${id}"]`);
+        if (!row) return;
 
-            const input = row.querySelector('td[data-field="name"] input');
-            const newName = input.value.trim();
+        const input = row.querySelector('td[data-field="name"] input');
+        const newName = input.value.trim();
+        const typeSelect = row.querySelector('td[data-field="customer_type"] select');
+        const newType = typeSelect.value;
 
-            if (!newName) {
-                showErrorAlert("Input Tidak Lengkap", "Nama customer tidak boleh kosong.");
-                return;
-            }
-            try {
-                await updateDoc(doc(db, "customers", id), { name: newName });
-                showSuccessAlert("Berhasil", `Nama customer berhasil diubah.`);
-            } catch (error) {
-                console.error("Error updating customer: ", error);
-                showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan.");
-            }
-        };
+        if (!newName) {
+            showErrorAlert("Input Tidak Lengkap", "Nama customer tidak boleh kosong.");
+            return;
+        }
+        try {
+            await updateDoc(doc(db, "customers", id), { name: newName, customer_type: newType });
+            showSuccessAlert("Berhasil", `Nama customer berhasil diubah.`);
+        } catch (error) {
+            console.error("Error updating customer: ", error);
+            showErrorAlert("Gagal Menyimpan", "Gagal menyimpan perubahan.");
+        }
+    };
 
         window.cancelCustomerEdit = () => {
             renderCustomerTable();
@@ -2846,16 +3260,22 @@
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.value === 'all' ? 'Semua_Angkutan' : selectedAngkutanSelect.value.replace(/ /g, '_');
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
-            const isInapMode = selectedStatus === 'INAP';
+            
             const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
-            const showLeadTimeColumn = isInapMode || isCombinedMode;
+            const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
 
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
             
-            if (isCombinedMode) {
+            if (selectedStatus === 'INAP BU17') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            } else if (selectedStatus === 'INAP CMI') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            } else if (selectedStatus === 'INAP (Lainnya)') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
                 filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
             } else if (selectedStatus !== 'all') {
                 filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
@@ -2863,6 +3283,12 @@
 
             if (showLeadTimeColumn) {
                 filteredData.sort((a, b) => {
+                    const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[getDynamicStatus(a)] || 3;
+                    const statusB = statusPriority[getDynamicStatus(b)] || 3;
+                    const statusComp = statusA - statusB;
+                    if (statusComp !== 0) return statusComp;
+
                     const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
                     const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
                     return leadTimeB - leadTimeA;
@@ -2876,11 +3302,11 @@
             
             const body = filteredData.map((truck, index) => {
                 const row = [
-                    index + 1, truck.angkutan || '-', truck.fo || '-',
-                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                index + 1, truck.angkutan || '-', truck.fo || '-',
+                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
+                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
                 if (showLeadTimeColumn) {
                     row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
@@ -2902,8 +3328,14 @@
             if (showLeadTimeColumn) merges.push({ s: { r: 0, c: 14 }, e: { r: 1, c: 14 } });
             worksheet['!merges'] = merges;
             
-            if (isInapMode) {
-                const headerStyle = { font: { bold: true }, fill: { fgColor: { rgb: "D9D9D9" } }, alignment: { horizontal: "center", vertical: "center" } };
+            // [PERBAIKAN] Ganti warna "D9D9D9" menjadi "4F46E5" (biru) dan tambahkan warna font putih
+            const headerStyle = { 
+                font: { bold: true, color: { rgb: "FFFFFF" } }, 
+                fill: { fgColor: { rgb: "4F46E5" } }, 
+                alignment: { horizontal: "center", vertical: "center" } 
+            };
+
+            if (showLeadTimeColumn) {
                 // Style header
                 header1.forEach((_, colIndex) => {
                     const address1 = XLSX.utils.encode_cell({ r: 0, c: colIndex });
@@ -2913,6 +3345,7 @@
                 });
 
                 filteredData.forEach((truck, index) => {
+                    // ... (sisa kode pewarnaan baris tetap sama)
                     const leadTimeDays = calculateLeadTimeInDays(truck.tiba_lokasi_bongkar);
                     let rowColor = "";
 
@@ -2931,6 +3364,14 @@
                         }
                     }
                 });
+            } else {
+                 // [PERBAIKAN] Terapkan style biru HANYA jika tidak dalam mode INAP
+                header1.forEach((_, colIndex) => {
+                    const address1 = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+                    const address2 = XLSX.utils.encode_cell({ r: 1, c: colIndex });
+                    if(worksheet[address1]) worksheet[address1].s = headerStyle;
+                    if(worksheet[address2]) worksheet[address2].s = headerStyle;
+                });
             }
 
             const workbook = XLSX.utils.book_new();
@@ -2948,16 +3389,21 @@
             const title = `Summary Status Truck - ${angkutanName}`;
             
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
-            const isInapMode = selectedStatus === 'INAP';
             const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
-            const showLeadTimeColumn = isInapMode || isCombinedMode;
+            const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
 
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
 
-            if (isCombinedMode) {
+            if (selectedStatus === 'INAP BU17') {
+            filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            } else if (selectedStatus === 'INAP CMI') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            } else if (selectedStatus === 'INAP (Lainnya)') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
                 filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
             } else if (selectedStatus !== 'all') {
                 filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
@@ -2965,9 +3411,9 @@
 
             if (showLeadTimeColumn) {
                  filteredData.sort((a, b) => {
-                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
-                    const statusA = statusPriority[a.keterangan] || 3;
-                    const statusB = statusPriority[b.keterangan] || 3;
+                    const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[getDynamicStatus(a)] || 3;
+                    const statusB = statusPriority[getDynamicStatus(b)] || 3;
                     const statusComp = statusA - statusB;
                     if (statusComp !== 0) return statusComp;
 
@@ -2992,21 +3438,24 @@
             if (showLeadTimeColumn) head[0].push({ content: 'LEAD TIME', rowSpan: 2 });
 
             const body = filteredData.map((truck, index) => {
-                const row = [
-                    index + 1,
-                    truck.angkutan || '-', truck.fo || '-',
-                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
-                ];
+            const row = [
+                index + 1,
+                truck.angkutan || '-', truck.fo || '-',
+                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
+                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+            ];
                 if (showLeadTimeColumn) {
                     row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
                 }
                 return row;
             });
             
-            const headStyles = showLeadTimeColumn ? { fillColor: [217, 217, 217], textColor: [0, 0, 0], halign: 'center', valign: 'middle', lineWidth: 0.1, lineColor: [0, 0, 0] } : { fillColor: [79, 70, 229], halign: 'center', valign: 'middle' };
+            // [PERBAIKAN] Ganti `fillColor` abu-abu [217, 217, 217] menjadi biru [79, 70, 229] dan hapus `textColor: [0, 0, 0]`
+            const blueHeaderStyle = { fillColor: [79, 70, 229], textColor: [255, 255, 255], halign: 'center', valign: 'middle' };
+            
+            const headStyles = showLeadTimeColumn ? blueHeaderStyle : blueHeaderStyle;
             const styles = showLeadTimeColumn ? { fontSize: 6, cellPadding: 1.5, halign: 'center', valign: 'middle' } : { fontSize: 6, cellPadding: 1.5 };
 
             doc.autoTable({
@@ -3028,16 +3477,22 @@
             const angkutanName = selectedAngkutanSelect.options[selectedAngkutanSelect.selectedIndex].text;
             const cleanAngkutanName = angkutanName.replace(/ /g, '_');
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
-            const isInapMode = selectedStatus === 'INAP';
+            
             const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
-            const showLeadTimeColumn = isInapMode || isCombinedMode;
+            const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
 
             let filteredData = [...window.trucksData];
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
             
-            if (isCombinedMode) {
+            if (selectedStatus === 'INAP BU17') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            } else if (selectedStatus === 'INAP CMI') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            } else if (selectedStatus === 'INAP (Lainnya)') {
+                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
                 filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
             } else if (selectedStatus !== 'all') {
                 filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
@@ -3045,9 +3500,9 @@
 
             if (showLeadTimeColumn) {
                  filteredData.sort((a, b) => {
-                    const statusPriority = { 'INAP': 1, 'ANTRI BONGKAR': 2 };
-                    const statusA = statusPriority[a.keterangan] || 3;
-                    const statusB = statusPriority[b.keterangan] || 3;
+                    const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
+                    const statusA = statusPriority[getDynamicStatus(a)] || 3;
+                    const statusB = statusPriority[getDynamicStatus(b)] || 3;
                     const statusComp = statusA - statusB;
                     if (statusComp !== 0) return statusComp;
 
@@ -3094,9 +3549,11 @@
                 th.style.padding = '8px';
                 th.style.textAlign = 'center';
                 th.style.verticalAlign = 'middle';
-                if (showLeadTimeColumn) {
-                    th.style.backgroundColor = '#d9d9d9';
-                }
+                
+                // [PERBAIKAN] Ganti warna '#d9d9d9' menjadi '#4F46E5' dan tambahkan warna font
+                th.style.backgroundColor = '#4F46E5';
+                th.style.color = '#ffffff';
+
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
@@ -3104,12 +3561,12 @@
             filteredData.forEach((truck, index) => {
                 const tr = document.createElement('tr');
                 const rowData = [
-                    index + 1,
-                    truck.angkutan || '-', truck.fo || '-',
-                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                    truck.customer || '-', truck.tujuan || '-', truck.keterangan || '-',
-                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                index + 1,
+                truck.angkutan || '-', truck.fo || '-',
+                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
+                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
                 if (showLeadTimeColumn) {
                     rowData.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
@@ -3177,13 +3634,15 @@
                 return;
             }
 
-            let fullTitle = defaultTitle;
+            // [PERBAIKAN] Ubah nama variabel agar lebih jelas
+            let titleHtml = defaultTitle;
 
             const headerContainer = tableToExport.closest('.bg-white.p-6')?.querySelector('.flex.justify-between');
             if (headerContainer) {
                 const h4Element = headerContainer.querySelector('h4');
                 if (h4Element) {
-                    fullTitle = h4Element.innerText.trim();
+                    // [PERBAIKAN] Ambil .innerHTML (yang berisi style) BUKAN .innerText
+                    titleHtml = h4Element.innerHTML;
                 }
             }
             
@@ -3199,7 +3658,8 @@
             screenshotContainer.style.border = '1px solid #e2e8f0';
             screenshotContainer.style.fontFamily = "'Inter', sans-serif";
             
-            screenshotContainer.innerHTML = `<div style="margin-bottom: 1rem; display: flex; justify-content: center;"><h4 style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">${fullTitle}</h4></div>`;
+            // [PERBAIKAN] Masukkan titleHtml (yang berisi HTML) ke dalam H4
+            screenshotContainer.innerHTML = `<div style="margin-bottom: 1rem; display: flex; justify-content: center;"><h4 style="font-size: 1.125rem; font-weight: 700; color: #1e293b;">${titleHtml}</h4></div>`;
 
             const tableClone = tableToExport.cloneNode(true);
             screenshotContainer.appendChild(tableClone);
