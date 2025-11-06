@@ -438,24 +438,28 @@
             if (!truck) return 'N/A';
             const originalStatus = truck.keterangan;
 
-            // Jika status bukan INAP, kembalikan apa adanya
-            if (originalStatus !== 'INAP') {
+            if (originalStatus !== 'INAP' && originalStatus !== 'ANTRI BONGKAR') {
                 return originalStatus;
             }
             
-            // Jika INAP, cek tipe customer
             const customerName = truck.customer;
             if (!customerName) {
-                return 'INAP (Lainnya)'; // INAP, tapi tidak ada customer
+                return `${originalStatus} (Lainnya)`; 
             }
 
             const customerType = window.customerTypeMap.get(customerName);
-            if (customerType === 'BU17') {
-                return 'INAP BU17';
-            } else if (customerType === 'CMI') {
-                return 'INAP CMI';
-            } else {
-                return 'INAP (Lainnya)'; // INAP, customer ada, tapi tipenya tidak diset
+            
+            if (originalStatus === 'INAP') { // Handle INAP
+                if (customerType === 'BU17') return 'INAP BU17';
+                if (customerType === 'CMI') return 'INAP CMI';
+                return 'INAP (Lainnya)';
+            }
+            
+            // [PERBAIKAN] Handle ANTRI BONGKAR dengan nama baru
+            if (originalStatus === 'ANTRI BONGKAR') { 
+                if (customerType === 'BU17') return 'ANTRI BU17'; // <-- REVISI
+                if (customerType === 'CMI') return 'ANTRI CMI';   // <-- REVISI
+                return 'ANTRI BONGKAR (Lainnya)';
             }
         }
         // --- BATAS FUNGSI BARU ---
