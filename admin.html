@@ -369,31 +369,35 @@
                                     <p id="total-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
-                            <div id="total-angkutan-card" class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
-                                <div class="p-4 bg-green-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
+                            <div id="total-angkutan-card" class="bg-orange-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                                <div class="p-4 bg-orange-500 rounded-full"><i class="fas fa-building text-3xl"></i></div>
                                 <div class="ml-4">
                                     <p class="font-semibold">Total Vendor</p>
                                     <p id="total-angkutan-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
-                            <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg flex items-center">
-                                <div class="p-4 bg-orange-500 rounded-full">
-                                    <i class="fas fa-route text-3xl"></i>
-                                </div>
-                                <div class="ml-4">
-                                    <p class="font-semibold">Truk Dijalan</p>
-                                    <p id="active-truck-count" class="text-3xl font-bold">0</p>
-                                </div>
+                            
+                            <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg flex items-center">
+                            <div class="p-4 bg-green-500 rounded-full">
+                                <i class="fas fa-check-circle text-3xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-semibold">Sudah Alokasi</p>
+                                <p id="active-truck-count" class="text-3xl font-bold">0</p>
+                            </div>
                             </div>
                             <div class="bg-slate-700 text-white p-6 rounded-xl shadow-lg flex items-center">
                                 <div class="p-4 bg-slate-600 rounded-full">
-                                    <i class="fas fa-check-circle text-3xl"></i>
+                                    <i class="fas fa-times-circle text-3xl"></i>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="font-semibold">Truk Tersedia</p>
+                                    <p class="font-semibold">Belum Alokasi</p>
                                     <p id="available-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
+
+
+
                         </div>
                     
                         <div>
@@ -1001,24 +1005,28 @@
             if (!truck) return 'N/A';
             const originalStatus = truck.keterangan;
 
-            // Jika status bukan INAP, kembalikan apa adanya
-            if (originalStatus !== 'INAP') {
+            if (originalStatus !== 'INAP' && originalStatus !== 'ANTRI BONGKAR') {
                 return originalStatus;
             }
             
-            // Jika INAP, cek tipe customer
             const customerName = truck.customer;
             if (!customerName) {
-                return 'INAP (Lainnya)'; // INAP, tapi tidak ada customer
+                return `${originalStatus} (Lainnya)`; 
             }
 
             const customerType = window.customerTypeMap.get(customerName);
-            if (customerType === 'BU17') {
-                return 'INAP BU17';
-            } else if (customerType === 'CMI') {
-                return 'INAP CMI';
-            } else {
-                return 'INAP (Lainnya)'; // INAP, customer ada, tapi tipenya tidak diset
+            
+            if (originalStatus === 'INAP') { // Handle INAP
+                if (customerType === 'BU17') return 'INAP BU17';
+                if (customerType === 'CMI') return 'INAP CMI';
+                return 'INAP (Lainnya)';
+            }
+            
+            // [PERBAIKAN] Handle ANTRI BONGKAR dengan nama baru
+            if (originalStatus === 'ANTRI BONGKAR') { 
+                if (customerType === 'BU17') return 'ANTRI BU17'; // <-- REVISI
+                if (customerType === 'CMI') return 'ANTRI CMI';   // <-- REVISI
+                return 'ANTRI BONGKAR (Lainnya)';
             }
         }
         // --- BATAS FUNGSI BARU ---
@@ -1040,9 +1048,41 @@
 
 
         const appId = 'truck-dashboard-app';
-        const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
-        const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MILL': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
-        const statusBadgeMap = { 'TERSEDIA': 'bg-slate-100 text-slate-800', 'OTW MILL': 'bg-purple-100 text-purple-800', 'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 'OTW CUSTOMER': 'bg-green-100 text-green-800', 'ANTRI BONGKAR': 'bg-yellow-100 text-yellow-800', 'INAP': 'bg-orange-100 text-orange-800', 'STORING': 'bg-red-100 text-red-800', 'NO DRIVER': 'bg-rose-100 text-rose-800' };
+        // [PERBAIKAN] Hapus 'ANTRI BONGKAR' dan 'INAP', tambahkan versi split
+        // [PERBAIKAN] Mengganti nama 'ANTRI BONGKAR BU17' menjadi 'ANTRI BU17', dst.
+        const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BU17', 'ANTRI CMI', 'ANTRI BONGKAR (Lainnya)', 'INAP BU17', 'INAP CMI', 'INAP (Lainnya)', 'STORING', 'NO DRIVER'];
+        
+        const statusInfo = { 
+            'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 
+            'OTW MILL': { icon: 'fa-truck-loading', color: 'purple' }, 
+            'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 
+            'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 
+            'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, // Kunci dasar
+            'ANTRI BU17': { icon: 'fa-hourglass-half', color: 'yellow' }, // <-- BARU
+            'ANTRI CMI': { icon: 'fa-hourglass-half', color: 'yellow' }, // <-- BARU
+            'ANTRI BONGKAR (Lainnya)': { icon: 'fa-hourglass-half', color: 'yellow' }, 
+            'INAP': { icon: 'fa-bed', color: 'orange' }, // Kunci dasar
+            'INAP BU17': { icon: 'fa-bed', color: 'orange' },
+            'INAP CMI': { icon: 'fa-bed', color: 'orange' },
+            'INAP (Lainnya)': { icon: 'fa-bed', color: 'orange' },
+            'STORING': { icon: 'fa-tools', color: 'red' }, 
+            'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } 
+        };
+        
+        const statusBadgeMap = { 
+            'TERSEDIA': 'bg-slate-100 text-slate-800', 
+            'OTW MILL': 'bg-purple-100 text-purple-800', 
+            'ANTRI MUAT': 'bg-cyan-100 text-cyan-800', 
+            'OTW CUSTOMER': 'bg-green-100 text-green-800', 
+            'ANTRI BU17': 'bg-yellow-100 text-yellow-800', // <-- BARU
+            'ANTRI CMI': 'bg-yellow-100 text-yellow-800', // <-- BARU
+            'ANTRI BONGKAR (Lainnya)': 'bg-yellow-100 text-yellow-800', 
+            'INAP BU17': 'bg-orange-100 text-orange-800',
+            'INAP CMI': 'bg-orange-100 text-orange-800',
+            'INAP (Lainnya)': 'bg-orange-100 text-orange-800',
+            'STORING': 'bg-red-100 text-red-800', 
+            'NO DRIVER': 'bg-rose-100 text-rose-800' 
+        };
 
         // --- TAMBAHKAN BLOK INI ---
         const vendorNameMapping = {
@@ -1753,27 +1793,30 @@
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             const totalTrucks = data.length;
-            const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
+            
+            // [PERBAIKAN] Logika 'availableTrucks' (sekarang Belum Alokasi) diubah
+            const belumAlokasi = data.filter(t => ['TERSEDIA', 'STORING', 'NO DRIVER'].includes(t.keterangan)).length;
+            
             const totalAngkutan = [...new Set(data.map(t => t.angkutan).filter(Boolean))].length;
+            
+            // Logika 'activeTrucks' (sekarang Sudah Alokasi) sudah benar
             const activeTrucks = data.filter(t => ['OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
 
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
             document.getElementById('total-angkutan-count').textContent = totalAngkutan;
-            document.getElementById('available-truck-count').textContent = availableTrucks;
+            
+            // [PERBAIKAN] Mengirim hasil 'belumAlokasi' ke elemen card
+            document.getElementById('available-truck-count').textContent = belumAlokasi;
 
-
-            const container = document.getElementById('status-details-grid');
-            container.innerHTML = '';
-
-            // 1. Fungsi helper untuk buat kartu (agar tidak duplikat kode)
+            
             const createStatusCard = (status, count) => {
-                if (count === 0) return;
-                
-                // Tentukan info asli (untuk warna/icon)
                 let originalStatus = status;
                 if (status.startsWith('INAP')) {
                     originalStatus = 'INAP';
+                } else if (status.startsWith('ANTRI')) { 
+                    originalStatus = 'ANTRI BONGKAR'; 
+                    if (status === 'ANTRI MUAT') originalStatus = 'ANTRI MUAT'; 
                 }
                 
                 const info = statusInfo[originalStatus] || { icon: 'fa-question-circle', color: 'gray' };
@@ -1790,23 +1833,93 @@
                 container.appendChild(card);
             };
 
-            // 2. Loop untuk semua status KECUALI INAP
-            statusOptions.forEach(status => {
-                if (status === 'INAP') return; // Skip INAP
-                const count = data.filter(truck => truck.keterangan === status).length;
-                createStatusCard(status, count);
+            const container = document.getElementById('status-details-grid');
+            container.innerHTML = '';
+
+            const orderedStatuses = [
+                'TERSEDIA',
+                'OTW MILL',
+                'ANTRI MUAT',
+                'OTW CUSTOMER',
+                'ANTRI BU17', 
+                'ANTRI CMI',  
+                'INAP BU17',
+                'INAP CMI',
+                'STORING',
+                'NO DRIVER'
+            ];
+
+            const counts = {};
+            counts['TERSEDIA'] = data.filter(t => t.keterangan === 'TERSEDIA').length;
+            counts['OTW MILL'] = data.filter(t => t.keterangan === 'OTW MILL').length;
+            counts['ANTRI MUAT'] = data.filter(t => t.keterangan === 'ANTRI MUAT').length;
+            counts['OTW CUSTOMER'] = data.filter(t => t.keterangan === 'OTW CUSTOMER').length;
+            counts['ANTRI BU17'] = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI BU17').length;
+            counts['ANTRI CMI'] = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI CMI').length;
+            counts['INAP BU17'] = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17').length;
+            counts['INAP CMI'] = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI').length;
+            counts['STORING'] = data.filter(t => t.keterangan === 'STORING').length;
+            counts['NO DRIVER'] = data.filter(t => t.keterangan === 'NO DRIVER').length;
+            
+            orderedStatuses.forEach(status => {
+                createStatusCard(status, counts[status] || 0);
             });
 
-            // 3. Hitung dan buat kartu INAP secara manual
-            const inapBU17Count = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17').length;
-            createStatusCard('INAP BU17', inapBU17Count);
-            
-            const inapCMICount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI').length;
-            createStatusCard('INAP CMI', inapCMICount);
-
             const inapLainnyaCount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)').length;
-            createStatusCard('INAP (Lainnya)', inapLainnyaCount);
+            if (inapLainnyaCount > 0) {
+                 createStatusCard('INAP (Lainnya)', inapLainnyaCount);
+            }
+            const antriLainnyaCount = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI BONGKAR (Lainnya)').length;
+            if (antriLainnyaCount > 0) {
+                 createStatusCard('ANTRI BONGKAR (Lainnya)', antriLainnyaCount);
+            }
 
+            const knownStatuses = [...statusOptions, 'INAP', 'ANTRI BONGKAR']; 
+            const unknownTrucks = data.filter(truck => {
+                const status = truck.keterangan;
+                if (!status) return true; 
+                return !knownStatuses.includes(status);
+            });
+            const unknownCount = unknownTrucks.length;
+
+            if (unknownCount > 0) {
+                const info = { icon: 'fa-question-circle', color: 'gray' };
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
+                card.style.cursor = 'pointer';
+                card.style.border = '2px solid #ef4444'; 
+                
+                card.innerHTML = `
+                    <div class="p-3 bg-${info.color}-100 rounded-full"><i class="fas ${info.icon} text-2xl text-${info.color}-600"></i></div>
+                    <div class="ml-4">
+                        <p class="text-slate-500 font-semibold">STATUS TIDAK DIKENALI</p>
+                        <p class="text-2xl font-bold text-red-600">${unknownCount}</p>
+                    </div>`;
+                
+                card.onclick = () => {
+                    const modal = document.getElementById('status-modal');
+                    const modalTitle = document.getElementById('modal-title');
+                    const filterDropdown = document.getElementById('modalFilterAngkutan');
+                    const searchInput = document.getElementById('modalSearchInput');
+                    
+                    currentModalTrucks = unknownTrucks; 
+
+                    modalTitle.textContent = `Daftar Truk: STATUS TIDAK DIKENALI`;
+                    const uniqueAngkutan = [...new Set(currentModalTrucks.map(t => t.angkutan))].sort();
+                    filterDropdown.innerHTML = '<option value="">Semua Angkutan</option>';
+                    uniqueAngkutan.forEach(a => { if (a) filterDropdown.innerHTML += `<option value="${a}">${a}</option>`; });
+                    searchInput.value = '';
+                    filterDropdown.value = '';
+                    modalSort = { column: 'angkutan', direction: 'asc' };
+                    renderModalTable(currentModalTrucks);
+                    modal.classList.remove('hidden');
+                };
+                
+                container.appendChild(card);
+            }
+
+            // ... (Sisa fungsi 'renderHomePage' untuk vendor dan jenis truk tidak berubah) ...
+            
             const vendorContainer = document.getElementById('vendor-details-grid');
             if (vendorContainer) {
                 vendorContainer.innerHTML = '';
@@ -1821,25 +1934,18 @@
 
                 sortedVendors.forEach(vendorName => {
                     const count = vendorCounts[vendorName];
-
-                    // === LOGIKA BARU DIMULAI DI SINI ===
-                    // Cek apakah sidebar sedang disembunyikan
                     const isCollapsed = document.getElementById('sidebar').classList.contains('sidebar-collapsed');
                     
-                    // Tentukan nama yang akan ditampilkan
-                    // Jika disembunyikan, cari nama pendek. Jika tidak ketemu, pakai nama asli.
                     let displayName = vendorName;
                     if (isCollapsed && vendorNameMapping[vendorName]) {
                         displayName = vendorNameMapping[vendorName];
                     }
-                    // === LOGIKA BARU SELESAI ===
                     
                     const vendorCard = document.createElement('div');
                     vendorCard.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
                     vendorCard.style.cursor = 'pointer';
-                    vendorCard.onclick = () => window.showTrucksByVendor(vendorName); // OnClick tetap pakai nama asli
+                    vendorCard.onclick = () => window.showTrucksByVendor(vendorName); 
                     
-                    // Gunakan 'displayName' untuk teks, tapi 'vendorName' untuk 'title' (tooltip)
                     vendorCard.innerHTML = `
                         <div class="p-3 bg-sky-100 rounded-full">
                             <i class="fas fa-building text-2xl text-sky-600"></i>
@@ -2122,14 +2228,20 @@
             jenisMobilSelect.innerHTML = '<option value="all">Semua Jenis</option>'; uniqueJenis.forEach(j => jenisMobilSelect.innerHTML += `<option value="${j}">${j}</option>`);
             
             statusSelect.innerHTML = '<option value="all">Semua Status</option>'; 
-            statusOptions.forEach(s => {
-                if (s === 'INAP') return; // Skip INAP standar
-                statusSelect.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-            // Tambah status INAP baru secara manual
+            // [PERBAIKAN] Menggunakan daftar status baru
+            statusSelect.innerHTML += `<option value="TERSEDIA">TERSEDIA</option>`;
+            statusSelect.innerHTML += `<option value="OTW MILL">OTW MILL</option>`;
+            statusSelect.innerHTML += `<option value="ANTRI MUAT">ANTRI MUAT</option>`;
+            statusSelect.innerHTML += `<option value="OTW CUSTOMER">OTW CUSTOMER</option>`;
+            statusSelect.innerHTML += `<option value="ANTRI BU17">ANTRI BU17</option>`;
+            statusSelect.innerHTML += `<option value="ANTRI CMI">ANTRI CMI</option>`;
+            statusSelect.innerHTML += `<option value="ANTRI BONGKAR (Lainnya)">ANTRI BONGKAR (Lainnya)</option>`;
             statusSelect.innerHTML += `<option value="INAP BU17">INAP BU17</option>`;
             statusSelect.innerHTML += `<option value="INAP CMI">INAP CMI</option>`;
             statusSelect.innerHTML += `<option value="INAP (Lainnya)">INAP (Lainnya)</option>`;
+            statusSelect.innerHTML += `<option value="STORING">STORING</option>`;
+            statusSelect.innerHTML += `<option value="NO DRIVER">NO DRIVER</option>`;
+            
             statusSelect.innerHTML += `<option value="ANTRI BONGKAR + INAP">ANTRI BONGKAR + INAP</option>`;
         }
         
@@ -2614,21 +2726,20 @@
         };
 
         window.showTrucksByStatus = (status) => {
-            // [PERBAIKAN] Cek apakah status yang diklik adalah status INAP
-            if (status.startsWith('INAP')) {
-                // Jika ya, panggil fungsi modal INAP yang baru
+            // [PERBAIKAN] Logika 'if' diubah untuk mendeteksi nama status baru
+            if (status.startsWith('INAP') || status === 'ANTRI BU17' || status === 'ANTRI CMI' || status === 'ANTRI BONGKAR (Lainnya)') {
+                // Jika ya, panggil fungsi modal INAP/Lama Inap
                 showInapStatusModal(status);
                 return; // Hentikan eksekusi di sini
             }
 
             // --- Kode di bawah ini adalah kode LAMA Anda, untuk status NON-INAP ---
-            // Ini hanya akan berjalan jika status BUKAN INAP
+            // Ini hanya akan berjalan untuk status seperti TERSEDIA, OTW MILL, ANTRI MUAT, dll.
             const modal = document.getElementById('status-modal');
             const modalTitle = document.getElementById('modal-title');
             const filterDropdown = document.getElementById('modalFilterAngkutan');
             const searchInput = document.getElementById('modalSearchInput');
             
-            // Logika filter LAMA (hanya untuk status non-inap)
             currentModalTrucks = window.trucksData.filter(truck => truck.keterangan === status);
 
             modalTitle.textContent = `Daftar Truk: ${status}`;
@@ -2659,7 +2770,7 @@
             modalTitle.textContent = `Daftar Truk: ${status}`;
 
             let filteredTrucks;
-            // 1. Filter truk berdasarkan status INAP yang diklik
+            // [PERBAIKAN] Menggunakan nama status baru
             if (status === 'INAP BU17') {
                 filteredTrucks = window.trucksData.filter(truck => 
                     truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP BU17'
@@ -2668,9 +2779,21 @@
                 filteredTrucks = window.trucksData.filter(truck => 
                     truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP CMI'
                 );
-            } else { // INAP (Lainnya)
+            } else if (status === 'INAP (Lainnya)') {
                  filteredTrucks = window.trucksData.filter(truck => 
                     truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP (Lainnya)'
+                );
+            } else if (status === 'ANTRI BU17') { // <-- REVISI
+                filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI BU17'
+                );
+            } else if (status === 'ANTRI CMI') { // <-- REVISI
+                filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI CMI'
+                );
+            } else { // Asumsi sisanya adalah 'ANTRI BONGKAR (Lainnya)'
+                 filteredTrucks = window.trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI BONGKAR (Lainnya)'
                 );
             }
 
