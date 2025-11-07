@@ -194,12 +194,13 @@
                                     <p id="total-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
+                        
                             <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg flex items-center">
                                 <div class="p-4 bg-orange-500 rounded-full">
                                     <i class="fas fa-route text-3xl"></i>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="font-semibold">Truk Sedang Jalan</p>
+                                    <p class="font-semibold">Sudah Alokasi</p>
                                     <p id="active-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
@@ -208,10 +209,11 @@
                                     <i class="fas fa-check-circle text-3xl"></i>
                                 </div>
                                 <div class="ml-4">
-                                    <p class="font-semibold">Truk Tersedia</p>
+                                    <p class="font-semibold">Belum Alokasi</p>
                                     <p id="available-truck-count" class="text-3xl font-bold">0</p>
                                 </div>
                             </div>
+
                         </div>
                     
                         <div>
@@ -402,7 +404,56 @@
             </div>
         </div>
     </div>
+
+
+    <div id="inap-status-modal" class="modal-overlay hidden" onclick="window.closeInapStatusModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="window.closeInapStatusModal()">&times;</span>
+        <h3 id="inap-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Daftar Truk Inap</h3>
+        <div class="modal-body">
+            <table class="w-full text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-3" data-sort="angkutan" onclick="window.sortInapModalTable('angkutan')">Angkutan</th>
+                        <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortInapModalTable('no_mobil')">Plat Nomor</th>
+                        <th class="px-4 py-3" data-sort="customer" onclick="window.sortInapModalTable('customer')">Nama Customer</th>
+                        <th class="px-4 py-3" data-sort="tujuan" onclick="window.sortInapModalTable('tujuan')">Kota</th>
+                        <th class="px-4 py-3" data-sort="leadTimeMinutes" onclick="window.sortInapModalTable('leadTimeMinutes')">Lead Time</th>
+                    </tr>
+                </thead>
+                <tbody id="inap-modal-truck-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
+
+
     <div id="header-filter-popup" class="header-filter-popup hidden">
+    
+    <div id="inap-status-modal" class="modal-overlay hidden" onclick="window.closeInapStatusModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="modal-close" onclick="window.closeInapStatusModal()">&times;</span>
+        <h3 id="inap-modal-title" class="text-2xl font-bold text-slate-800 mb-4">Daftar Truk Inap</h3>
+        <div class="modal-body">
+            <table class="w-full text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-3" data-sort="angkutan" onclick="window.sortInapModalTable('angkutan')">Angkutan</th>
+                        <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortInapModalTable('no_mobil')">Plat Nomor</th>
+                        <th class="px-4 py-3" data-sort="customer" onclick="window.sortInapModalTable('customer')">Nama Customer</th>
+                        <th class="px-4 py-3" data-sort="tujuan" onclick="window.sortInapModalTable('tujuan')">Kota</th>
+                        <th class="px-4 py-3" data-sort="leadTimeMinutes" onclick="window.sortInapModalTable('leadTimeMinutes')">Lama Inap</th>
+                    </tr>
+                </thead>
+                <tbody id="inap-modal-truck-list">
+                    </tbody>
+            </table>
+            </div>
+    </div>
+    </div>
+        
+
         <input type="text" id="filter-search" class="w-full p-2 border border-slate-300 rounded-md mb-2" placeholder="Cari opsi...">
         <div id="filter-options" class="filter-options"></div>
         <div class="flex justify-end gap-2 pt-2 border-t">
@@ -464,6 +515,200 @@
         }
         // --- BATAS FUNGSI BARU ---
 
+
+        // --- TAMBAHKAN SEMUA KODE BARU DI BAWAH INI ---
+
+        // Variabel global baru untuk modal 'Lama Inap'
+        let currentInapModalTrucks = []; 
+        let inapModalSort = { column: 'leadTimeMinutes', direction: 'desc' };
+
+        // --- Fungsi untuk Modal LAMA (status-modal) ---
+        
+        window.closeModal = () => {
+            document.getElementById('status-modal').classList.add('hidden');
+        }
+
+        function renderModalTable(trucksToRender) {
+            const modalList = document.getElementById('modal-truck-list');
+            modalList.innerHTML = '';
+            if (!trucksToRender || trucksToRender.length === 0) {
+                modalList.innerHTML = '<tr><td colspan="7" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>';
+                return;
+            }
+            trucksToRender.forEach(truck => {
+                const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
+                const dimensi = `${p}×${l}×${t}`;
+                const kubikasi = (p * l * t / 1000000).toFixed(2);
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
+                    <td class="px-4 py-3">${truck.nama_driver || '-'}</td>
+                    <td class="px-4 py-3">${truck.no_hp || '-'}</td>
+                    <td class="px-4 py-3">${truck.jenis_mobil || '-'}</td>
+                    <td class="px-4 py-3">${dimensi}</td>
+                    <td class="px-4 py-3 font-semibold">${kubikasi} m³</td>
+                `;
+                modalList.appendChild(row);
+            });
+        }
+        
+        window.applyModalFiltersAndSort = () => {
+            const searchTerm = document.getElementById('modalSearchInput').value.toLowerCase();
+            let filtered = [...currentModalTrucks];
+            if (searchTerm) {
+                filtered = filtered.filter(truck => Object.values(truck).some(val => String(val).toLowerCase().includes(searchTerm)));
+            }
+            filtered.sort((a, b) => {
+                const valA = a[modalSort.column] || '';
+                const valB = b[modalSort.column] || '';
+                const comparison = valA.localeCompare(valB, undefined, { numeric: true });
+                return modalSort.direction === 'asc' ? comparison : -comparison;
+            });
+            renderModalTable(filtered);
+        }
+
+        window.sortModalTable = (column) => {
+            if (modalSort.column === column) {
+                modalSort.direction = modalSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                modalSort.column = column;
+                modalSort.direction = 'asc';
+            }
+            applyModalFiltersAndSort();
+        };
+
+        // --- Fungsi untuk Modal BARU (inap-status-modal) ---
+        
+        window.closeInapStatusModal = () => {
+            document.getElementById('inap-status-modal').classList.add('hidden');
+        }
+
+        function showInapStatusModal(status) {
+            const modal = document.getElementById('inap-status-modal');
+            const modalTitle = document.getElementById('inap-modal-title');
+            
+            modalTitle.textContent = `Daftar Truk: ${status}`;
+
+            let filteredTrucks;
+            if (status === 'INAP BU17') {
+                filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP BU17'
+                );
+            } else if (status === 'INAP CMI') {
+                filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP CMI'
+                );
+            } else if (status === 'INAP (Lainnya)') {
+                 filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'INAP' && getDynamicStatus(truck) === 'INAP (Lainnya)'
+                );
+            } else if (status === 'ANTRI BU17') { 
+                filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI BU17'
+                );
+            } else if (status === 'ANTRI CMI') { 
+                filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI CMI'
+                );
+            } else { 
+                 filteredTrucks = trucksData.filter(truck => 
+                    truck.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(truck) === 'ANTRI BONGKAR (Lainnya)'
+                );
+            }
+
+            currentInapModalTrucks = filteredTrucks.map(truck => {
+                return {
+                    ...truck,
+                    leadTimeFormatted: calculateLeadTime(truck.tiba_lokasi_bongkar),
+                    leadTimeMinutes: calculateLeadTimeInMinutes(truck.tiba_lokasi_bongkar)
+                };
+            });
+
+            inapModalSort = { column: 'leadTimeMinutes', direction: 'desc' };
+            renderInapModalTable();
+            modal.classList.remove('hidden');
+        }
+
+        function renderInapModalTable() {
+            const modalList = document.getElementById('inap-modal-truck-list');
+            modalList.innerHTML = '';
+
+            const sortedData = [...currentInapModalTrucks].sort((a, b) => {
+                const col = inapModalSort.column;
+                const dir = inapModalSort.direction === 'asc' ? 1 : -1;
+                const valA = a[col] || (col === 'leadTimeMinutes' ? 0 : '');
+                const valB = b[col] || (col === 'leadTimeMinutes' ? 0 : '');
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return (valA - valB) * dir;
+                }
+                return String(valA).localeCompare(String(valB), undefined, { numeric: true }) * dir;
+            });
+
+            if (sortedData.length === 0) {
+                modalList.innerHTML = '<tr><td colspan="5" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>';
+                return;
+            }
+
+            sortedData.forEach(truck => {
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="px-4 py-3">${truck.angkutan || '-'}</td>
+                    <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
+                    <td class="px-4 py-3">${truck.customer || '-'}</td>
+                    <td class="px-4 py-3">${truck.tujuan || '-'}</td>
+                    <td class="px-4 py-3 font-semibold">${truck.leadTimeFormatted || '-'}</td>
+                `;
+                modalList.appendChild(row);
+            });
+        }
+
+        window.sortInapModalTable = (column) => {
+            if (inapModalSort.column === column) {
+                inapModalSort.direction = inapModalSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                inapModalSort.column = column;
+                inapModalSort.direction = 'asc';
+            }
+            renderInapModalTable();
+        };
+
+        // --- Fungsi 'Router' (INI ADALAH FUNGSI STEP 5 YANG HILANG) ---
+        
+        window.showTrucksByStatus = (status) => {
+            // Logika untuk mengarahkan ke modal yang benar
+            if (status.startsWith('INAP') || status === 'ANTRI BU17' || status === 'ANTRI CMI' || status === 'ANTRI BONGKAR (Lainnya)') {
+                showInapStatusModal(status);
+                return; 
+            }
+
+            // Logika untuk status normal (non-inap)
+            const modal = document.getElementById('status-modal');
+            const modalTitle = document.getElementById('modal-title');
+            
+            modalTitle.textContent = `Daftar Truk: ${status}`;
+
+            if (status === 'UNKNOWN') {
+                const knownStatuses = [...statusOptions, 'INAP', 'ANTRI BONGKAR']; 
+                currentModalTrucks = trucksData.filter(truck => {
+                    const s = truck.keterangan;
+                    if (!s) return true; 
+                    return !knownStatuses.includes(s);
+                });
+            } else {
+                currentModalTrucks = trucksData.filter(truck => truck.keterangan === status);
+            }
+
+            const searchInput = document.getElementById('modalSearchInput');
+            searchInput.value = '';
+
+            modalSort = { column: 'no_mobil', direction: 'asc' };
+            applyModalFiltersAndSort();
+            modal.classList.remove('hidden');
+        }
+
+        // --- BATAS KODE BARU ---
 
         const statusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
         const statusInfo = { 'TERSEDIA': { icon: 'fa-check-circle', color: 'slate' }, 'OTW MILL': { icon: 'fa-truck-loading', color: 'purple' }, 'ANTRI MUAT': { icon: 'fa-clock', color: 'cyan' }, 'OTW CUSTOMER': { icon: 'fa-road', color: 'green' }, 'ANTRI BONGKAR': { icon: 'fa-hourglass-half', color: 'yellow' }, 'INAP': { icon: 'fa-bed', color: 'orange' }, 'STORING': { icon: 'fa-tools', color: 'red' }, 'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } };
@@ -787,24 +1032,31 @@
             if (!data) return;
             document.getElementById('welcome-title').textContent = `Selamat Datang, ${currentUserData.angkutanName}!`;
             document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
             const totalTrucks = data.length;
-            const activeTrucks = data.filter(t => ['OTW MILL', 'ANTRI MUAT', 'MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
-            const availableTrucks = data.filter(t => t.keterangan === 'TERSEDIA').length;
+            
+            // [PERBAIKAN] Logika 'availableTrucks' (sekarang Belum Alokasi) diubah
+            const belumAlokasi = data.filter(t => ['TERSEDIA', 'STORING', 'NO DRIVER'].includes(t.keterangan)).length;
+            
+            // Logika 'activeTrucks' (sekarang Sudah Alokasi) sudah benar
+            const activeTrucks = data.filter(t => ['OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP'].includes(t.keterangan)).length;
+
             document.getElementById('total-truck-count').textContent = totalTrucks;
             document.getElementById('active-truck-count').textContent = activeTrucks;
-            document.getElementById('available-truck-count').textContent = availableTrucks;
+            // [PERBAIKAN] Mengirim hasil 'belumAlokasi' ke elemen card
+            document.getElementById('available-truck-count').textContent = belumAlokasi;
             
             const container = document.getElementById('status-details-grid');
             container.innerHTML = '';
 
-            // 1. Fungsi helper untuk buat kartu (agar tidak duplikat kode)
+            // [PERBAIKAN] Fungsi helper internal dimodifikasi
             const createStatusCard = (status, count) => {
-                if (count === 0) return;
-                
-                // Tentukan info asli (untuk warna/icon)
                 let originalStatus = status;
                 if (status.startsWith('INAP')) {
                     originalStatus = 'INAP';
+                } else if (status.startsWith('ANTRI')) { 
+                    originalStatus = 'ANTRI BONGKAR'; 
+                    if (status === 'ANTRI MUAT') originalStatus = 'ANTRI MUAT'; 
                 }
                 
                 const info = statusInfo[originalStatus] || { icon: 'fa-question-circle', color: 'gray' };
@@ -817,26 +1069,77 @@
                         <p class="text-slate-500 font-semibold">${status}</p>
                         <p class="text-2xl font-bold text-slate-800">${count}</p>
                     </div>`;
+                // Onclick ini memanggil fungsi modal di file index.html
                 card.onclick = () => window.showTrucksByStatus(status);
                 container.appendChild(card);
             };
 
-            // 2. Loop untuk semua status KECUALI INAP
-            statusOptions.forEach(status => {
-                if (status === 'INAP') return; // Skip INAP
-                const count = data.filter(truck => truck.keterangan === status).length;
-                createStatusCard(status, count);
+            // [PERBAIKAN] Tentukan urutan status baru
+            const orderedStatuses = [
+                'TERSEDIA',
+                'OTW MILL',
+                'ANTRI MUAT',
+                'OTW CUSTOMER',
+                'ANTRI BU17', // <-- BARU
+                'ANTRI CMI',  // <-- BARU
+                'INAP BU17',
+                'INAP CMI',
+                'STORING',
+                'NO DRIVER'
+            ];
+
+            // Hitung SEMUA count terlebih dahulu
+            const counts = {};
+            counts['TERSEDIA'] = data.filter(t => t.keterangan === 'TERSEDIA').length;
+            counts['OTW MILL'] = data.filter(t => t.keterangan === 'OTW MILL').length;
+            counts['ANTRI MUAT'] = data.filter(t => t.keterangan === 'ANTRI MUAT').length;
+            counts['OTW CUSTOMER'] = data.filter(t => t.keterangan === 'OTW CUSTOMER').length;
+            counts['ANTRI BU17'] = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI BU17').length;
+            counts['ANTRI CMI'] = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI CMI').length;
+            counts['INAP BU17'] = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17').length;
+            counts['INAP CMI'] = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI').length;
+            counts['STORING'] = data.filter(t => t.keterangan === 'STORING').length;
+            counts['NO DRIVER'] = data.filter(t => t.keterangan === 'NO DRIVER').length;
+            
+            // Loop melalui urutan yang DIINGINKAN dan render kartunya (termasuk yg 0)
+            orderedStatuses.forEach(status => {
+                createStatusCard(status, counts[status] || 0);
             });
 
-            // 3. Hitung dan buat kartu INAP secara manual
-            const inapBU17Count = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17').length;
-            createStatusCard('INAP BU17', inapBU17Count);
-            
-            const inapCMICount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI').length;
-            createStatusCard('INAP CMI', inapCMICount);
-
+            // Tampilkan (Lainnya) HANYA JIKA count > 0
             const inapLainnyaCount = data.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)').length;
-            createStatusCard('INAP (Lainnya)', inapLainnyaCount);
+            if (inapLainnyaCount > 0) {
+                 createStatusCard('INAP (Lainnya)', inapLainnyaCount);
+            }
+            const antriLainnyaCount = data.filter(t => t.keterangan === 'ANTRI BONGKAR' && getDynamicStatus(t) === 'ANTRI BONGKAR (Lainnya)').length;
+            if (antriLainnyaCount > 0) {
+                 createStatusCard('ANTRI BONGKAR (Lainnya)', antriLainnyaCount);
+            }
+
+            // Tampilkan 'STATUS TIDAK DIKENALI' HANYA JIKA count > 0
+            const knownStatuses = [...statusOptions, 'INAP', 'ANTRI BONGKAR']; 
+            const unknownTrucks = data.filter(truck => {
+                const status = truck.keterangan;
+                if (!status) return true; 
+                return !knownStatuses.includes(status);
+            });
+            const unknownCount = unknownTrucks.length;
+
+            if (unknownCount > 0) {
+                const info = { icon: 'fa-question-circle', color: 'gray' };
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-xl shadow-md flex items-center status-card';
+                card.style.cursor = 'pointer';
+                card.style.border = '2px solid #ef4444'; 
+                card.innerHTML = `
+                    <div class="p-3 bg-${info.color}-100 rounded-full"><i class="fas ${info.icon} text-2xl text-${info.color}-600"></i></div>
+                    <div class="ml-4">
+                        <p class="text-slate-500 font-semibold">STATUS TIDAK DIKENALI</p>
+                        <p class="text-2xl font-bold text-red-600">${unknownCount}</p>
+                    </div>`;
+                card.onclick = () => window.showTrucksByStatus('UNKNOWN'); // Kirim sinyal UNKNOWN
+                container.appendChild(card);
+            }
         }
 
         function createTruckCard(truck) {
@@ -1149,7 +1452,11 @@
             const card = document.createElement('div');
             card.className = 'bg-white p-6 rounded-xl shadow-md';
             card.setAttribute('data-id', truck.firestoreId);
-            const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
+            
+            // [PERBAIKAN] Gunakan getDynamicStatus agar badge-nya benar
+            const dynamicStatus = getDynamicStatus(truck) || 'N/A';
+            const badgeClasses = statusBadgeMap[dynamicStatus] || 'bg-slate-100 text-slate-800';
+            
             const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
             const kubikasi = (p * l * t / 1000000).toFixed(2);
             const [tanggal, jam] = (truck.waktu || 'T').split('T');
@@ -1163,7 +1470,8 @@
                 <div class="flex justify-between"><span class="text-slate-500">Keluar Bongkar:</span><span class="text-slate-700 font-semibold">${formatTanggalJam(truck.keluar_lokasi_bongkar)}</span></div>
             </div>`;
             
-            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
+            // [PERBAIKAN] Tampilkan dynamicStatus di badge
+            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${dynamicStatus}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
             
             return card;
         }
