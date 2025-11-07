@@ -1068,6 +1068,10 @@
             'STORING': { icon: 'fa-tools', color: 'red' }, 
             'NO DRIVER': { icon: 'fa-user-slash', color: 'rose' } 
         };
+
+        // --- TAMBAHKAN VARIABEL BARU DI BAWAH INI ---
+        const baseStatusOptions = ['TERSEDIA', 'OTW MILL', 'ANTRI MUAT', 'OTW CUSTOMER', 'ANTRI BONGKAR', 'INAP', 'STORING', 'NO DRIVER'];
+        // --- BATAS TAMBAHAN ---
         
         const statusBadgeMap = { 
             'TERSEDIA': 'bg-slate-100 text-slate-800', 
@@ -2087,7 +2091,11 @@
                 const field = cell.dataset.field; const value = truck[field] || '';
                 if(field === 'angkutan') cell.innerHTML = createSelect(uniqueAngkutan, value);
                 else if(field === 'jenis_mobil') cell.innerHTML = createSelect(window.jenisTruckData.map(j => j.name), value);
-                else if(field === 'keterangan') cell.innerHTML = createSelect(statusOptions, value);
+                
+                // [PERBAIKAN] Menggunakan 'baseStatusOptions' (daftar simpel)
+                // bukan 'statusOptions' (daftar kompleks)
+                else if(field === 'keterangan') cell.innerHTML = createSelect(baseStatusOptions, value); 
+                
                 else cell.innerHTML = createInput(value);
             });
             row.querySelector('.action-buttons').innerHTML = `<button class="save p-2 text-xs text-white bg-green-600 rounded-lg" onclick="window.saveRow('${firestoreId}')"><i class="fas fa-check"></i></button><button class="cancel p-2 text-xs text-white bg-gray-500 rounded-lg" onclick="window.cancelEdit()"><i class="fas fa-times"></i></button>`;
