@@ -309,6 +309,11 @@
                                         <th class="px-6 py-3" data-filter="nama_driver" onclick="handleHeaderClick(event, 'nama_driver')">Nama Driver</th>
                                         <th class="px-6 py-3" data-filter="customer" onclick="handleHeaderClick(event, 'customer')">Customer</th>
                                         <th class="px-6 py-3" data-filter="tujuan" onclick="handleHeaderClick(event, 'tujuan')">Kota</th>
+                                        
+                                        <th class="px-6 py-3 whitespace-nowrap" data-filter="tiba_lokasi_muat" onclick="handleHeaderClick(event, 'tiba_lokasi_muat')">Tiba Muat</th>
+                                        <th class="px-6 py-3 whitespace-nowrap" data-filter="keluar_lokasi_muat" onclick="handleHeaderClick(event, 'keluar_lokasi_muat')">Keluar Muat</th>
+                                        <th class="px-6 py-3 whitespace-nowrap" data-filter="tiba_lokasi_bongkar" onclick="handleHeaderClick(event, 'tiba_lokasi_bongkar')">Tiba Bongkar</th>
+                                        <th class="px-6 py-3 whitespace-nowrap" data-filter="keluar_lokasi_bongkar" onclick="handleHeaderClick(event, 'keluar_lokasi_bongkar')">Keluar Bongkar</th>
                                         <th class="px-6 py-3" data-filter="timestamp_selesai" onclick="handleHeaderClick(event, 'timestamp_selesai')">Tanggal Selesai</th>
                                         <th class="px-6 py-3" data-filter="fo" onclick="handleHeaderClick(event, 'fo')">FO/DN</th>
                                     </tr>
@@ -1961,7 +1966,8 @@
             const { currentPage, filteredData } = paginationState.ritaseTruck;
 
             if (!filteredData || filteredData.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
+                // Update colspan menjadi 10 karena jumlah kolom bertambah
+                tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
                 renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
                 return;
             }
@@ -1973,14 +1979,23 @@
             paginatedData.forEach(data => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
+                
+                // Format tanggal selesai (timestamp Firestore)
                 const formattedDate = data.timestamp_selesai?.toDate() 
                     ? data.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short'}) + ' WIB' 
                     : '-';
+                
+                // Render baris tabel dengan kolom baru
                 row.innerHTML = `
                     <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
                     <td class="px-6 py-4">${data.nama_driver || '-'}</td>
                     <td class="px-6 py-4">${data.customer || '-'}</td>
                     <td class="px-6 py-4">${data.tujuan || '-'}</td>
+                    
+                    <td class="px-6 py-4 whitespace-nowrap text-xs">${formatTanggalJam(data.tiba_lokasi_muat)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs">${formatTanggalJam(data.keluar_lokasi_muat)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs">${formatTanggalJam(data.tiba_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs">${formatTanggalJam(data.keluar_lokasi_bongkar)}</td>
                     <td class="px-6 py-4">${formattedDate}</td>
                     <td class="px-6 py-4">${data.fo || '-'}</td>
                 `;
@@ -2062,22 +2077,179 @@
         }
         
         window.exportRitaseToExcel = () => {
-            const table = document.getElementById('ritaseTable');
-            const workbook = XLSX.utils.table_to_book(table, {sheet: "Laporan Ritase"});
+            // Ambil data yang sudah difilter
+            const dataToExport = paginationState.ritaseTruck.filteredData;
+
+            if (!dataToExport || dataToExport.length === 0) {
+                showErrorAlert("Gagal Export", "Tidak ada data untuk diexport.");
+                return;
+            }
+
+            // Fungsi helper kecil untuk memformat string "YYYY-MM-DDTHH:mm" menjadi "DD/MM/YYYY, HH:mm"
+            const fmtTime = (isoString) => {
+                if (!isoString || !isoString.includes('T')) return '-';
+                const [datePart, timePart] = isoString.split('T');
+                const [year, month, day] = datePart.split('-');
+                return `${day}/${month}/${year}, ${timePart}`;
+            };
+
+            // UPDATE: Header ditambahkan 4 kolom baru setelah "Kota"
+            const headers = [
+                "No", 
+                "Plat Nomor", 
+                "Nama Driver", 
+                "Customer", 
+                "Kota", 
+                "Tiba Muat", 
+                "Keluar Muat", 
+                "Tiba Bongkar", 
+                "Keluar Bongkar", 
+                "Tanggal Selesai", 
+                "FO/DN"
+            ];
+            
+            const body = dataToExport.map((row, index) => {
+                // Format timestamp selesai (dari Firestore Timestamp)
+                let formattedDateSelesai = '-';
+                if (row.timestamp_selesai && row.timestamp_selesai.toDate) {
+                    formattedDateSelesai = row.timestamp_selesai.toDate().toLocaleString('id-ID', { 
+                        timeZone: 'Asia/Jakarta', 
+                        dateStyle: 'long', 
+                        timeStyle: 'short'
+                    }) + ' WIB';
+                }
+
+                return [
+                    index + 1,
+                    row.plat_nomor || '-',
+                    row.nama_driver || '-',
+                    row.customer || '-',
+                    row.tujuan || '-',
+                    // UPDATE: Memasukkan data 4 kolom waktu baru
+                    fmtTime(row.tiba_lokasi_muat),
+                    fmtTime(row.keluar_lokasi_muat),
+                    fmtTime(row.tiba_lokasi_bongkar),
+                    fmtTime(row.keluar_lokasi_bongkar),
+                    formattedDateSelesai,
+                    row.fo || '-'
+                ];
+            });
+
+            const finalData = [headers, ...body];
+            const worksheet = XLSX.utils.aoa_to_sheet(finalData);
+            
+            // Style header (Bold)
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const address = XLSX.utils.encode_col(C) + "1"; 
+                if (!worksheet[address]) continue;
+                worksheet[address].s = { font: { bold: true }, alignment: { horizontal: "center" } };
+            }
+            
+            // Auto-width sederhana (opsional, agar kolom tidak terlalu sempit)
+            const wscols = headers.map(h => ({ wch: h.length + 5 })); 
+            worksheet['!cols'] = wscols;
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
+            
             const filename = `Laporan_Ritase_${currentUserData.angkutanName.replace(/ /g, '_')}_${getFilenameTimestamp()}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
         window.exportRitaseToPdf = () => {
+            const dataToExport = paginationState.ritaseTruck.filteredData;
+
+            if (!dataToExport || dataToExport.length === 0) {
+                showErrorAlert("Gagal Export", "Tidak ada data untuk diexport.");
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape' });
             const timestamp = getFormattedTimestamp();
             const title = `Laporan Ritase - ${currentUserData.angkutanName}`;
+            
+            // Helper format waktu
+            const fmtTime = (isoString) => {
+                if (!isoString || !isoString.includes('T')) return '-';
+                const [datePart, timePart] = isoString.split('T');
+                const [year, month, day] = datePart.split('-');
+                // Format dipendekkan sedikit agar muat di PDF: DD/MM HH:mm
+                return `${day}/${month}/${year}\n${timePart}`;
+            };
+            
             doc.text(title, 14, 15);
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
-            doc.autoTable({ html: '#ritaseTable', startY: 28, theme: 'grid', headStyles: { fillColor: [79, 70, 229] } });
+
+            // UPDATE: Definisi Header kolom baru
+            const head = [[
+                "No", "Plat Nomor", "Nama Driver", "Customer", "Kota", 
+                "Tiba Muat", "Keluar Muat", "Tiba Bongkar", "Keluar Bongkar", 
+                "Tgl Selesai", "FO/DN"
+            ]];
+            
+            const body = dataToExport.map((row, index) => {
+                let formattedDateSelesai = '-';
+                if (row.timestamp_selesai && row.timestamp_selesai.toDate) {
+                    // Format tanggal selesai dipersingkat agar muat
+                    formattedDateSelesai = row.timestamp_selesai.toDate().toLocaleString('id-ID', { 
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                }
+
+                return [
+                    index + 1,
+                    row.plat_nomor || '-',
+                    row.nama_driver || '-',
+                    row.customer || '-',
+                    row.tujuan || '-',
+                    // UPDATE: Data 4 kolom baru
+                    fmtTime(row.tiba_lokasi_muat),
+                    fmtTime(row.keluar_lokasi_muat),
+                    fmtTime(row.tiba_lokasi_bongkar),
+                    fmtTime(row.keluar_lokasi_bongkar),
+                    formattedDateSelesai,
+                    row.fo || '-'
+                ];
+            });
+
+            doc.autoTable({ 
+                head: head,
+                body: body,
+                startY: 28, 
+                theme: 'grid', 
+                headStyles: { 
+                    fillColor: [79, 70, 229], 
+                    halign: 'center', 
+                    valign: 'middle',
+                    fontSize: 7 
+                },
+                styles: { 
+                    fontSize: 6, // Font diperkecil agar semua kolom muat
+                    cellPadding: 2,
+                    valign: 'middle',
+                    halign: 'center'
+                },
+                columnStyles: {
+                    0: { cellWidth: 8 },  // No
+                    1: { cellWidth: 20 }, // Plat
+                    2: { cellWidth: 25 }, // Driver
+                    3: { cellWidth: 25 }, // Customer
+                    4: { cellWidth: 20 }, // Kota
+                    // Kolom waktu diberikan lebar cukup
+                    5: { cellWidth: 22 }, 
+                    6: { cellWidth: 22 },
+                    7: { cellWidth: 22 },
+                    8: { cellWidth: 22 },
+                    9: { cellWidth: 25 }, // Tgl Selesai
+                    10: { cellWidth: 'auto' } // FO
+                }
+            });
+            
             const filename = `Laporan_Ritase_${currentUserData.angkutanName.replace(/ /g, '_')}_${getFilenameTimestamp()}.pdf`;
             doc.save(filename);
         };
