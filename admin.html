@@ -607,16 +607,22 @@
                         <div class="bg-white rounded-xl shadow-md overflow-x-auto">
                             <table id="ritaseTable" class="w-full text-sm text-left text-slate-600">
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-                                    <tr>
-                                        <th class="px-6 py-3" data-filter="angkutanName" onclick="handleHeaderClick(event, 'angkutanName')">Angkutan</th>
-                                        <th class="px-6 py-3" data-filter="plat_nomor" onclick="handleHeaderClick(event, 'plat_nomor')">Plat Nomor</th>
-                                        <th class="px-6 py-3" data-filter="nama_driver" onclick="handleHeaderClick(event, 'nama_driver')">Nama Driver</th>
-                                        <th class="px-6 py-3" data-filter="customer" onclick="handleHeaderClick(event, 'customer')">Customer</th>
-                                        <th class="px-6 py-3" data-filter="tujuan" onclick="handleHeaderClick(event, 'tujuan')">Kota</th>
-                                        <th class="px-6 py-3" data-filter="timestamp_selesai" onclick="handleHeaderClick(event, 'timestamp_selesai')">Tanggal Selesai</th>
-                                        <th class="px-6 py-3" data-filter="fo" onclick="handleHeaderClick(event, 'fo')">FO</th>
-                                    </tr>
-                                </thead>
+                                <tr>
+                                    <th class="px-6 py-3" data-filter="angkutanName" onclick="handleHeaderClick(event, 'angkutanName')">Angkutan</th>
+                                    <th class="px-6 py-3" data-filter="plat_nomor" onclick="handleHeaderClick(event, 'plat_nomor')">Plat Nomor</th>
+                                    <th class="px-6 py-3" data-filter="nama_driver" onclick="handleHeaderClick(event, 'nama_driver')">Nama Driver</th>
+                                    <th class="px-6 py-3" data-filter="customer" onclick="handleHeaderClick(event, 'customer')">Customer</th>
+                                    <th class="px-6 py-3" data-filter="tujuan" onclick="handleHeaderClick(event, 'tujuan')">Kota</th>
+                                    
+                                    <th class="px-6 py-3">Tiba Muat</th>
+                                    <th class="px-6 py-3">Keluar Muat</th>
+                                    <th class="px-6 py-3">Tiba Bongkar</th>
+                                    <th class="px-6 py-3">Keluar Bongkar</th>
+                                    <th class="px-6 py-3" data-filter="timestamp_selesai" onclick="handleHeaderClick(event, 'timestamp_selesai')">Tanggal Selesai</th>
+                                    <th class="px-6 py-3 whitespace-nowrap">Lama Inap</th>
+                                    <th class="px-6 py-3" data-filter="fo" onclick="handleHeaderClick(event, 'fo')">FO</th>
+                                </tr>
+                            </thead>
                                 <tbody id="ritaseTableBody"></tbody>
                             </table>
                         </div>
@@ -1190,6 +1196,31 @@
             const [tahun, bulan, tanggal] = tanggalPart.split('-');
             if (!tahun || !bulan || !tanggal) { return '-'; }
             return `${tanggal}/${bulan}/${tahun}, ${jamPart}`;
+        }
+
+        // Fungsi untuk menghitung selisih antara dua waktu (Keluar Bongkar - Keluar Muat)
+        function calculateDurationBetween(startStr, endStr) {
+            if (!startStr || !endStr) return '-';
+            
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            let diff = end - start; // selisih dalam milidetik
+
+            if (isNaN(diff)) return '-';
+            if (diff < 0) return '-'; // Antisipasi jika data terbalik
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            diff -= days * (1000 * 60 * 60 * 24);
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            diff -= hours * (1000 * 60 * 60);
+            const minutes = Math.floor(diff / (1000 * 60));
+
+            let parts = [];
+            if (days > 0) parts.push(`${days} Hari`);
+            if (hours > 0) parts.push(`${hours} Jam`);
+            if (minutes > 0) parts.push(`${minutes} Mnt`); // Singkat 'Menit' jadi 'Mnt' agar tabel tidak terlalu lebar
+
+            return parts.length > 0 ? parts.join(' ') : '0 Mnt';
         }
         
         const firebaseConfig = {
@@ -3252,42 +3283,247 @@
             closeFilterPopup();
         }
 
+        // --- GANTI FUNGSI displayRitaseTable YANG LAMA DENGAN INI ---
         function displayRitaseTable() {
-            const tableBody = document.getElementById('ritaseTableBody');
-            tableBody.innerHTML = '';
+        const tableBody = document.getElementById('ritaseTableBody');
+        tableBody.innerHTML = '';
 
-            const { currentPage, filteredData } = paginationState.ritaseTruck;
-            
-            if (!filteredData || filteredData.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
-                renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
-                return;
-            }
-
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const paginatedData = filteredData.slice(start, end);
-
-            paginatedData.forEach(data => {
-                const row = document.createElement('tr');
-                row.className = 'bg-white border-b hover:bg-slate-50';
-                const formattedDate = data.timestamp_selesai?.toDate() 
-                    ? data.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short'}) + ' WIB' 
-                    : '-';
-                row.innerHTML = `
-                    <td class="px-6 py-4">${data.angkutanName || '-'}</td>
-                    <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
-                    <td class="px-6 py-4">${data.nama_driver || '-'}</td>
-                    <td class="px-6 py-4">${data.customer || '-'}</td>
-                    <td class="px-6 py-4">${data.tujuan || '-'}</td>
-                    <td class="px-6 py-4">${formattedDate}</td>
-                    <td class="px-6 py-4">${data.fo || '-'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
+        const { currentPage, filteredData } = paginationState.ritaseTruck;
+        
+        if (!filteredData || filteredData.length === 0) {
+            // Update colspan menjadi 12 karena kolom bertambah
+            tableBody.innerHTML = `<tr><td colspan="12" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
             renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
+            return;
         }
 
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const paginatedData = filteredData.slice(start, end);
+
+        const fmt = (isoStr) => {
+            if (!isoStr) return '-';
+            return formatTanggalJam(isoStr);
+        };
+
+        paginatedData.forEach(data => {
+            const row = document.createElement('tr');
+            row.className = 'bg-white border-b hover:bg-slate-50';
+            
+            const formattedDate = data.timestamp_selesai?.toDate 
+                ? data.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short'}) + ' WIB' 
+                : '-';
+
+            // Hitung Lama Inap (Keluar Bongkar - Keluar Muat)
+            const lamaInap = calculateDurationBetween(data.keluar_lokasi_muat, data.keluar_lokasi_bongkar);
+
+            row.innerHTML = `
+                <td class="px-6 py-4">${data.angkutanName || '-'}</td>
+                <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
+                <td class="px-6 py-4">${data.nama_driver || '-'}</td>
+                <td class="px-6 py-4">${data.customer || '-'}</td>
+                <td class="px-6 py-4">${data.tujuan || '-'}</td>
+                
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.tiba_lokasi_muat)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.keluar_lokasi_muat)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.tiba_lokasi_bongkar)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.keluar_lokasi_bongkar)}</td>
+
+                <td class="px-6 py-4">${formattedDate}</td>
+                
+                <td class="px-6 py-4 font-semibold text-indigo-600 whitespace-nowrap">${lamaInap}</td>
+                
+                <td class="px-6 py-4">${data.fo || '-'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+        renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
+    }
+
+    // --- GANTI FUNGSI exportRitaseToExcel YANG LAMA DENGAN INI ---
+    window.exportRitaseToExcel = () => {
+    // 1. Ambil data dari state
+    const dataToExport = paginationState.ritaseTruck.filteredData;
+
+    if (!dataToExport || dataToExport.length === 0) {
+        Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
+        return;
+    }
+
+    // 2. Definisi Header (Kolom "Lama Inap" ditambahkan setelah Tanggal Selesai)
+    const headers = [
+        "Angkutan", 
+        "Plat Nomor", 
+        "Nama Driver", 
+        "Customer", 
+        "Kota", 
+        "Tiba Muat", 
+        "Keluar Muat", 
+        "Tiba Bongkar", 
+        "Keluar Bongkar", 
+        "Tanggal Selesai", 
+        "Lama Inap", // <--- KOLOM BARU
+        "FO"
+    ];
+
+    // 3. Helper format tanggal
+    const fmt = (isoStr) => isoStr ? formatTanggalJam(isoStr) : '-';
+    
+    // 4. Mapping data ke baris Excel
+    const body = dataToExport.map(item => {
+        const tglSelesai = item.timestamp_selesai?.toDate 
+            ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) 
+            : '-';
+        
+        // HITUNG LAMA INAP (Keluar Bongkar - Keluar Muat)
+        const duration = calculateDurationBetween(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
+            
+        return [
+            item.angkutanName || '-',
+            item.plat_nomor || '-',
+            item.nama_driver || '-',
+            item.customer || '-',
+            item.tujuan || '-',
+            fmt(item.tiba_lokasi_muat),
+            fmt(item.keluar_lokasi_muat),
+            fmt(item.tiba_lokasi_bongkar),
+            fmt(item.keluar_lokasi_bongkar),
+            tglSelesai,
+            duration, // <--- DATA LAMA INAP DIMASUKKAN DISINI
+            item.fo || '-'
+        ];
+    });
+
+    // 5. Gabungkan Header dan Body
+    const wsData = [headers, ...body];
+    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // 6. Styling Header (Bold + Warna Abu)
+    if (worksheet['!ref']) {
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_col(C) + "1"; // Baris pertama
+            if (!worksheet[address]) continue;
+            worksheet[address].s = { 
+                font: { bold: true }, 
+                fill: { fgColor: { rgb: "CCCCCC" } },
+                alignment: { horizontal: "center" }
+            };
+        }
+    }
+
+    // 7. Auto Width (Otomatis lebar kolom menyesuaikan isi)
+    const colWidths = headers.map(h => ({ wch: h.length + 5 })); // Default width berdasarkan header
+    // Cek isi data untuk menyesuaikan lebar kolom Lama Inap agar tidak terpotong
+    if (body.length > 0) {
+        colWidths[10] = { wch: 20 }; // Lebar khusus untuk kolom Lama Inap
+    }
+    worksheet['!cols'] = colWidths;
+
+    // 8. Buat File Excel
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
+    
+    const startDate = document.getElementById('ritaseStartDate').value || 'All';
+    const endDate = document.getElementById('ritaseEndDate').value || 'All';
+    const filename = `Laporan_Ritase_${startDate}_sd_${endDate}.xlsx`;
+    
+    XLSX.writeFile(workbook, filename);
+};
+
+    // --- GANTI FUNGSI exportRitaseToPdf YANG LAMA DENGAN INI ---
+   window.exportRitaseToPdf = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    
+    const dataToExport = paginationState.ritaseTruck.filteredData;
+
+    if (!dataToExport || dataToExport.length === 0) {
+        Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
+        return;
+    }
+
+    const timestamp = new Date().toLocaleString('id-ID');
+    const startDate = document.getElementById('ritaseStartDate').value;
+    const endDate = document.getElementById('ritaseEndDate').value;
+    let subtitle = `Diekspor pada: ${timestamp}`;
+    if(startDate && endDate) {
+        subtitle += ` | Filter Tanggal: ${startDate} s/d ${endDate}`;
+    }
+
+    doc.setFontSize(14);
+    doc.text("Laporan Ritase Truck", 14, 15);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(subtitle, 14, 22);
+
+    // Tambahkan Header PDF
+    const head = [[
+        "Angkutan", "Plat", "Driver", "Customer", "Kota", 
+        "Tiba Muat", "Keluar Muat", "Tiba Bongkar", "Keluar Bongkar", 
+        "Tgl Selesai", "Lama Inap", "FO"
+    ]];
+
+    const fmt = (isoStr) => {
+        if(!isoStr) return '-';
+        return isoStr.replace('T', ' ').substring(0, 16); 
+    };
+
+    const body = dataToExport.map(item => {
+            const tglSelesai = item.timestamp_selesai?.toDate 
+            ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { 
+                year: 'numeric', month: '2-digit', day: '2-digit', 
+                hour: '2-digit', minute: '2-digit' 
+                }) 
+            : '-';
+
+        // Hitung durasi PDF
+        const duration = calculateDurationBetween(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
+
+        return [
+            item.angkutanName || '-',
+            item.plat_nomor || '-',
+            item.nama_driver || '-',
+            item.customer || '-',
+            item.tujuan || '-',
+            fmt(item.tiba_lokasi_muat),
+            fmt(item.keluar_lokasi_muat),
+            fmt(item.tiba_lokasi_bongkar),
+            fmt(item.keluar_lokasi_bongkar),
+            tglSelesai,
+            duration, // Masukkan durasi
+            item.fo || '-'
+        ];
+    });
+
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 28,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: [79, 70, 229], 
+            textColor: 255,
+            fontSize: 7, // Perkecil sedikit
+            halign: 'center'
+        },
+        styles: { 
+            fontSize: 6, // Perkecil sedikit
+            cellPadding: 1,
+            overflow: 'linebreak'
+        },
+        columnStyles: {
+            0: { cellWidth: 20 }, 
+            1: { cellWidth: 15 }, 
+            10: { cellWidth: 18, halign: 'center' }, // Kolom Lama Inap
+            11: { cellWidth: 18 } // FO
+        }
+    });
+
+    const filename = `Laporan_Ritase_${startDate || 'All'}_${endDate || 'All'}.pdf`;
+    doc.save(filename);
+};
+        
         function applyRitaseFiltersAndSort() {
             let filtered = [...window.allRitaseData];
 
@@ -3736,26 +3972,247 @@
             }
         };
 
-        window.exportRitaseToExcel = () => {
-            const table = document.getElementById('ritaseTable');
-            const workbook = XLSX.utils.table_to_book(table, {sheet: "Laporan Ritase"});
-            const filename = `Laporan_Ritase_Admin_${getFilenameTimestamp()}.xlsx`;
-            XLSX.writeFile(workbook, filename);
-        };
+        // ==========================================
+    // FUNGSI EXPORT BARU (DATA LENGKAP)
+    // ==========================================
 
-        window.exportRitaseToPdf = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' });
-            const timestamp = getFormattedTimestamp();
-            const title = "Ritase Truck";
-            doc.text(title, 14, 15);
-            doc.setFontSize(10);
-            doc.setTextColor(100);
-            doc.text(`Diekspor pada: ${timestamp}`, 14, 22);
-            doc.autoTable({ html: '#ritaseTable', startY: 28, theme: 'grid', headStyles: { fillColor: [79, 70, 229] } });
-            const filename = `Laporan_Ritase_Admin_${getFilenameTimestamp()}.pdf`;
-            doc.save(filename);
+        window.exportRitaseToExcel = () => {
+        // 1. AMBIL DATA DARI STATE (Bukan dari tabel HTML)
+        const dataToExport = paginationState.ritaseTruck.filteredData;
+
+        if (!dataToExport || dataToExport.length === 0) {
+            Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
+            return;
+        }
+
+        // --- DEFINISI HEADER KOLOM (Pastikan "Lama Inap" ada di sini) ---
+        const headers = [
+            "Angkutan", 
+            "Plat Nomor", 
+            "Nama Driver", 
+            "Customer", 
+            "Kota", 
+            "Tiba Muat", 
+            "Keluar Muat", 
+            "Tiba Bongkar", 
+            "Keluar Bongkar", 
+            "Tanggal Selesai", 
+            "Lama Inap",   // <--- INI KOLOM YANG SEBELUMNYA HILANG
+            "FO"
+        ];
+
+        // Helper: Format Tanggal
+        const fmt = (isoStr) => isoStr ? formatTanggalJam(isoStr) : '-';
+
+        // Helper Internal: Hitung Durasi (Langsung di sini agar aman)
+        const hitungDurasi = (startStr, endStr) => {
+            if (!startStr || !endStr) return '-';
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            let diff = end - start; 
+            if (isNaN(diff) || diff < 0) return '-';
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            diff -= days * (1000 * 60 * 60 * 24);
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            diff -= hours * (1000 * 60 * 60);
+            const minutes = Math.floor(diff / (1000 * 60));
+
+            let parts = [];
+            if (days > 0) parts.push(`${days} Hari`);
+            if (hours > 0) parts.push(`${hours} Jam`);
+            if (minutes > 0) parts.push(`${minutes} Mnt`);
+            return parts.length > 0 ? parts.join(' ') : '0 Mnt';
         };
+        
+        // 2. MAPPING DATA KE BARIS EXCEL
+        const body = dataToExport.map(item => {
+            const tglSelesai = item.timestamp_selesai?.toDate 
+                ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) 
+                : '-';
+            
+            // HITUNG LAMA INAP (Keluar Bongkar - Keluar Muat)
+            const duration = hitungDurasi(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
+                
+            return [
+                item.angkutanName || '-',
+                item.plat_nomor || '-',
+                item.nama_driver || '-',
+                item.customer || '-',
+                item.tujuan || '-',
+                fmt(item.tiba_lokasi_muat),
+                fmt(item.keluar_lokasi_muat),
+                fmt(item.tiba_lokasi_bongkar),
+                fmt(item.keluar_lokasi_bongkar),
+                tglSelesai,
+                duration, // <--- DATA DURASI DIMASUKKAN KE SINI (Kolom ke-11)
+                item.fo || '-'
+            ];
+        });
+
+        // 3. GABUNGKAN HEADER DAN BODY
+        const wsData = [headers, ...body];
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // 4. STYLING HEADER (BOLD & WARNA)
+        if (worksheet['!ref']) {
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const address = XLSX.utils.encode_col(C) + "1";
+                if (!worksheet[address]) continue;
+                worksheet[address].s = { 
+                    font: { bold: true }, 
+                    fill: { fgColor: { rgb: "CCCCCC" } },
+                    alignment: { horizontal: "center" }
+                };
+            }
+        }
+
+        // 5. ATUR LEBAR KOLOM (Agar "Lama Inap" terbaca jelas)
+        const colWidths = headers.map(h => ({ wch: h.length + 5 }));
+        colWidths[10] = { wch: 25 }; // Lebar khusus untuk kolom Lama Inap
+        worksheet['!cols'] = colWidths;
+
+        // 6. GENERATE FILE
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
+        
+        const startDate = document.getElementById('ritaseStartDate').value || 'All';
+        const endDate = document.getElementById('ritaseEndDate').value || 'All';
+        const filename = `Laporan_Ritase_${startDate}_sd_${endDate}.xlsx`;
+        
+        XLSX.writeFile(workbook, filename);
+    };
+
+    window.exportRitaseToPdf = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    
+    // 1. Ambil Data dari State
+    const dataToExport = paginationState.ritaseTruck.filteredData;
+
+    if (!dataToExport || dataToExport.length === 0) {
+        Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
+        return;
+    }
+
+    // Setup Judul & Tanggal
+    const timestamp = new Date().toLocaleString('id-ID');
+    const startDate = document.getElementById('ritaseStartDate').value;
+    const endDate = document.getElementById('ritaseEndDate').value;
+    let subtitle = `Diekspor pada: ${timestamp}`;
+    if(startDate && endDate) {
+        subtitle += ` | Filter Tanggal: ${startDate} s/d ${endDate}`;
+    }
+
+    doc.setFontSize(14);
+    doc.text("Laporan Ritase Truck", 14, 15);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(subtitle, 14, 22);
+
+    // 2. Definisi Header (Termasuk Lama Inap)
+    const head = [[
+        "Angkutan", "Plat", "Driver", "Customer", "Kota", 
+        "Tiba Muat", "Keluar Muat", "Tiba Bongkar", "Keluar Bongkar", 
+        "Tgl Selesai", "Lama Inap", "FO"
+    ]];
+
+    // Helper: Format Tanggal Singkat (DD/MM HH:mm) agar hemat tempat
+    const fmt = (isoStr) => {
+        if(!isoStr) return '-';
+        const d = new Date(isoStr);
+        // Format manual agar pendek
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}/${mm} ${hh}:${min}`;
+    };
+
+    // Helper: Hitung Durasi (Singkat)
+    const hitungDurasi = (startStr, endStr) => {
+        if (!startStr || !endStr) return '-';
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        let diff = end - start;
+        if (isNaN(diff) || diff < 0) return '-';
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+        const minutes = Math.floor(diff / (1000 * 60));
+
+        let parts = [];
+        if (days > 0) parts.push(`${days}h`); // h = Hari
+        if (hours > 0) parts.push(`${hours}j`); // j = Jam
+        if (minutes > 0) parts.push(`${minutes}m`); // m = Menit
+        return parts.length > 0 ? parts.join(' ') : '0m';
+    };
+
+    // 3. Mapping Data Body
+    const body = dataToExport.map(item => {
+         const tglSelesai = item.timestamp_selesai?.toDate 
+            ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { 
+                day: '2-digit', month: '2-digit', year: '2-digit', 
+                hour: '2-digit', minute: '2-digit' 
+              }) 
+            : '-';
+
+        // Hitung durasi
+        const duration = hitungDurasi(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
+
+        return [
+            item.angkutanName || '-',
+            item.plat_nomor || '-',
+            item.nama_driver || '-',
+            item.customer || '-',
+            item.tujuan || '-',
+            fmt(item.tiba_lokasi_muat),
+            fmt(item.keluar_lokasi_muat),
+            fmt(item.tiba_lokasi_bongkar),
+            fmt(item.keluar_lokasi_bongkar),
+            tglSelesai,
+            duration, // <--- Masukkan Data Lama Inap
+            item.fo || '-'
+        ];
+    });
+
+    // 4. Generate Tabel PDF
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 28,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: [79, 70, 229], 
+            textColor: 255,
+            fontSize: 7,
+            halign: 'center',
+            valign: 'middle'
+        },
+        styles: { 
+            fontSize: 6, // Font kecil agar semua kolom muat
+            cellPadding: 1,
+            overflow: 'linebreak',
+            halign: 'center',
+            valign: 'middle'
+        },
+        columnStyles: {
+            0: { cellWidth: 20, halign: 'left' }, // Angkutan
+            1: { cellWidth: 15 }, // Plat
+            2: { cellWidth: 15, halign: 'left' }, // Driver
+            3: { cellWidth: 20, halign: 'left' }, // Customer
+            // Kolom Lama Inap diberi style khusus agar terlihat
+            10: { cellWidth: 18, fontStyle: 'bold', textColor: [20, 20, 20] }, 
+            11: { cellWidth: 18 } // FO
+        }
+    });
+
+    const filename = `Laporan_Ritase_${startDate || 'All'}_${endDate || 'All'}.pdf`;
+    doc.save(filename);
+};
         
         window.exportInapTableAsImage = async (tableId, defaultTitle) => {
             const tableToExport = document.getElementById(tableId);
