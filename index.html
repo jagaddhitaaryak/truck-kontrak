@@ -470,7 +470,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, updateDoc, query, where, getDoc, addDoc, serverTimestamp, getDocs, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, onSnapshot, updateDoc, query, where, getDoc, addDoc, serverTimestamp, getDocs, orderBy, deleteDoc, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let db, auth, currentUserData, unsubscribeFromTrucks, unsubscribeFromCustomers, unsubscribeFromJenisTruck;
         let trucksData = [];
@@ -2015,24 +2015,77 @@
             });
         }
 
-        async function fetchAndRenderRitase() {
+        // GANTI FUNGSI INI DI SCRIPT
+        async function fetchAndRenderRitase(isFilterMode = false) {
             const tableBody = document.getElementById('ritaseTableBody');
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data ritase...</td></tr>`;
+            const loadingMsg = isFilterMode ? 'Mengambil data lengkap sesuai tanggal...' : 'Memuat data ritase (20 Terakhir)...';
+            
+            tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>${loadingMsg}</td></tr>`;
 
             try {
+                allRitaseData = []; // <--- TAMBAHKAN INI (Reset variabel penampung)
                 const ritaseRef = collection(db, "completed_deliveries");
-                const q = query(ritaseRef, 
-                    where("angkutanName", "==", currentUserData.angkutanName), 
-                    orderBy("timestamp_selesai", "desc")
-                );
+                let q;
+
+                // Cek Input Tanggal
+                const startDateVal = document.getElementById('ritaseStartDate').value;
+                const endDateVal = document.getElementById('ritaseEndDate').value;
+
+                if (isFilterMode && startDateVal && endDateVal) {
+                    // --- MODE FILTER TANGGAL (AMBIL SEMUA SESUAI TANGGAL) ---
+                    // Set jam agar mencakup seluruh hari (00:00 s/d 23:59)
+                    const startDate = new Date(startDateVal);
+                    startDate.setHours(0, 0, 0, 0);
+                    
+                    const endDate = new Date(endDateVal);
+                    endDate.setHours(23, 59, 59, 999);
+
+                    console.log("Mengambil data dari server range:", startDate, "s/d", endDate);
+
+                    q = query(ritaseRef, 
+                        where("angkutanName", "==", currentUserData.angkutanName), 
+                        where("timestamp_selesai", ">=", startDate),
+                        where("timestamp_selesai", "<=", endDate),
+                        orderBy("timestamp_selesai", "desc")
+                        // TIDAK ADA LIMIT DI SINI (Agar data sebulan penuh terambil)
+                    );
+                } else {
+                    // --- MODE DEFAULT (HEMAT KUOTA) ---
+                    // Hanya ambil 50 terakhir
+                    q = query(ritaseRef, 
+                        where("angkutanName", "==", currentUserData.angkutanName), 
+                        orderBy("timestamp_selesai", "desc"),
+                        limit(20) // LIMIT AKTIF
+                    );
+                }
                 
                 const querySnapshot = await getDocs(q);
+                
+                // Simpan ke variabel global
                 allRitaseData = querySnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id }));
                 
+                if (isFilterMode) {
+                    console.log(`Berhasil menarik ${allRitaseData.length} data ritase (Full Range).`);
+                    showSuccessAlert("Data Terupdate", `Berhasil memuat ${allRitaseData.length} data ritase sesuai tanggal.`);
+                } else {
+                    console.log(`Berhasil memuat ${allRitaseData.length} data ritase (Default Limit).`);
+                }
+                
+                // Panggil fungsi filter lokal untuk merender tabel
                 applyRitaseFiltersAndSort();
+
             } catch (error) {
                 console.error("Gagal memuat data ritase:", error);
-                tableBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-red-500">Gagal memuat data. Silakan coba lagi.</td></tr>`;
+                
+                if (error.code === 'resource-exhausted') {
+                    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-red-600 font-bold">Kuota Harian Habis. Silakan coba lagi besok.</td></tr>`;
+                } else if (error.code === 'failed-precondition') {
+                    // Error ini biasanya muncul jika Index belum dibuat di Firebase
+                    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-red-500">Perlu Index Firestore. (Hubungi Admin)</td></tr>`;
+                    console.log("Perlu membuat index komposisi: angkutanName + timestamp_selesai");
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-red-500">Gagal memuat data: ${error.message}</td></tr>`;
+                }
             }
         }
 
@@ -2471,11 +2524,25 @@
             });
             document.getElementById('copyright-year').textContent = new Date().getFullYear();
             
-            document.getElementById('applyDateFilterBtn').addEventListener('click', applyRitaseFiltersAndSort);
+            // GANTI DENGAN INI
+            document.getElementById('applyDateFilterBtn').addEventListener('click', () => {
+                // Panggil fetch dengan mode filter = true
+                fetchAndRenderRitase(true);
+            });
+            // GANTI DENGAN INI
+            // GANTI LOGIKA TOMBOL RESET DENGAN INI
             document.getElementById('resetDateFilterBtn').addEventListener('click', () => {
+                // 1. Kosongkan Input Tanggal Secara Visual
                 document.getElementById('ritaseStartDate').value = '';
                 document.getElementById('ritaseEndDate').value = '';
-                applyRitaseFiltersAndSort();
+                
+                // 2. Tampilkan Loading di Tabel
+                const tableBody = document.getElementById('ritaseTableBody');
+                tableBody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500"><i class="fas fa-sync fa-spin mr-2"></i>Mereset data...</td></tr>`;
+
+                // 3. Panggil Fetch Mode Default (False)
+                // Ini akan mengambil ulang 50 data terakhir dari database
+                fetchAndRenderRitase(false); 
             });
 
             document.getElementById('summaryFilterJenisMobil').addEventListener('change', renderSummaryReport);
