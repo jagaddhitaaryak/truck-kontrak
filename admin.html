@@ -241,16 +241,6 @@
         #sidebar.sidebar-collapsed ~ .flex-1 #home .text-suffix-truk {
             display: none;
         }
-        /* Memastikan body tidak melakukan scroll jika kita ingin scroll internal */
-        @media (min-width: 1024px) {
-            #dashboard-container > div {
-                height: 100vh;
-                overflow: hidden;
-            }
-            .flex-1 {
-                overflow-y: auto;
-            }
-        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -304,8 +294,7 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
 
         <div class="relative min-h-screen lg:flex">
-            <!-- <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col"> -->
-            <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed lg:sticky top-0 h-screen transition-transform duration-300 ease-in-out z-40 flex flex-col">
+            <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col">
                 <div class="h-16 flex items-center justify-between px-4 border-b border-slate-700 flex-shrink-0">
                      <h1 class="text-2xl font-bold tracking-wider flex items-center"><i class="fas fa-truck-moving w-6 text-center"></i><span class="ml-3 sidebar-text">LOG IKK</span></h1>
                      <button id="sidebar-close-btn" class="lg:hidden text-2xl text-slate-400 hover:text-white">&times;</button>
@@ -351,7 +340,7 @@
                 </div>
             </aside>
 
-            <div class="flex-1 flex flex-col min-h-screen">
+            <div class="flex-1 flex flex-col overflow-hidden">
                 <header class="bg-white shadow-md">
                     <div class="flex h-16 items-center justify-between px-4 lg:px-8">
                         <div class="flex items-center">
@@ -627,10 +616,6 @@
                                 <button onclick="window.loadRitaseData()" class="flex items-center gap-2 bg-slate-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-slate-600 text-sm shadow-sm transition-transform hover:scale-105" title="Muat Ulang Data">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
-
-                                <button onclick="window.autoFillMissingDates()" class="flex items-center gap-2 bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 text-sm shadow-sm transition-transform hover:scale-105">
-                                    <i class="fas fa-magic"></i> Auto-Fill Tanggal
-                                </button>
                                 <button onclick="window.exportRitaseToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow-sm transition-transform hover:scale-105">
                                     <i class="fas fa-file-excel"></i> Excel
                                 </button>
@@ -638,7 +623,6 @@
                                     <i class="fas fa-file-pdf"></i> PDF
                                 </button>
                             </div>
-
                         </div>
                         <div class="bg-white rounded-xl shadow-md overflow-x-auto">
                             <table id="ritaseTable" class="w-full text-sm text-left text-slate-600">
@@ -1020,146 +1004,105 @@
                             </div>
                         </div>                        
 
-<div id="tab-report" class="cost-tab-content hidden">
-    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-            <div>
-                <h4 class="text-xl font-bold text-slate-800">Analisa Tonase & Cost per Ton</h4>
-                <p class="text-sm text-slate-500">Hitung efisiensi biaya operasional berdasarkan total tonase</p>
-            </div>
-        </div>
+                        <div id="tab-report" class="cost-tab-content hidden">
+                            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                                <h4 class="text-lg font-bold text-slate-700 mb-4">Filter Laporan Bulanan</h4>
+                                <div class="flex gap-4 items-end">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-600">Bulan</label>
+                                        <input type="month" id="reportMonth" class="p-2 border rounded-lg">
+                                    </div>
+                                    <button onclick="window.generateFinancialReport()" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">
+                                        <i class="fas fa-calculator mr-2"></i>Hitung
+                                    </button>
+                                    
+                                    <button id="btnCloseBook" onclick="window.closeBook()" class="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 hidden">
+                                        <i class="fas fa-lock mr-2"></i>CLOSING
+                                    </button>
+                                    <button id="btnReopenBook" onclick="window.reopenBook()" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 hidden">
+                                            <i class="fas fa-lock-open mr-2"></i>Buka Kembali
+                                    </button>
+                                    <div id="lockStatus" class="hidden flex items-center text-red-600 font-bold bg-red-100 px-3 py-2 rounded-lg border border-red-200">
+                                        <i class="fas fa-lock mr-2"></i> DATA TERKUNCI
+                                    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">Bulan Laporan</label>
-                <input type="month" id="reportMonth" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">
-                    Total Tonase (Ton) 
-                    <i class="fas fa-info-circle text-slate-400 ml-1" title="Total tonase pada bulan terpilih"></i>
-                </label>
-                <input type="number" id="totalTonaseInput" step="0.01" placeholder="Contoh: 12500" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" oninput="window.calculateCostPerTon()">
-                <p id="tonaseHelper" class="text-xs text-rose-500 mt-1 hidden">Tonase belum diisi</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-600 mb-1">
-                    Rate USD (IDR/USD)
-                    <i class="fas fa-info-circle text-slate-400 ml-1" title="Kurs USD yang digunakan untuk konversi"></i>
-                </label>
-                <input type="number" id="usdRateInput" value="16500" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" oninput="window.calculateCostPerTon()">
-            </div>
-            <div class="flex gap-2">
-                <button onclick="window.generateFinancialReport()" class="flex-1 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-calculator"></i> Hitung
-                </button>
-            </div>
-        </div>
-        
-        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
-            <button id="btnCloseBook" onclick="window.closeBook()" class="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 hidden">
-                <i class="fas fa-lock mr-2"></i>CLOSING
-            </button>
-            <button id="btnReopenBook" onclick="window.reopenBook()" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 hidden">
-                <i class="fas fa-lock-open mr-2"></i>Buka Kembali
-            </button>
-            <div id="lockStatus" class="hidden flex items-center text-red-600 font-bold bg-red-100 px-3 py-2 rounded-lg border border-red-200">
-                <i class="fas fa-lock mr-2"></i> DATA TERKUNCI
-            </div>
-            <button onclick="window.exportFinancialExcel()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 ml-auto">
-                <i class="fas fa-file-excel mr-2"></i>Excel
-            </button>
-        </div>
-    </div>
+                                    <button onclick="window.exportFinancialExcel()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                                        <i class="fas fa-file-excel mr-2"></i>Excel
+                                    </button>
+                                </div>
+                            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase">Total Tonase</p>
-                <p id="resTotalTonase" class="text-3xl font-bold text-slate-800 mt-1">-</p>
-            </div>
-            <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-weight-hanging text-2xl"></i></div>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase">Cost per Ton (IDR)</p>
-                <p id="resCostTonIDR" class="text-3xl font-bold text-slate-800 mt-1">-</p>
-                <p class="text-xs text-slate-400 mt-1">Total Pengeluaran ÷ Total Tonase</p>
-            </div>
-            <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-money-bill-wave text-2xl"></i></div>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase">Cost per Ton (USD)</p>
-                <p id="resCostTonUSD" class="text-3xl font-bold text-slate-800 mt-1">-</p>
-                <p id="resUsdRateLabel" class="text-xs text-slate-400 mt-1">Rate: 16.500</p>
-            </div>
-            <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-dollar-sign text-2xl"></i></div>
-        </div>
-    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg">
+                                    <p class="font-semibold opacity-80">Total Pengeluaran (Grand Total)</p>
+                                    <p id="rptGrandTotal" class="text-3xl font-bold mt-2">Rp 0</p>
+                                </div>
+                                <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg">
+                                    <p class="font-semibold opacity-80">Total Fix Cost (Sewa)</p>
+                                    <p id="rptTotalFix" class="text-3xl font-bold mt-2">Rp 0</p>
+                                </div>
+                                <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
+                                    <p class="font-semibold opacity-80">Total Variable Cost (Uang Jalan)</p>
+                                    <p id="rptTotalVar" class="text-3xl font-bold mt-2">Rp 0</p>
+                                </div>
+                            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg">
-            <p class="font-semibold opacity-80">Total Pengeluaran (Grand Total)</p>
-            <p id="rptGrandTotal" class="text-3xl font-bold mt-2">Rp 0</p>
-        </div>
-        <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg">
-            <p class="font-semibold opacity-80">Total Fix Cost (Sewa)</p>
-            <p id="rptTotalFix" class="text-3xl font-bold mt-2">Rp 0</p>
-        </div>
-        <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
-            <p class="font-semibold opacity-80">Total Variable Cost (Uang Jalan)</p>
-            <p id="rptTotalVar" class="text-3xl font-bold mt-2">Rp 0</p>
-        </div>
-    </div>
+                            <div id="ritase-dashboard-area" class="mt-10 border-t-4 border-slate-200 pt-8 hidden">
+                                
+                                <h3 class="text-2xl font-bold text-slate-700 mb-6">Analisa Performa Vendor</h3>
 
-    <div id="ritase-dashboard-area" class="mt-10 border-t-4 border-slate-200 pt-8 hidden">
-        <h3 class="text-2xl font-bold text-slate-700 mb-6">Analisa Performa Vendor</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
-                <div>
-                    <p class="text-2xl font-semibold text-slate-500 uppercase">Total Ritase (All)</p>
-                    <p id="kpi-total-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-route text-2xl"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
-                <div>
-                    <p class="text-2xl font-semibold text-slate-500 uppercase">Rata-rata Ritase / Unit</p>
-                    <p id="kpi-avg-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                </div>
-                <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-calculator text-2xl"></i></div>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
-                <div>
-                    <p class="text-2xl font-semibold text-slate-500 uppercase">Total Unit Operasional</p>
-                    <p id="kpi-total-unit" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-truck text-2xl"></i></div>
-            </div>
-        </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Total Ritase (All)</p>
+                                            <p id="kpi-total-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                                        </div>
+                                        <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-route text-2xl"></i></div>
+                                    </div>
+                                    
+                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Rata-rata Ritase / Unit</p>
+                                            <p id="kpi-avg-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                                        </div>
+                                        <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-calculator text-2xl"></i></div>
+                                    </div>
 
-        <div id="ritase-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Total Unit Operasional</p>
+                                            <p id="kpi-total-unit" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                                        </div>
+                                        <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-truck text-2xl"></i></div>
+                                    </div>
+                                </div>
 
-        <div class="bg-white rounded-xl shadow-md overflow-x-auto p-4">
-            <h4 class="text-xl font-bold text-slate-800 mb-4">Rincian Per Vendor & Truck (Keuangan)</h4>
-            <table class="w-full text-sm text-left text-slate-600" id="financialTable">
-                <thead class="bg-slate-800 text-white uppercase text-xs">
-                    <tr>
-                        <th class="px-6 py-3">Vendor</th>
-                        <th class="px-6 py-3">Plat Nomor</th>
-                        <th class="px-6 py-3 text-right">Fix Cost (Sewa)</th>
-                        <th class="px-6 py-3 text-center">Jml Ritase</th>
-                        <th class="px-6 py-3 text-right">Variable Cost (Total Uang Jalan)</th>
-                        <th class="px-6 py-3 text-right font-bold bg-slate-900">TOTAL BIAYA</th>
-                    </tr>
-                </thead>
-                <tbody id="financialReportBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                                <div id="ritase-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
+                                
+                                <!-- <div class="flex justify-end mb-8">
+                                    <button onclick="window.exportRitaseSummaryExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow-sm transition-transform hover:scale-105">
+                                        <i class="fas fa-file-excel"></i> Download Rekap Excel
+                                    </button>
+                                </div> -->
+
+                                <div class="bg-white rounded-xl shadow-md overflow-x-auto p-4">
+                                    <h4 class="text-xl font-bold text-slate-800 mb-4">Rincian Per Vendor & Truck (Keuangan)</h4>
+                                    <table class="w-full text-sm text-left text-slate-600" id="financialTable">
+                                        <thead class="bg-slate-800 text-white uppercase text-xs">
+                                            <tr>
+                                                <th class="px-6 py-3">Vendor</th>
+                                                <th class="px-6 py-3">Plat Nomor</th>
+                                                <th class="px-6 py-3 text-right">Fix Cost (Sewa)</th>
+                                                <th class="px-6 py-3 text-center">Jml Ritase</th>
+                                                <th class="px-6 py-3 text-right">Variable Cost (Total Uang Jalan)</th>
+                                                <th class="px-6 py-3 text-right font-bold bg-slate-900">TOTAL BIAYA</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="financialReportBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                    </div>
 
                 </main>
                 <footer class="text-center p-4 text-sm text-slate-500 mt-auto bg-white border-t">&copy; <span id="copyright-year"></span> Jagaddhita Arya Koswara - Logistik IKK</footer>
@@ -1470,8 +1413,7 @@
             "PT. SINAR MAJU JAYA": "SMJ",
             "PT. TIARA FAJAR TRANSPORTINDO": "TFT",
             "PT. TRANSPORTASI NUSANTARA JAYA": "TNJ",
-            "PT. YUSHAR PUTERA JAYA": "YUSHAR",
-            "PT. DEWI SRI": "DEWI SRI"
+            "PT. YUSHAR PUTERA JAYA": "YUSHAR"
         };
 
         // PAGINATION STATE
@@ -5025,10 +4967,7 @@ window.autoGenerateFixCost = () => {
 
         // YUSHAR: 26 Juta
         "PT. YUSHAR PUTERA JAYA": 26000000,
-        "YUSHAR": 26000000,
-
-        "PT. DEWI SRI": 32000000, // Ganti angka ini dengan harga sewa yang sesuai
-        "DEWI SRI": 32000000
+        "YUSHAR": 26000000
     };
 
     let updatedCount = 0;
@@ -5220,9 +5159,7 @@ function renderVarCostTable() {
         "PT. TIARA FAJAR TRANSPORTINDO": 26000000,
         "TFT": 26000000,
         "PT. YUSHAR PUTERA JAYA": 26000000,
-        "YUSHAR": 26000000,
-        "PT. DEWI SRI": 32000000,
-        "DEWI SRI": 32000000
+        "YUSHAR": 26000000
     };
 
     // --- 4. LOGIKA LAPORAN KEUANGAN & EXPORT ---
@@ -5273,14 +5210,10 @@ function renderVarCostTable() {
     window.calculateRealtimeReport = (monthInput) => {
         const [year, month] = monthInput.split('-');
 
-        // Kode Baru (berdasarkan keluar_lokasi_muat)
+        // Filter Data Ritase (Variable Cost) berdasarkan bulan dipilih
         const filteredRitase = window.allRitaseData.filter(trip => {
-            // Memastikan data keluar_lokasi_muat tersedia
-            if(!trip.keluar_lokasi_muat) return false;
-            
-            // Konversi string/object tanggal ke Date object JavaScript
-            const tripDate = new Date(trip.keluar_lokasi_muat); 
-            
+            if(!trip.timestamp_selesai) return false;
+            const tripDate = trip.timestamp_selesai.toDate();
             return tripDate.getFullYear() === parseInt(year) && (tripDate.getMonth() + 1) === parseInt(month);
         });
 
@@ -5356,10 +5289,10 @@ window.calculateRealtimeReport = (monthInput) => {
     const [year, month] = monthInput.split('-');
 
     // Filter Data Ritase
-    // Cuplikan perubahan di admin.html
     const filteredRitase = window.allRitaseData.filter(trip => {
-        if(!trip.keluar_lokasi_muat) return false; // Pastikan menggunakan field keluar_lokasi_muat
-        const tripDate = new Date(trip.keluar_lokasi_muat); 
+        if(!trip.timestamp_selesai) return false;
+        // Handle jika timestamp_selesai berupa string atau object Firestore
+        const tripDate = trip.timestamp_selesai.toDate ? trip.timestamp_selesai.toDate() : new Date(trip.timestamp_selesai);
         return tripDate.getFullYear() === parseInt(year) && (tripDate.getMonth() + 1) === parseInt(month);
     });
 
@@ -5530,22 +5463,18 @@ window.recalculateVendorTotal = (vendorEncoded) => {
     const newQty = parseInt(qtyInput.value) || 0;
     const rate = parseFloat(rateInput.value) || 0;
     
+    // Hitung Fix Cost Baru
     const newFixCost = newQty * rate;
+    
+    // Hitung Total Tagihan Baru
     const newTotalVendor = newFixCost + varCostValue;
 
+    // Update HTML
     subtotalCell.innerText = formatRupiah(newFixCost);
     if(grandTotalCell) grandTotalCell.innerText = formatRupiah(newTotalVendor);
 
-    // Update kotak total di bagian atas dashboard
     calculateGrandTotalAll();
-    
-    // --- TAMBAHKAN BARIS INI ---
-    // Agar Cost per Ton langsung menyesuaikan angka pengeluaran baru
-    window.calculateCostPerTon(); 
-    
-    if (typeof window.updateRitaseDashboard === 'function') {
-        window.updateRitaseDashboard();
-    }
+    window.updateRitaseDashboard();
 };
 
 // --- 5. HITUNG GRAND TOTAL SEMUA (KOTAK WARNA-WARNI DI ATAS) ---
@@ -6370,122 +6299,6 @@ window.exportRitaseSummaryExcel = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Performa Vendor");
     XLSX.writeFile(workbook, `Rekap_Performa_Vendor.xlsx`);
-};
-window.autoFillMissingDates = async () => {
-    // 1. Filter data dari window.allRitaseData untuk periode Agustus-Oktober 2025 yang datanya masih kosong
-    const targetData = window.allRitaseData.filter(trip => {
-        const tgl = trip.timestamp_selesai?.toDate ? trip.timestamp_selesai.toDate() : null;
-        if (!tgl) return false;
-        
-        const bulan = tgl.getMonth() + 1; // 8 = Agustus, 10 = Oktober
-        const tahun = tgl.getFullYear();
-        
-        // Hanya memproses data yang belum memiliki 'keluar_lokasi_bongkar'
-        return tahun === 2025 && bulan >= 8 && bulan <= 10 && !trip.keluar_lokasi_bongkar;
-    });
-
-    if (targetData.length === 0) {
-        return Swal.fire("Info", "Tidak ada data kosong yang ditemukan pada periode Agustus-Oktober 2025.", "info");
-    }
-
-    Swal.fire({
-        title: 'Konfirmasi Auto-Fill',
-        text: `Ditemukan ${targetData.length} data ritase yang akan diisi otomatis. Lanjutkan?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#4f46e5',
-        confirmButtonText: 'Ya, Isi Otomatis'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            // Menampilkan loading sederhana
-            Swal.fire({ title: 'Sedang memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            for (const trip of targetData) {
-                const tSelesai = trip.timestamp_selesai.toDate();
-                const satuJam = 60 * 60 * 1000;
-                const satuHari = 24 * satuJam;
-
-                // Logika Waktu Berdasarkan Permintaan Anda:
-                // 1. Keluar Bongkar = Tanggal Selesai (Sama persis)
-                const keluarBongkar = new Date(tSelesai.getTime());
-                
-                // 2. Tiba Bongkar = 4 jam sebelum Keluar Bongkar (Estimasi proses bongkar)
-                const tibaBongkar = new Date(keluarBongkar.getTime() - (4 * satuJam));
-                
-                // 3. Keluar Muat = 2 hari sebelum Tiba Bongkar (Estimasi perjalanan)
-                const keluarMuat = new Date(tibaBongkar.getTime() - (2 * satuHari));
-                
-                // 4. Tiba Muat = 3 jam sebelum Keluar Muat (Estimasi antri/proses muat)
-                const tibaMuat = new Date(keluarMuat.getTime() - (3 * satuJam));
-
-                const updateData = {
-                    keluar_lokasi_bongkar: keluarBongkar.toISOString(),
-                    tiba_lokasi_bongkar: tibaBongkar.toISOString(),
-                    keluar_lokasi_muat: keluarMuat.toISOString(),
-                    tiba_lokasi_muat: tibaMuat.toISOString()
-                };
-
-                try {
-                    const docRef = doc(db, "completed_deliveries", trip.docId);
-                    await updateDoc(docRef, updateData);
-                } catch (err) {
-                    console.error(`Gagal update dokumen ${trip.docId}:`, err);
-                }
-            }
-
-            Swal.fire("Berhasil", `${targetData.length} data ritase telah diperbarui.`, "success");
-            
-            // Refresh data ritase setelah update selesai
-            if (typeof window.loadRitaseData === 'function') {
-                window.loadRitaseData();
-            }
-        }
-    });
-};
-
-// Fungsi Perhitungan Cost per Ton
-// Fungsi Perhitungan Cost per Ton
-window.calculateCostPerTon = () => {
-    const tonaseInput = document.getElementById('totalTonaseInput');
-    const usdRateInput = document.getElementById('usdRateInput');
-    
-    const tonase = parseFloat(tonaseInput.value) || 0;
-    const usdRate = parseFloat(usdRateInput.value) || 16500;
-    
-    // Mengambil teks Total Pengeluaran dari kotak ungu
-    const grandTotalText = document.getElementById('rptGrandTotal').innerText;
-    
-    // Membersihkan format mata uang (Rp dan titik)
-    const cleanTotal = grandTotalText.replace(/Rp/g, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
-    const grandTotal = parseFloat(cleanTotal) || 0;
-
-    const resTonase = document.getElementById('resTotalTonase');
-    const resIDR = document.getElementById('resCostTonIDR');
-    const resUSD = document.getElementById('resCostTonUSD');
-
-    if (tonase <= 0) {
-        resTonase.innerText = "-";
-        resIDR.innerText = "-";
-        resUSD.innerText = "-";
-        return;
-    }
-
-    const costPerTonIDR = grandTotal / tonase;
-    const costPerTonUSD = costPerTonIDR / usdRate;
-
-    resTonase.innerText = tonase.toLocaleString('id-ID') + " Ton";
-    resIDR.innerText = "Rp " + Math.round(costPerTonIDR).toLocaleString('id-ID');
-    resUSD.innerText = "$ " + costPerTonUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
-
-// Integrasi dengan fungsi Hitung Laporan
-const originalGenerateReport = window.generateFinancialReport;
-window.generateFinancialReport = async () => {
-    // 1. Jalankan perhitungan biaya vendor
-    await originalGenerateReport();
-    
-    // 2. Jalankan perhitungan analisa tonase otomatis
-    window.calculateCostPerTon();
 };
         
     </script>
