@@ -241,6 +241,16 @@
         #sidebar.sidebar-collapsed ~ .flex-1 #home .text-suffix-truk {
             display: none;
         }
+        /* Memastikan body tidak melakukan scroll jika kita ingin scroll internal */
+        @media (min-width: 1024px) {
+            #dashboard-container > div {
+                height: 100vh;
+                overflow: hidden;
+            }
+            .flex-1 {
+                overflow-y: auto;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -294,7 +304,8 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden"></div>
 
         <div class="relative min-h-screen lg:flex">
-            <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col">
+            <!-- <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed inset-y-0 left-0 transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex flex-col"> -->
+            <aside id="sidebar" class="bg-slate-800 text-white w-64 flex-shrink-0 fixed lg:sticky top-0 h-screen transition-transform duration-300 ease-in-out z-40 flex flex-col">
                 <div class="h-16 flex items-center justify-between px-4 border-b border-slate-700 flex-shrink-0">
                      <h1 class="text-2xl font-bold tracking-wider flex items-center"><i class="fas fa-truck-moving w-6 text-center"></i><span class="ml-3 sidebar-text">LOG IKK</span></h1>
                      <button id="sidebar-close-btn" class="lg:hidden text-2xl text-slate-400 hover:text-white">&times;</button>
@@ -340,7 +351,7 @@
                 </div>
             </aside>
 
-            <div class="flex-1 flex flex-col overflow-hidden">
+            <div class="flex-1 flex flex-col min-h-screen">
                 <header class="bg-white shadow-md">
                     <div class="flex h-16 items-center justify-between px-4 lg:px-8">
                         <div class="flex items-center">
@@ -616,6 +627,10 @@
                                 <button onclick="window.loadRitaseData()" class="flex items-center gap-2 bg-slate-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-slate-600 text-sm shadow-sm transition-transform hover:scale-105" title="Muat Ulang Data">
                                     <i class="fas fa-sync-alt"></i>
                                 </button>
+
+                                <button onclick="window.autoFillMissingDates()" class="flex items-center gap-2 bg-orange-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-orange-600 text-sm shadow-sm transition-transform hover:scale-105">
+                                    <i class="fas fa-magic"></i> Auto-Fill Tanggal
+                                </button>
                                 <button onclick="window.exportRitaseToExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow-sm transition-transform hover:scale-105">
                                     <i class="fas fa-file-excel"></i> Excel
                                 </button>
@@ -623,11 +638,12 @@
                                     <i class="fas fa-file-pdf"></i> PDF
                                 </button>
                             </div>
+
                         </div>
                         <div class="bg-white rounded-xl shadow-md overflow-x-auto">
                             <table id="ritaseTable" class="w-full text-sm text-left text-slate-600">
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-                                    <tr>
+                                    <!-- <tr>
                                         <th class="px-6 py-3" data-filter="angkutanName" onclick="handleHeaderClick(event, 'angkutanName')">Angkutan</th>
                                         <th class="px-6 py-3" data-filter="plat_nomor" onclick="handleHeaderClick(event, 'plat_nomor')">Plat Nomor</th>
                                         
@@ -637,6 +653,9 @@
                                         <th class="px-6 py-3" data-filter="customer" onclick="handleHeaderClick(event, 'customer')">Customer</th>
                                         <th class="px-6 py-3" data-filter="tujuan" onclick="handleHeaderClick(event, 'tujuan')">Kota</th>
                                         
+                                        <th class="px-6 py-3 text-blue-600">Qty (Kg)</th> 
+                                        <th class="px-6 py-3">Jadwal Bongkar</th> 
+
                                         <th class="px-6 py-3">Tiba Muat</th>
                                         <th class="px-6 py-3">Keluar Muat</th>
                                         <th class="px-6 py-3">Tiba Bongkar</th>
@@ -644,6 +663,25 @@
                                         <th class="px-6 py-3" data-filter="timestamp_selesai" onclick="handleHeaderClick(event, 'timestamp_selesai')">Tanggal Selesai</th>
                                         <th class="px-6 py-3 whitespace-nowrap">Lama Inap</th>
                                         <th class="px-6 py-3" data-filter="fo" onclick="handleHeaderClick(event, 'fo')">FO</th>
+                                        <th class="px-6 py-3">Aksi</th>
+                                    </tr> -->
+                                    <tr>
+                                        <th class="px-6 py-3">Angkutan</th>
+                                        <th class="px-6 py-3">Plat Nomor</th>
+                                        <th class="px-6 py-3">Jenis Truck</th>
+                                        <th class="px-6 py-3">Nama Driver</th>
+                                        <th class="px-6 py-3">Customer</th>
+                                        <th class="px-6 py-3">Kota</th>
+                                        <th class="px-6 py-3 text-emerald-600">Uang Jalan</th>
+                                        <th class="px-6 py-3 text-blue-600">Qty (Kg)</th> 
+                                        <th class="px-6 py-3">Jadwal Bongkar</th> 
+                                        <th class="px-6 py-3">Tiba Muat</th>
+                                        <th class="px-6 py-3">Keluar Muat</th>
+                                        <th class="px-6 py-3">Tiba Bongkar</th>
+                                        <th class="px-6 py-3">Keluar Bongkar</th>
+                                        <th class="px-6 py-3">Tgl Selesai</th>
+                                        <th class="px-6 py-3">Lama Inap</th>
+                                        <th class="px-6 py-3">FO</th>
                                         <th class="px-6 py-3">Aksi</th>
                                     </tr>
                                 </thead>
@@ -694,6 +732,8 @@
                                             <th class="px-6 py-3">KELUAR LOKASI BONGKAR</th>
                                             <th class="px-6 py-3">NAMA CUSTOMER</th>
                                             <th class="px-6 py-3">KOTA</th>
+                                            <th class="px-6 py-3">QTY(Kg)</th> 
+                                            <th class="px-6 py-3">JADWAL BONGKAR</th> 
                                             <th class="px-6 py-3">STATUS</th>
                                             <th class="px-6 py-3">NAMA DRIVER</th>
                                             <th class="px-6 py-3">NO HP</th>
@@ -959,6 +999,9 @@
                         <div id="tab-master-var" class="cost-tab-content hidden">
                             <div class="bg-white p-6 rounded-xl shadow-md mb-6">
                                 <h4 class="text-lg font-bold text-slate-700 mb-4">Input Variable Cost (Uang Jalan)</h4>
+                                <button onclick="window.exportVarCostToExcel()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                                    <i class="fas fa-file-excel"></i> Export Excel
+                                </button>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                                     <div>
@@ -1004,105 +1047,146 @@
                             </div>
                         </div>                        
 
-                        <div id="tab-report" class="cost-tab-content hidden">
-                            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
-                                <h4 class="text-lg font-bold text-slate-700 mb-4">Filter Laporan Bulanan</h4>
-                                <div class="flex gap-4 items-end">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-600">Bulan</label>
-                                        <input type="month" id="reportMonth" class="p-2 border rounded-lg">
-                                    </div>
-                                    <button onclick="window.generateFinancialReport()" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700">
-                                        <i class="fas fa-calculator mr-2"></i>Hitung
-                                    </button>
-                                    
-                                    <button id="btnCloseBook" onclick="window.closeBook()" class="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 hidden">
-                                        <i class="fas fa-lock mr-2"></i>CLOSING
-                                    </button>
-                                    <button id="btnReopenBook" onclick="window.reopenBook()" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 hidden">
-                                            <i class="fas fa-lock-open mr-2"></i>Buka Kembali
-                                    </button>
-                                    <div id="lockStatus" class="hidden flex items-center text-red-600 font-bold bg-red-100 px-3 py-2 rounded-lg border border-red-200">
-                                        <i class="fas fa-lock mr-2"></i> DATA TERKUNCI
-                                    </div>
+<div id="tab-report" class="cost-tab-content hidden">
+    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+            <div>
+                <h4 class="text-xl font-bold text-slate-800">Analisa Tonase & Cost per Ton</h4>
+                <p class="text-sm text-slate-500">Hitung efisiensi biaya operasional berdasarkan total tonase</p>
+            </div>
+        </div>
 
-                                    <button onclick="window.exportFinancialExcel()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                                        <i class="fas fa-file-excel mr-2"></i>Excel
-                                    </button>
-                                </div>
-                            </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Bulan Laporan</label>
+                <input type="month" id="reportMonth" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">
+                    Total Tonase (Ton) 
+                    <i class="fas fa-info-circle text-slate-400 ml-1" title="Total tonase pada bulan terpilih"></i>
+                </label>
+                <input type="number" id="totalTonaseInput" step="0.01" placeholder="Contoh: 12500" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" oninput="window.calculateCostPerTon()">
+                <p id="tonaseHelper" class="text-xs text-rose-500 mt-1 hidden">Tonase belum diisi</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">
+                    Rate USD (IDR/USD)
+                    <i class="fas fa-info-circle text-slate-400 ml-1" title="Kurs USD yang digunakan untuk konversi"></i>
+                </label>
+                <input type="number" id="usdRateInput" value="16500" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500" oninput="window.calculateCostPerTon()">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.generateFinancialReport()" class="flex-1 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-calculator"></i> Hitung
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
+            <button id="btnCloseBook" onclick="window.closeBook()" class="bg-slate-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-slate-800 hidden">
+                <i class="fas fa-lock mr-2"></i>CLOSING
+            </button>
+            <button id="btnReopenBook" onclick="window.reopenBook()" class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 hidden">
+                <i class="fas fa-lock-open mr-2"></i>Buka Kembali
+            </button>
+            <div id="lockStatus" class="hidden flex items-center text-red-600 font-bold bg-red-100 px-3 py-2 rounded-lg border border-red-200">
+                <i class="fas fa-lock mr-2"></i> DATA TERKUNCI
+            </div>
+            <button onclick="window.exportFinancialExcel()" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 ml-auto">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+            </button>
+        </div>
+    </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg">
-                                    <p class="font-semibold opacity-80">Total Pengeluaran (Grand Total)</p>
-                                    <p id="rptGrandTotal" class="text-3xl font-bold mt-2">Rp 0</p>
-                                </div>
-                                <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg">
-                                    <p class="font-semibold opacity-80">Total Fix Cost (Sewa)</p>
-                                    <p id="rptTotalFix" class="text-3xl font-bold mt-2">Rp 0</p>
-                                </div>
-                                <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
-                                    <p class="font-semibold opacity-80">Total Variable Cost (Uang Jalan)</p>
-                                    <p id="rptTotalVar" class="text-3xl font-bold mt-2">Rp 0</p>
-                                </div>
-                            </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase">Total Tonase</p>
+                <p id="resTotalTonase" class="text-3xl font-bold text-slate-800 mt-1">-</p>
+            </div>
+            <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-weight-hanging text-2xl"></i></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase">Cost per Ton (IDR)</p>
+                <p id="resCostTonIDR" class="text-3xl font-bold text-slate-800 mt-1">-</p>
+                <p class="text-xs text-slate-400 mt-1">Total Pengeluaran ÷ Total Tonase</p>
+            </div>
+            <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-money-bill-wave text-2xl"></i></div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase">Cost per Ton (USD)</p>
+                <p id="resCostTonUSD" class="text-3xl font-bold text-slate-800 mt-1">-</p>
+                <p id="resUsdRateLabel" class="text-xs text-slate-400 mt-1">Rate: 16.500</p>
+            </div>
+            <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-dollar-sign text-2xl"></i></div>
+        </div>
+    </div>
 
-                            <div id="ritase-dashboard-area" class="mt-10 border-t-4 border-slate-200 pt-8 hidden">
-                                
-                                <h3 class="text-2xl font-bold text-slate-700 mb-6">Analisa Performa Vendor</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-indigo-600 text-white p-6 rounded-xl shadow-lg">
+            <p class="font-semibold opacity-80">Total Pengeluaran (Grand Total)</p>
+            <p id="rptGrandTotal" class="text-3xl font-bold mt-2">Rp 0</p>
+        </div>
+        <div class="bg-orange-600 text-white p-6 rounded-xl shadow-lg">
+            <p class="font-semibold opacity-80">Total Fix Cost (Sewa)</p>
+            <p id="rptTotalFix" class="text-3xl font-bold mt-2">Rp 0</p>
+        </div>
+        <div class="bg-green-600 text-white p-6 rounded-xl shadow-lg">
+            <p class="font-semibold opacity-80">Total Variable Cost (Uang Jalan)</p>
+            <p id="rptTotalVar" class="text-3xl font-bold mt-2">Rp 0</p>
+        </div>
+    </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
-                                        <div>
-                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Total Ritase (All)</p>
-                                            <p id="kpi-total-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                                        </div>
-                                        <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-route text-2xl"></i></div>
-                                    </div>
-                                    
-                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
-                                        <div>
-                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Rata-rata Ritase / Unit</p>
-                                            <p id="kpi-avg-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                                        </div>
-                                        <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-calculator text-2xl"></i></div>
-                                    </div>
+    <div id="ritase-dashboard-area" class="mt-10 border-t-4 border-slate-200 pt-8 hidden">
+        <h3 class="text-2xl font-bold text-slate-700 mb-6">Analisa Performa Vendor</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500 flex items-center justify-between">
+                <div>
+                    <p class="text-2xl font-semibold text-slate-500 uppercase">Total Ritase (All)</p>
+                    <p id="kpi-total-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i class="fas fa-route text-2xl"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500 flex items-center justify-between">
+                <div>
+                    <p class="text-2xl font-semibold text-slate-500 uppercase">Rata-rata Ritase / Unit</p>
+                    <p id="kpi-avg-ritase" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-orange-100 rounded-full text-orange-600"><i class="fas fa-calculator text-2xl"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
+                <div>
+                    <p class="text-2xl font-semibold text-slate-500 uppercase">Total Unit Operasional</p>
+                    <p id="kpi-total-unit" class="text-3xl font-bold text-slate-800 mt-1">0</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-truck text-2xl"></i></div>
+            </div>
+        </div>
 
-                                    <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between">
-                                        <div>
-                                            <p class="text-2xl font-semibold text-slate-500 uppercase">Total Unit Operasional</p>
-                                            <p id="kpi-total-unit" class="text-3xl font-bold text-slate-800 mt-1">0</p>
-                                        </div>
-                                        <div class="p-3 bg-green-100 rounded-full text-green-600"><i class="fas fa-truck text-2xl"></i></div>
-                                    </div>
-                                </div>
+        <div id="ritase-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
 
-                                <div id="ritase-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"></div>
-                                
-                                <!-- <div class="flex justify-end mb-8">
-                                    <button onclick="window.exportRitaseSummaryExcel()" class="flex items-center gap-2 bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 text-sm shadow-sm transition-transform hover:scale-105">
-                                        <i class="fas fa-file-excel"></i> Download Rekap Excel
-                                    </button>
-                                </div> -->
-
-                                <div class="bg-white rounded-xl shadow-md overflow-x-auto p-4">
-                                    <h4 class="text-xl font-bold text-slate-800 mb-4">Rincian Per Vendor & Truck (Keuangan)</h4>
-                                    <table class="w-full text-sm text-left text-slate-600" id="financialTable">
-                                        <thead class="bg-slate-800 text-white uppercase text-xs">
-                                            <tr>
-                                                <th class="px-6 py-3">Vendor</th>
-                                                <th class="px-6 py-3">Plat Nomor</th>
-                                                <th class="px-6 py-3 text-right">Fix Cost (Sewa)</th>
-                                                <th class="px-6 py-3 text-center">Jml Ritase</th>
-                                                <th class="px-6 py-3 text-right">Variable Cost (Total Uang Jalan)</th>
-                                                <th class="px-6 py-3 text-right font-bold bg-slate-900">TOTAL BIAYA</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="financialReportBody"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                    </div>
+        <div class="bg-white rounded-xl shadow-md overflow-x-auto p-4">
+            <h4 class="text-xl font-bold text-slate-800 mb-4">Rincian Per Vendor & Truck (Keuangan)</h4>
+            <table class="w-full text-sm text-left text-slate-600" id="financialTable">
+                <thead class="bg-slate-800 text-white uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-3">Vendor</th>
+                        <th class="px-6 py-3">Plat Nomor</th>
+                        <th class="px-6 py-3 text-right">Fix Cost (Sewa)</th>
+                        <th class="px-6 py-3 text-center">Jml Ritase</th>
+                        <th class="px-6 py-3 text-right">Variable Cost (Total Uang Jalan)</th>
+                        <th class="px-6 py-3 text-right font-bold bg-slate-900">TOTAL BIAYA</th>
+                    </tr>
+                </thead>
+                <tbody id="financialReportBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
                 </main>
                 <footer class="text-center p-4 text-sm text-slate-500 mt-auto bg-white border-t">&copy; <span id="copyright-year"></span> Jagaddhita Arya Koswara - Logistik IKK</footer>
@@ -1243,13 +1327,24 @@
                         <input type="text" id="ritaseDriver" class="w-full p-2 border rounded-lg">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-600">Customer</label>
-                        <input type="text" id="ritaseCustomer" class="w-full p-2 border rounded-lg">
+                        <select id="ritaseCustomer" class="w-full p-2 border rounded-lg bg-white">
+                            <option value="">- Pilih Customer -</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-600">Kota Tujuan</label>
                         <input type="text" id="ritaseKota" class="w-full p-2 border rounded-lg">
                     </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Qty (Kg)</label>
+                        <input type="number" id="ritaseQty" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700">Jadwal Bongkar</label>
+                        <input type="datetime-local" id="ritaseJadwalBongkar" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-slate-600">No. FO / DN</label>
                         <input type="text" id="ritaseFO" class="w-full p-2 border rounded-lg">
@@ -1413,7 +1508,8 @@
             "PT. SINAR MAJU JAYA": "SMJ",
             "PT. TIARA FAJAR TRANSPORTINDO": "TFT",
             "PT. TRANSPORTASI NUSANTARA JAYA": "TNJ",
-            "PT. YUSHAR PUTERA JAYA": "YUSHAR"
+            "PT. YUSHAR PUTERA JAYA": "YUSHAR",
+            "PT. DEWI SRI": "DEWI SRI"
         };
 
         // PAGINATION STATE
@@ -2728,8 +2824,82 @@
                 <div class="flex justify-between"><span class="text-slate-500">Keluar Bongkar:</span><span class="text-slate-700 font-semibold">${formatWaktu(truck.keluar_lokasi_bongkar)}</span></div>
             </div>`;
             
-            card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div><div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
-        }
+//             card.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || 'N/A'}</span></div><p class="text-sm text-slate-500 mb-4">${truck.jenis_mobil || ''}</p><div class="border-t border-slate-200 pt-4 mt-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Customer:</span><span class="text-slate-700 font-semibold">${truck.customer || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kota:</span><span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Angkutan:</span><span class="text-slate-700 font-semibold">${truck.angkutan || '-'}</span></div>${timestampHTML}<div class="flex justify-between"><span class="text-slate-500 font-medium">Terakhir Update Status:</span><span class="text-slate-700 font-semibold">${waktuDisplay}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Driver:</span><span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No HP:</span><span class="text-slate-700 font-semibold">${truck.no_hp || '-'}</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">No. FO:</span><span class="text-slate-700 font-semibold">${truck.fo || '-'}</span></div></div>
+//             <div class="flex justify-between"><span class="text-slate-500 font-medium">Qty (Kg):</span><span class="text-slate-700 font-bold text-blue-600">${truck.qty || '-'}</span></div>
+// <div class="flex justify-between"><span class="text-slate-500 font-medium">Jadwal Bongkar:</span><span class="text-slate-700 font-semibold">${formatTanggalJam(truck.jadwal_bongkar)}</span></div>
+// </div>
+//             <div class="border-t border-slate-200 pt-2 mt-2 space-y-2 text-sm"><div class="flex justify-between"><span class="text-slate-500 font-medium">Dimensi:</span><span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span></div><div class="flex justify-between"><span class="text-slate-500 font-medium">Kubikasi:</span><span class="text-slate-700 font-bold text-indigo-600">${kubikasi} m³</span></div></div>`;
+//         }
+// Template HTML yang sudah dirapikan
+card.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <h3 class="text-lg font-bold text-slate-800">${truck.no_mobil}</h3>
+            <span class="px-3 py-1 text-xs font-bold leading-tight rounded-full ${badgeClasses}">
+                ${getDynamicStatus(truck) || 'N/A'}
+            </span>
+        </div>
+        <p class="text-sm text-slate-500 mb-4 font-medium">${truck.jenis_mobil || '-'}</p>
+        
+        <div class="border-t border-slate-200 pt-4 space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span class="text-slate-500">Customer:</span>
+                <span class="text-slate-900 font-bold">${truck.customer || '-'}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Kota Tujuan:</span>
+                <span class="text-slate-700 font-semibold">${truck.tujuan || '-'}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Angkutan:</span>
+                <span class="text-slate-700 font-medium">${truck.angkutan || '-'}</span>
+            </div>
+            
+            <div class="bg-slate-50 p-2 rounded-lg space-y-1 text-xs mt-2 border border-slate-100">
+                <div class="flex justify-between"><span class="text-slate-500">Tiba Muat:</span><span class="font-medium">${formatWaktu(truck.tiba_lokasi_muat)}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Tiba Bongkar:</span><span class="font-medium">${formatWaktu(truck.tiba_lokasi_bongkar)}</span></div>
+            </div>
+
+            <div class="flex justify-between pt-2">
+                <span class="text-slate-500">No. FO / DN:</span>
+                <span class="text-slate-900 font-bold">${truck.fo || '-'}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500 font-semibold">Qty (Kg):</span>
+                <span class="text-blue-700 font-black text-base">${truck.qty ? Number(truck.qty).toLocaleString('id-ID') : '-'}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">Jadwal Bongkar:</span>
+                <span class="text-slate-800 font-bold">${formatTanggalJam(truck.jadwal_bongkar)}</span>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-3 mt-3 space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span class="text-slate-500">Driver:</span>
+                <span class="text-slate-700 font-semibold">${truck.nama_driver || '-'}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-500">No HP:</span>
+                <span class="text-slate-700 font-medium">${truck.no_hp || '-'}</span>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-2 mt-2 flex justify-between items-center text-sm">
+            <div>
+                <span class="text-slate-400 text-xs block uppercase font-bold">Dimensi</span>
+                <span class="text-slate-700 font-semibold">${p}×${l}×${t} cm</span>
+            </div>
+            <div class="text-right">
+                <span class="text-slate-400 text-xs block uppercase font-bold">Kubikasi</span>
+                <span class="text-indigo-700 font-black text-base">${kubikasi} m³</span>
+            </div>
+        </div>
+        
+        <div class="mt-4 pt-2 border-t border-slate-100 text-[10px] text-slate-400 text-right italic">
+            Last Update: ${waktuDisplay}
+        </div>
+    `;
+}
         
         window.renderSummaryReport = function() {
             const selectedAngkutan = document.getElementById('summaryFilterAngkutan').value;
@@ -2803,20 +2973,33 @@
                 const badgeClasses = statusBadgeMap[truck.keterangan] || 'bg-slate-100 text-slate-800';
                 
                 // --- KODE ROW DIBUAT DENGAN 'let' AGAR BISA DITAMBAH ---
+                // Cari bagian loop filteredData.forEach di dalam renderSummaryReport
                 let rowHtml = `
-                <tr class="bg-white border-b">
+                <tr class="bg-white border-b hover:bg-slate-50 transition-colors">
                     <td class="px-6 py-4 font-medium">${truck.angkutan || '-'}</td>
-                    <td class="px-6 py-4">${truck.fo || '-'}</td>
-                    <td class="px-6 py-4">${formatWaktuTabel(truck.tiba_lokasi_muat)}</td>
-                    <td class="px-6 py-4">${formatWaktuTabel(truck.keluar_lokasi_muat)}</td>
-                    <td class="px-6 py-4">${formatWaktuTabel(truck.tiba_lokasi_bongkar)}</td>
-                    <td class="px-6 py-4">${formatWaktuTabel(truck.keluar_lokasi_bongkar)}</td>
-                    <td class="px-6 py-4">${truck.customer || '-'}</td>
-                    <td class="px-6 py-4">${truck.tujuan || '-'}</td>
-                    <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-semibold leading-tight rounded-full ${badgeClasses}">${getDynamicStatus(truck) || '-'}</span></td>
+                    <td class="px-6 py-4 font-bold text-slate-800">${truck.fo || '-'}</td>
+                    <td class="px-6 py-4 text-xs">${formatWaktuTabel(truck.tiba_lokasi_muat)}</td>
+                    <td class="px-6 py-4 text-xs">${formatWaktuTabel(truck.keluar_lokasi_muat)}</td>
+                    <td class="px-6 py-4 text-xs">${formatWaktuTabel(truck.tiba_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4 text-xs">${formatWaktuTabel(truck.keluar_lokasi_bongkar)}</td>
+                    <td class="px-6 py-4 font-bold text-slate-900">${truck.customer || '-'}</td>
+                    <td class="px-6 py-4 font-medium">${truck.tujuan || '-'}</td>
+                    
+                    <td class="px-6 py-4 font-black text-blue-700">
+                        ${truck.qty ? Number(truck.qty).toLocaleString('id-ID') : '-'}
+                    </td>
+                    <td class="px-6 py-4 font-bold text-slate-700">
+                        ${formatWaktuTabel(truck.jadwal_bongkar)}
+                    </td>
+
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs font-bold rounded-full ${badgeClasses}">
+                            ${getDynamicStatus(truck) || '-'}
+                        </span>
+                    </td>
                     <td class="px-6 py-4">${truck.nama_driver || '-'}</td>
                     <td class="px-6 py-4">${truck.no_hp || '-'}</td>
-                    <td class="px-6 py-4">${truck.no_mobil || '-'}</td>
+                    <td class="px-6 py-4 font-semibold">${truck.no_mobil || '-'}</td>
                     <td class="px-6 py-4">${truck.jenis_mobil || '-'}</td>
                 `;
 
@@ -3692,198 +3875,257 @@
         }
 
         // --- GANTI FUNGSI INI SEPENUHNYA ---
-        function displayRitaseTable() {
-            const tableBody = document.getElementById('ritaseTableBody');
-            tableBody.innerHTML = '';
+function displayRitaseTable() {
+    const tableBody = document.getElementById('ritaseTableBody');
+    tableBody.innerHTML = '';
 
-            const { currentPage, filteredData } = paginationState.ritaseTruck;
-            
-            if (!filteredData || filteredData.length === 0) {
-                // Colspan 14 sesuai jumlah kolom
-                tableBody.innerHTML = `<tr><td colspan="14" class="text-center p-8 text-slate-500">Tidak ada data ritase yang cocok.</td></tr>`;
-                renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
-                return;
-            }
+    const { currentPage, filteredData } = paginationState.ritaseTruck;
+    
+    if (!filteredData || filteredData.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="17" class="text-center p-8 text-slate-500">Tidak ada data ritase.</td></tr>`;
+        return;
+    }
 
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const paginatedData = filteredData.slice(start, end);
+    const start = (currentPage - 1) * rowsPerPage;
+    const paginatedData = filteredData.slice(start, start + rowsPerPage);
+    const fmt = (isoStr) => isoStr ? formatTanggalJam(isoStr) : '-';
 
-            // Helper format tanggal jam tabel
-            const fmt = (isoStr) => {
-                if (!isoStr) return '-';
-                return formatTanggalJam(isoStr);
-            };
+    paginatedData.forEach(data => {
+        const row = document.createElement('tr');
+        row.className = 'bg-white border-b hover:bg-slate-50 transition-colors';
+        
+        const formattedDate = data.timestamp_selesai?.toDate 
+            ? data.timestamp_selesai.toDate().toLocaleString('id-ID') : '-';
+        const lamaInap = calculateDurationBetween(data.keluar_lokasi_muat, data.keluar_lokasi_bongkar);
 
-            paginatedData.forEach(data => {
-                const row = document.createElement('tr');
-                row.className = 'bg-white border-b hover:bg-slate-50';
-                
-                // Format tanggal selesai
-                const formattedDate = data.timestamp_selesai?.toDate 
-                    ? data.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'long', timeStyle: 'short'}) + ' WIB' 
-                    : '-';
-
-                // --- INI PERBAIKAN UTAMANYA: HITUNG ULANG LAMA INAP ---
-                // Menggunakan helper calculateDurationBetween yang baru dibuat di atas
-                const lamaInap = calculateDurationBetween(data.keluar_lokasi_muat, data.keluar_lokasi_bongkar);
-
-                // Fallback Jenis Truck
-                let jenisTruckDisplay = data.jenis_mobil;
-                if (!jenisTruckDisplay) {
-                    const relatedTruck = window.trucksData.find(t => t.no_mobil === data.plat_nomor);
-                    jenisTruckDisplay = relatedTruck ? relatedTruck.jenis_mobil : '-';
-                }
-
-                row.innerHTML = `
-                    <td class="px-6 py-4">${data.angkutanName || '-'}</td>
-                    <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
-                    <td class="px-6 py-4">${jenisTruckDisplay}</td>
-                    <td class="px-6 py-4">${data.nama_driver || '-'}</td>
-                    <td class="px-6 py-4">${data.customer || '-'}</td>
-                    <td class="px-6 py-4">${data.tujuan || '-'}</td>
-                    
-                    <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.tiba_lokasi_muat)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.keluar_lokasi_muat)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.tiba_lokasi_bongkar)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-xs">${fmt(data.keluar_lokasi_bongkar)}</td>
-
-                    <td class="px-6 py-4">${formattedDate}</td>
-                    
-                    <td class="px-6 py-4 font-semibold text-indigo-600 whitespace-nowrap">${lamaInap}</td>
-                    
-                    <td class="px-6 py-4">${data.fo || '-'}</td>
-                    
-                    <td class="px-6 py-4 whitespace-nowrap flex gap-2">
-                        <button onclick="window.openRitaseModal('edit', '${data.docId}')" class="bg-amber-500 text-white p-2 rounded hover:bg-amber-600" title="Edit">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button onclick="window.deleteRitaseData('${data.docId}')" class="bg-red-600 text-white p-2 rounded hover:bg-red-700" title="Hapus">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
+        // --- LOGIKA PENCARIAN (LOOKUP) ---
+        const vendor = data.angkutanName || '';
+        const destination = (data.tujuan || '').toUpperCase().trim();
+        const origin = 'KARAWANG';
+        
+        // 1. Fallback Jenis Truck (Cari di master jika di history kosong)
+        let jenisTruck = data.jenis_mobil;
+        if (!jenisTruck && data.plat_nomor) {
+            // Mencari data truk di master window.trucksData berdasarkan plat nomor
+            const truckRef = window.trucksData.find(t => t.no_mobil === data.plat_nomor);
+            if (truckRef) jenisTruck = truckRef.jenis_mobil;
         }
+
+        // 2. Cari Biaya Uang Jalan
+        const masterVar = window.masterVarCost || [];
+        const foundCost = masterVar.find(item => 
+            item.vendor === vendor && 
+            (item.jenis_truck || '') === (jenisTruck || '') &&
+            item.destination.toUpperCase() === destination &&
+            item.origin.toUpperCase() === origin
+        );
+        const uangJalanVal = foundCost ? parseFloat(foundCost.cost) : 0;
+        const uangJalanFormatted = formatRupiah(uangJalanVal);
+        // ----------------------------------
+
+        row.innerHTML = `
+            <td class="px-6 py-4">${data.angkutanName || '-'}</td>
+            <td class="px-6 py-4 font-medium">${data.plat_nomor || '-'}</td>
+            
+            <td class="px-6 py-4">${jenisTruck || '-'}</td>
+            
+            <td class="px-6 py-4">${data.nama_driver || '-'}</td>
+            <td class="px-6 py-4 font-bold text-slate-900">${data.customer || '-'}</td>
+            <td class="px-6 py-4">${data.tujuan || '-'}</td>
+            
+            <td class="px-6 py-4 font-semibold text-emerald-600">${uangJalanFormatted}</td>
+
+            <td class="px-6 py-4 font-black text-blue-700">${data.qty ? Number(data.qty).toLocaleString('id-ID') : '-'}</td>
+            <td class="px-6 py-4 font-bold text-slate-700">${fmt(data.jadwal_bongkar)}</td>
+
+            <td class="px-6 py-4 text-xs">${fmt(data.tiba_lokasi_muat)}</td>
+            <td class="px-6 py-4 text-xs">${fmt(data.keluar_lokasi_muat)}</td>
+            <td class="px-6 py-4 text-xs">${fmt(data.tiba_lokasi_bongkar)}</td>
+            <td class="px-6 py-4 text-xs">${fmt(data.keluar_lokasi_bongkar)}</td>
+            <td class="px-6 py-4">${formattedDate}</td>
+            <td class="px-6 py-4 font-semibold text-indigo-600">${lamaInap}</td>
+            <td class="px-6 py-4 font-bold">${data.fo || '-'}</td>
+            
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex gap-2">
+                    <button onclick="window.openRitaseModal('edit', '${data.docId}')" class="bg-amber-500 text-white p-2 rounded hover:bg-amber-600 shadow-sm">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button onclick="window.deleteRitaseData('${data.docId}')" class="bg-red-600 text-white p-2 rounded hover:bg-red-700 shadow-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    renderPagination('ritaseTablePagination', 'ritaseTruck', displayRitaseTable);
+}
 
     // --- GANTI FUNGSI exportRitaseToExcel YANG LAMA DENGAN INI ---
-    window.exportRitaseToExcel = () => {
-        // 1. AMBIL DATA DARI STATE
-        const dataToExport = paginationState.ritaseTruck.filteredData;
+    // --- GANTI FUNGSI INI SEPENUHNYA DI ADMIN.HTML ---
+// ============================================================
+// GANTI SELURUH FUNGSI window.exportRitaseToExcel DENGAN INI
+// ============================================================
+window.exportRitaseToExcel = () => {
+    // 1. Cek Data
+    const dataToExport = paginationState.ritaseTruck.filteredData;
+    if (!dataToExport || dataToExport.length === 0) {
+        Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
+        return;
+    }
 
-        if (!dataToExport || dataToExport.length === 0) {
-            Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
-            return;
-        }
+    // 2. Definisi Header Kolom (PASTIKAN URUTAN INI)
+    const headers = [
+        "Angkutan", 
+        "Plat Nomor", 
+        "Jenis Truck",      // Diperlukan untuk hitung Uang Jalan
+        "Nama Driver", 
+        "Customer", 
+        "Kota", 
+        "Uang Jalan",       // <--- KOLOM YANG ANDA MINTA
+        "Qty (Kg)",         // <--- KOLOM YANG ANDA MINTA
+        "Jadwal Bongkar",   // <--- KOLOM YANG ANDA MINTA
+        "Tiba Muat", 
+        "Keluar Muat", 
+        "Tiba Bongkar", 
+        "Keluar Bongkar", 
+        "Tanggal Selesai", 
+        "Lama Inap",   
+        "FO"
+    ];
 
-        // --- DEFINISI HEADER KOLOM (Update: Tambah "Jenis Truck") ---
-        const headers = [
-            "Angkutan", 
-            "Plat Nomor", 
-            "Jenis Truck", // <--- KOLOM BARU
-            "Nama Driver", 
-            "Customer", 
-            "Kota", 
-            "Tiba Muat", 
-            "Keluar Muat", 
-            "Tiba Bongkar", 
-            "Keluar Bongkar", 
-            "Tanggal Selesai", 
-            "Lama Inap",   
-            "FO"
-        ];
-
-        // Helper: Format Tanggal
-        const fmt = (isoStr) => isoStr ? formatTanggalJam(isoStr) : '-';
-
-        // Helper: Hitung Durasi
-        const hitungDurasi = (startStr, endStr) => {
-            if (!startStr || !endStr) return '-';
-            const start = new Date(startStr);
-            const end = new Date(endStr);
-            let diff = end - start; 
-            if (isNaN(diff) || diff < 0) return '-';
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            diff -= days * (1000 * 60 * 60 * 24);
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            diff -= hours * (1000 * 60 * 60);
-            const minutes = Math.floor(diff / (1000 * 60));
-
-            let parts = [];
-            if (days > 0) parts.push(`${days} Hari`);
-            if (hours > 0) parts.push(`${hours} Jam`);
-            if (minutes > 0) parts.push(`${minutes} Mnt`);
-            return parts.length > 0 ? parts.join(' ') : '0 Mnt';
-        };
+    // Helper: Format Tanggal (Mengubah ISO string ke format yang mudah dibaca)
+    const fmt = (isoStr) => {
+        if (!isoStr) return '-';
+        // Handle jika input adalah Firestore Timestamp
+        if (typeof isoStr.toDate === 'function') isoStr = isoStr.toDate();
+        // Handle jika input string/date
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return '-';
         
-        // 2. MAPPING DATA KE BARIS EXCEL
-        const body = dataToExport.map(item => {
-            const tglSelesai = item.timestamp_selesai?.toDate 
-                ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) 
-                : '-';
-            
-            const duration = hitungDurasi(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
-
-            // LOGIKA BARU: Ambil Jenis Truck (Fallback ke master jika di history kosong)
-            let jenisTruck = item.jenis_mobil;
-            if (!jenisTruck) {
-                const truckRef = window.trucksData.find(t => t.no_mobil === item.plat_nomor);
-                jenisTruck = truckRef ? truckRef.jenis_mobil : '-';
-            }
-                
-            return [
-                item.angkutanName || '-',
-                item.plat_nomor || '-',
-                jenisTruck, // <--- ISI DATA JENIS TRUCK
-                item.nama_driver || '-',
-                item.customer || '-',
-                item.tujuan || '-',
-                fmt(item.tiba_lokasi_muat),
-                fmt(item.keluar_lokasi_muat),
-                fmt(item.tiba_lokasi_bongkar),
-                fmt(item.keluar_lokasi_bongkar),
-                tglSelesai,
-                duration,
-                item.fo || '-'
-            ];
+        return d.toLocaleString('id-ID', { 
+            day: '2-digit', month: '2-digit', year: 'numeric', 
+            hour: '2-digit', minute: '2-digit' 
         });
+    };
 
-        // 3. GABUNGKAN HEADER DAN BODY
-        const wsData = [headers, ...body];
-        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+    // Helper: Hitung Durasi
+    const hitungDurasi = (startStr, endStr) => {
+        if (!startStr || !endStr) return '-';
+        const start = new Date(startStr);
+        const end = new Date(endStr);
+        let diff = end - start; 
+        if (isNaN(diff) || diff < 0) return '-';
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+        const minutes = Math.floor(diff / (1000 * 60));
+
+        let parts = [];
+        if (days > 0) parts.push(`${days} Hari`);
+        if (hours > 0) parts.push(`${hours} Jam`);
+        if (minutes > 0) parts.push(`${minutes} Mnt`);
+        return parts.length > 0 ? parts.join(' ') : '0 Mnt';
+    };
+
+    // Helper Format Rupiah
+    const formatRupiah = (angka) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    };
+    
+    // 3. Mapping Data ke Body Excel
+    const body = dataToExport.map(item => {
+        // A. Format Tanggal Selesai
+        let tglSelesai = '-';
+        if (item.timestamp_selesai) {
+            const dateObj = item.timestamp_selesai.toDate ? item.timestamp_selesai.toDate() : new Date(item.timestamp_selesai);
+            tglSelesai = dateObj.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+        }
         
-        // 4. STYLING HEADER
-        if (worksheet['!ref']) {
-            const range = XLSX.utils.decode_range(worksheet['!ref']);
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const address = XLSX.utils.encode_col(C) + "1";
-                if (!worksheet[address]) continue;
-                worksheet[address].s = { 
-                    font: { bold: true }, 
-                    fill: { fgColor: { rgb: "CCCCCC" } },
-                    alignment: { horizontal: "center" }
-                };
-            }
+        // B. Hitung Durasi
+        const duration = hitungDurasi(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
+
+        // C. Logika Cari Jenis Truck (Jika kosong di data ritase, cari di master truk)
+        let jenisTruck = item.jenis_mobil;
+        if (!jenisTruck) {
+            const truckRef = window.trucksData.find(t => t.no_mobil === item.plat_nomor);
+            jenisTruck = truckRef ? truckRef.jenis_mobil : '';
         }
 
-        // 5. ATUR LEBAR KOLOM
-        const colWidths = headers.map(h => ({ wch: h.length + 5 }));
-        colWidths[11] = { wch: 25 }; // Lebar khusus untuk Lama Inap (Index geser jadi 11)
-        worksheet['!cols'] = colWidths;
+        // D. Logika Cari Uang Jalan (Lookup ke Master Variable Cost)
+        const vendor = item.angkutanName || '';
+        const destination = (item.tujuan || '').toUpperCase().trim();
+        const origin = 'KARAWANG';
+        
+        const masterVar = window.masterVarCost || [];
+        const foundCost = masterVar.find(c => 
+            c.vendor === vendor && 
+            (c.jenis_truck || '') === (jenisTruck || '') &&
+            c.destination.toUpperCase() === destination &&
+            c.origin.toUpperCase() === origin
+        );
+        // Ambil nilai cost, default 0
+        const uangJalanVal = foundCost ? parseFloat(foundCost.cost) : 0;
 
-        // 6. GENERATE FILE
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
-        
-        const startDate = document.getElementById('ritaseStartDate').value || 'All';
-        const endDate = document.getElementById('ritaseEndDate').value || 'All';
-        const filename = `Laporan_Ritase_${startDate}_sd_${endDate}.xlsx`;
-        
-        XLSX.writeFile(workbook, filename);
-    };
+        // E. Return Array Baris (URUTAN HARUS SAMA DENGAN HEADERS)
+        return [
+            item.angkutanName || '-',
+            item.plat_nomor || '-',
+            jenisTruck || '-',
+            item.nama_driver || '-',
+            item.customer || '-',
+            item.tujuan || '-',
+            uangJalanVal,               // <--- DATA UANG JALAN
+            item.qty || 0,              // <--- DATA QTY
+            fmt(item.jadwal_bongkar),   // <--- DATA JADWAL BONGKAR
+            fmt(item.tiba_lokasi_muat),
+            fmt(item.keluar_lokasi_muat),
+            fmt(item.tiba_lokasi_bongkar),
+            fmt(item.keluar_lokasi_bongkar),
+            tglSelesai,
+            duration,
+            item.fo || '-'
+        ];
+    });
+
+    // 4. Gabungkan Header dan Body
+    const wsData = [headers, ...body];
+    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // 5. Styling Header (Bold & Abu-abu)
+    if (worksheet['!ref']) {
+        const range = XLSX.utils.decode_range(worksheet['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_col(C) + "1";
+            if (!worksheet[address]) continue;
+            worksheet[address].s = { 
+                font: { bold: true }, 
+                fill: { fgColor: { rgb: "CCCCCC" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+        }
+    }
+
+    // 6. Atur Lebar Kolom
+    const colWidths = headers.map(h => ({ wch: h.length + 5 }));
+    colWidths[6] = { wch: 15 }; // Lebar Uang Jalan
+    colWidths[8] = { wch: 20 }; // Lebar Jadwal Bongkar
+    colWidths[14] = { wch: 25 }; // Lebar Lama Inap
+    worksheet['!cols'] = colWidths;
+
+    // 7. Generate & Download File
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
+    
+    const startDate = document.getElementById('ritaseStartDate').value || 'All';
+    const endDate = document.getElementById('ritaseEndDate').value || 'All';
+    const filename = `Laporan_Ritase_${startDate}_sd_${endDate}.xlsx`;
+    
+    XLSX.writeFile(workbook, filename);
+};
 
     // --- GANTI FUNGSI exportRitaseToPdf YANG LAMA DENGAN INI ---
     window.exportRitaseToPdf = () => {
@@ -4167,6 +4409,7 @@
         }
         
         window.exportToExcel = () => {
+            // 1. Ambil Data & Filter (Sama seperti logika render)
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.value === 'all' ? 'Semua_Angkutan' : selectedAngkutanSelect.value.replace(/ /g, '_');
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
@@ -4179,44 +4422,70 @@
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
             
+            // Filter Status logic...
             if (selectedStatus === 'INAP BU17') {
                 filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
             } else if (selectedStatus === 'INAP CMI') {
                 filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
             } else if (selectedStatus === 'INAP (Lainnya)') {
                 filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
-            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
+            } else if (isCombinedMode) {
                 filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
             } else if (selectedStatus !== 'all') {
                 filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
             }
 
+            // Sort logic...
             if (showLeadTimeColumn) {
                 filteredData.sort((a, b) => {
                     const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
                     const statusA = statusPriority[getDynamicStatus(a)] || 3;
                     const statusB = statusPriority[getDynamicStatus(b)] || 3;
-                    const statusComp = statusA - statusB;
-                    if (statusComp !== 0) return statusComp;
-
-                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
-                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
-                    return leadTimeB - leadTimeA;
+                    if ((statusA - statusB) !== 0) return statusA - statusB;
+                    return calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar) - calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
                 });
             }
 
-            const header1 = ["No", "ANGKUTAN", "FO/DN", "LOKASI MUAT", null, "LOKASI BONGKAR", null, "NAMA CUSTOMER", "KOTA", "STATUS", "NAMA DRIVER", "NO HP", "PLAT NOMOR", "JENIS TRUCK"];
-            if (showLeadTimeColumn) header1.push("LEAD TIME");
-            const header2 = [null, null, null, "TIBA", "KELUAR", "TIBA", "KELUAR", null, null, null, null, null, null, null];
-            if (showLeadTimeColumn) header2.push(null);
-            
+            // 2. DEFINISI HEADER (FLAT / 1 BARIS - TIDAK ADA MERGE)
+            const headers = [
+                "No", 
+                "ANGKUTAN", 
+                "FO", 
+                "TIBA LOKASI MUAT", 
+                "KELUAR LOKASI MUAT", 
+                "TIBA LOKASI BONGKAR", 
+                "KELUAR LOKASI BONGKAR", 
+                "NAMA CUSTOMER", 
+                "KOTA", 
+                "QTY (Kg)",       // Kolom disamakan dengan web
+                "JADWAL BONGKAR", // Kolom disamakan dengan web
+                "STATUS", 
+                "NAMA DRIVER", 
+                "NO HP", 
+                "PLAT NOMOR", 
+                "JENIS TRUCK"
+            ];
+            if (showLeadTimeColumn) headers.push("LEAD TIME");
+
+            // 3. MAPPING BODY
             const body = filteredData.map((truck, index) => {
                 const row = [
-                index + 1, truck.angkutan || '-', truck.fo || '-',
-                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
-                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                    index + 1, 
+                    truck.angkutan || '-', 
+                    truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), 
+                    formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), 
+                    formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', 
+                    truck.tujuan || '-', 
+                    truck.qty ? Number(truck.qty).toLocaleString('id-ID') : '-', // Format angka
+                    formatTanggalJam(truck.jadwal_bongkar),
+                    getDynamicStatus(truck) || '-',
+                    truck.nama_driver || '-', 
+                    truck.no_hp || '-', 
+                    truck.no_mobil || '-', 
+                    truck.jenis_mobil || '-'
                 ];
                 if (showLeadTimeColumn) {
                     row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
@@ -4224,80 +4493,79 @@
                 return row;
             });
 
-            const dataToExport = [header1, header2, ...body];
+            // 4. BUAT WORKSHEET
+            const dataToExport = [headers, ...body];
             const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+
+            // 5. STYLING (WARNA & BORDER)
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
             
-            const merges = [
-                { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } }, { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
-                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, 
-                { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, 
-                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, 
-                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, 
-                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } }
-            ];
-            if (showLeadTimeColumn) merges.push({ s: { r: 0, c: 14 }, e: { r: 1, c: 14 } });
-            worksheet['!merges'] = merges;
-            
-            // [PERBAIKAN] Ganti warna "D9D9D9" menjadi "4F46E5" (biru) dan tambahkan warna font putih
+            // Style Header: Indigo Background, White Text, Bold
             const headerStyle = { 
                 font: { bold: true, color: { rgb: "FFFFFF" } }, 
-                fill: { fgColor: { rgb: "4F46E5" } }, 
-                alignment: { horizontal: "center", vertical: "center" } 
+                fill: { fgColor: { rgb: "4F46E5" } }, // Warna Indigo-600
+                alignment: { horizontal: "center", vertical: "center" },
+                border: {
+                    top: {style: "thin", color: {rgb: "000000"}},
+                    bottom: {style: "thin", color: {rgb: "000000"}},
+                    left: {style: "thin", color: {rgb: "000000"}},
+                    right: {style: "thin", color: {rgb: "000000"}}
+                }
             };
 
-            if (showLeadTimeColumn) {
-                // Style header
-                header1.forEach((_, colIndex) => {
-                    const address1 = XLSX.utils.encode_cell({ r: 0, c: colIndex });
-                    const address2 = XLSX.utils.encode_cell({ r: 1, c: colIndex });
-                    if(worksheet[address1]) worksheet[address1].s = headerStyle;
-                    if(worksheet[address2]) worksheet[address2].s = headerStyle;
-                });
+            // Style Body: Border Thin & Alternating Colors (Zebra)
+            const cellStyle = {
+                border: {
+                    top: {style: "thin", color: {rgb: "CCCCCC"}},
+                    bottom: {style: "thin", color: {rgb: "CCCCCC"}},
+                    left: {style: "thin", color: {rgb: "CCCCCC"}},
+                    right: {style: "thin", color: {rgb: "CCCCCC"}},
+                },
+                alignment: { vertical: "center" }
+            };
 
-                filteredData.forEach((truck, index) => {
-                    // ... (sisa kode pewarnaan baris tetap sama)
-                    const leadTimeDays = calculateLeadTimeInDays(truck.tiba_lokasi_bongkar);
-                    let rowColor = "";
-
-                    if (leadTimeDays < 3) rowColor = "C6EFCE"; // Green
-                    else if (leadTimeDays <= 6) rowColor = "BDD7EE"; // Blue
-                    else if (leadTimeDays <= 9) rowColor = "FFEB9C"; // Yellow
-                    else rowColor = "FFC7CE"; // Red
-
-                    if (rowColor) {
-                        const style = { fill: { fgColor: { rgb: rowColor } } };
-                        const rowIndex = index + 2;
-                        for (let C = 0; C < header1.length; C++) {
-                            const address = XLSX.utils.encode_cell({ r: rowIndex, c: C });
-                            if (!worksheet[address]) worksheet[address] = {};
-                            worksheet[address].s = style;
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const address = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!worksheet[address]) worksheet[address] = { v: "" }; // Pastikan sel ada
+                    
+                    if (R === 0) {
+                        // Header Row
+                        worksheet[address].s = headerStyle;
+                    } else {
+                        // Body Rows
+                        worksheet[address].s = { ...cellStyle }; // Copy style
+                        // Zebra Striping (Baris Genap dikasih warna abu muda)
+                        if (R % 2 === 0) {
+                            worksheet[address].s.fill = { fgColor: { rgb: "F3F4F6" } }; // Slate-100
                         }
                     }
-                });
-            } else {
-                 // [PERBAIKAN] Terapkan style biru HANYA jika tidak dalam mode INAP
-                header1.forEach((_, colIndex) => {
-                    const address1 = XLSX.utils.encode_cell({ r: 0, c: colIndex });
-                    const address2 = XLSX.utils.encode_cell({ r: 1, c: colIndex });
-                    if(worksheet[address1]) worksheet[address1].s = headerStyle;
-                    if(worksheet[address2]) worksheet[address2].s = headerStyle;
-                });
+                }
             }
 
+            // 6. AUTO WIDTH KOLOM
+            const colWidths = headers.map(h => ({ wch: h.length + 5 })); 
+            // Manual adjustment untuk kolom panjang
+            colWidths[1] = { wch: 25 }; // Angkutan
+            colWidths[7] = { wch: 25 }; // Customer
+            colWidths[8] = { wch: 20 }; // Kota
+            worksheet['!cols'] = colWidths;
+
+            // 7. DOWNLOAD
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary Status Truck");
-            const filename = `Summary_Status_Truck_${angkutanName}_${getFilenameTimestamp()}.xlsx`;
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Summary Report");
+            const filename = `Summary_Report_${angkutanName}_${getFilenameTimestamp()}.xlsx`;
             XLSX.writeFile(workbook, filename);
         };
 
         window.exportToPdf = () => {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape' });
+            const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
             const timestamp = getFormattedTimestamp();
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.options[selectedAngkutanSelect.selectedIndex].text;
-            const title = `Summary Status Truck - ${angkutanName}`;
             
+            // Filter Logic
             const selectedStatus = document.getElementById('summaryFilterStatus').value;
             const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
             const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
@@ -4307,77 +4575,72 @@
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
 
-            if (selectedStatus === 'INAP BU17') {
-            filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
-            } else if (selectedStatus === 'INAP CMI') {
-                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
-            } else if (selectedStatus === 'INAP (Lainnya)') {
-                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
-            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
-                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
-            } else if (selectedStatus !== 'all') {
-                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
-            }
+            if (selectedStatus === 'INAP BU17') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            else if (selectedStatus === 'INAP CMI') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            else if (selectedStatus === 'INAP (Lainnya)') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            else if (isCombinedMode) filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            else if (selectedStatus !== 'all') filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
 
             if (showLeadTimeColumn) {
-                 filteredData.sort((a, b) => {
+                filteredData.sort((a, b) => {
                     const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
                     const statusA = statusPriority[getDynamicStatus(a)] || 3;
                     const statusB = statusPriority[getDynamicStatus(b)] || 3;
-                    const statusComp = statusA - statusB;
-                    if (statusComp !== 0) return statusComp;
-
-                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
-                    if (customerComp !== 0) return customerComp;
-
-                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
-                    if (cityComp !== 0) return cityComp;
-                    
-                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
-                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
-                    return leadTimeB - leadTimeA;
+                    if ((statusA - statusB) !== 0) return statusA - statusB;
+                    return calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar) - calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
                 });
             }
 
-            const head = [[
-                { content: 'No', rowSpan: 2 }, { content: 'ANGKUTAN', rowSpan: 2 }, { content: 'FO', rowSpan: 2 },
-                { content: 'LOKASI MUAT', colSpan: 2 }, { content: 'LOKASI BONGKAR', colSpan: 2 },
-                { content: 'NAMA CUSTOMER', rowSpan: 2 }, { content: 'KOTA', rowSpan: 2 }, { content: 'STATUS', rowSpan: 2 },
-                { content: 'NAMA DRIVER', rowSpan: 2 }, { content: 'NO HP', rowSpan: 2 }, { content: 'PLAT NOMOR', rowSpan: 2 }, { content: 'JENIS TRUCK', rowSpan: 2 },
-            ], [ 'TIBA', 'KELUAR', 'TIBA', 'KELUAR' ]];
-            if (showLeadTimeColumn) head[0].push({ content: 'LEAD TIME', rowSpan: 2 });
+            doc.setFontSize(14); doc.setTextColor(30, 41, 59);
+            doc.text(`Summary Status Truck - ${angkutanName}`, 14, 15);
+            doc.setFontSize(8); doc.setTextColor(100);
+            doc.text(`Dicetak pada: ${timestamp}`, 14, 20);
+
+            const headers = [[
+                "No", "Angkutan", "FO", "Tiba Muat", "Keluar Muat", "Tiba Bongkar", "Keluar Bongkar", 
+                "Customer", "Kota", "Qty(Kg)", "Jadwal Bongkar", "Status", "Driver", "No HP", "Plat", "Jenis"
+            ]];
+            if (showLeadTimeColumn) headers[0].push("Lead Time");
 
             const body = filteredData.map((truck, index) => {
-            const row = [
-                index + 1,
-                truck.angkutan || '-', truck.fo || '-',
-                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
-                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
-            ];
-                if (showLeadTimeColumn) {
-                    row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
-                }
+                const row = [
+                    index + 1,
+                    truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat).replace(', ', '\n'), 
+                    formatTanggalJam(truck.keluar_lokasi_muat).replace(', ', '\n'),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar).replace(', ', '\n'), 
+                    formatTanggalJam(truck.keluar_lokasi_bongkar).replace(', ', '\n'),
+                    truck.customer || '-', truck.tujuan || '-', 
+                    truck.qty ? Number(truck.qty).toLocaleString('id-ID') : '-',
+                    formatTanggalJam(truck.jadwal_bongkar).replace(', ', '\n'),
+                    getDynamicStatus(truck) || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                ];
+                if (showLeadTimeColumn) row.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
                 return row;
             });
-            
-            // [PERBAIKAN] Ganti `fillColor` abu-abu [217, 217, 217] menjadi biru [79, 70, 229] dan hapus `textColor: [0, 0, 0]`
-            const blueHeaderStyle = { fillColor: [79, 70, 229], textColor: [255, 255, 255], halign: 'center', valign: 'middle' };
-            
-            const headStyles = showLeadTimeColumn ? blueHeaderStyle : blueHeaderStyle;
-            const styles = showLeadTimeColumn ? { fontSize: 6, cellPadding: 1.5, halign: 'center', valign: 'middle' } : { fontSize: 6, cellPadding: 1.5 };
 
             doc.autoTable({
-                head: head, body: body, startY: 28, theme: 'grid',
-                headStyles: headStyles,
-                styles: styles,
-                didDrawPage: (data) => {
-                    doc.setFontSize(10);
-                    doc.setTextColor(150);
-                    doc.text('Page ' + doc.internal.getNumberOfPages(), data.settings.margin.left, doc.internal.pageSize.height - 10);
+                head: headers,
+                body: body,
+                startY: 25,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold',
+                    halign: 'center', valign: 'middle', fontSize: 7
+                },
+                styles: { 
+                    fontSize: 6, cellPadding: 1.5, overflow: 'linebreak',
+                    valign: 'middle', 
+                    halign: 'center', // RATA TENGAH (HORIZONTAL)
+                    lineColor: [200, 200, 200]
+                },
+                alternateRowStyles: { fillColor: [243, 244, 246] },
+                columnStyles: {
+                    0: { cellWidth: 7 }, 1: { cellWidth: 18 }, 7: { cellWidth: 18 }, 8: { cellWidth: 15 }, 11: { fontStyle: 'bold' }
                 }
             });
+
             const filename = `Summary_Status_Truck_${angkutanName.replace(/ /g, '_')}_${getFilenameTimestamp()}.pdf`;
             doc.save(filename);
         };
@@ -4386,8 +4649,8 @@
             const selectedAngkutanSelect = document.getElementById('summaryFilterAngkutan');
             const angkutanName = selectedAngkutanSelect.options[selectedAngkutanSelect.selectedIndex].text;
             const cleanAngkutanName = angkutanName.replace(/ /g, '_');
-            const selectedStatus = document.getElementById('summaryFilterStatus').value;
             
+            const selectedStatus = document.getElementById('summaryFilterStatus').value;
             const isCombinedMode = selectedStatus === 'ANTRI BONGKAR + INAP';
             const showLeadTimeColumn = isCombinedMode || selectedStatus.startsWith('INAP');
 
@@ -4395,36 +4658,20 @@
             if (selectedAngkutanSelect.value !== 'all') { filteredData = filteredData.filter(t => t.angkutan === selectedAngkutanSelect.value); }
             const selectedJenisMobil = document.getElementById('summaryFilterJenisMobil').value;
             if (selectedJenisMobil !== 'all') { filteredData = filteredData.filter(t => t.jenis_mobil === selectedJenisMobil); }
-            
-            if (selectedStatus === 'INAP BU17') {
-                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
-            } else if (selectedStatus === 'INAP CMI') {
-                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
-            } else if (selectedStatus === 'INAP (Lainnya)') {
-                filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
-            } else if (isCombinedMode) { // 'ANTRI BONGKAR + INAP'
-                filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
-            } else if (selectedStatus !== 'all') {
-                filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
-            }
+
+            if (selectedStatus === 'INAP BU17') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP BU17');
+            else if (selectedStatus === 'INAP CMI') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP CMI');
+            else if (selectedStatus === 'INAP (Lainnya)') filteredData = filteredData.filter(t => t.keterangan === 'INAP' && getDynamicStatus(t) === 'INAP (Lainnya)');
+            else if (isCombinedMode) filteredData = filteredData.filter(t => t.keterangan === 'ANTRI BONGKAR' || t.keterangan === 'INAP');
+            else if (selectedStatus !== 'all') filteredData = filteredData.filter(t => t.keterangan === selectedStatus);
 
             if (showLeadTimeColumn) {
-                 filteredData.sort((a, b) => {
+                filteredData.sort((a, b) => {
                     const statusPriority = { 'INAP BU17': 1, 'INAP CMI': 1, 'INAP (Lainnya)': 1, 'ANTRI BONGKAR': 2 };
                     const statusA = statusPriority[getDynamicStatus(a)] || 3;
                     const statusB = statusPriority[getDynamicStatus(b)] || 3;
-                    const statusComp = statusA - statusB;
-                    if (statusComp !== 0) return statusComp;
-
-                    const customerComp = (a.customer || '').localeCompare(b.customer || '');
-                    if (customerComp !== 0) return customerComp;
-
-                    const cityComp = (a.tujuan || '').localeCompare(b.tujuan || '');
-                    if (cityComp !== 0) return cityComp;
-                    
-                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
-                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
-                    return leadTimeB - leadTimeA;
+                    if ((statusA - statusB) !== 0) return statusA - statusB;
+                    return calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar) - calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
                 });
             }
 
@@ -4432,65 +4679,78 @@
             screenshotContainer.style.position = 'absolute';
             screenshotContainer.style.left = '-9999px';
             screenshotContainer.style.top = '0';
-            screenshotContainer.style.padding = '1.5rem';
+            screenshotContainer.style.padding = '2rem';
             screenshotContainer.style.backgroundColor = 'white';
             screenshotContainer.style.width = 'fit-content';
-            
+            screenshotContainer.style.minWidth = '1200px'; 
+            screenshotContainer.style.fontFamily = "'Inter', sans-serif";
+
             screenshotContainer.innerHTML = `
-                <div style="margin-bottom: 1rem; text-align: center;">
-                    <h4 style="font-size: 1.25rem; font-weight: 700; color: #334155;">Summary Report - ${angkutanName}</h4>
+                <div style="margin-bottom: 1.5rem; text-align: center;">
+                    <h4 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 0.5rem;">Summary Report - ${angkutanName}</h4>
                     <p style="font-size: 0.875rem; color: #64748b;">${document.getElementById('export-timestamp').textContent}</p>
                 </div>
             `;
 
             const table = document.createElement('table');
             table.style.borderCollapse = 'collapse';
+            table.style.width = '100%';
+            table.style.fontSize = '12px';
+            table.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1)';
+
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
 
-            let headers = ["No", "Angkutan", "FO", "Tiba Lokasi Muat", "Keluar Lokasi Muat", "Tiba Lokasi Bongkar", "Keluar Lokasi Bongkar", "Nama Customer", "Kota", "Status", "Nama Driver", "No HP", "Plat Nomor", "Jenis Truck"];
+            let headers = [
+                "No", "Angkutan", "FO", "Tiba Muat", "Keluar Muat", "Tiba Bongkar", "Keluar Bongkar", 
+                "Customer", "Kota", "Qty(Kg)", "Jadwal Bongkar", "Status", "Driver", "No HP", "Plat", "Jenis"
+            ];
             if (showLeadTimeColumn) headers.push("Lead Time");
             
             const headerRow = document.createElement('tr');
             headers.forEach(headerText => {
                 const th = document.createElement('th');
-                th.textContent = headerText;
-                th.style.border = '1px solid #ddd';
-                th.style.padding = '8px';
-                th.style.textAlign = 'center';
-                th.style.verticalAlign = 'middle';
-                
-                // [PERBAIKAN] Ganti warna '#d9d9d9' menjadi '#4F46E5' dan tambahkan warna font
+                th.textContent = headerText.toUpperCase();
                 th.style.backgroundColor = '#4F46E5';
                 th.style.color = '#ffffff';
-
+                th.style.fontWeight = 'bold';
+                th.style.padding = '12px 8px';
+                th.style.textAlign = 'center'; // RATA TENGAH HEADER
+                th.style.verticalAlign = 'middle';
+                th.style.border = '1px solid #4338ca'; 
+                th.style.whiteSpace = 'nowrap';
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
             
             filteredData.forEach((truck, index) => {
                 const tr = document.createElement('tr');
+                tr.style.backgroundColor = index % 2 === 0 ? '#ffffff' : '#f8fafc';
+
                 const rowData = [
-                index + 1,
-                truck.angkutan || '-', truck.fo || '-',
-                formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
-                formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
-                truck.customer || '-', truck.tujuan || '-', getDynamicStatus(truck) || '-',
-                truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
+                    index + 1,
+                    truck.angkutan || '-', truck.fo || '-',
+                    formatTanggalJam(truck.tiba_lokasi_muat), formatTanggalJam(truck.keluar_lokasi_muat),
+                    formatTanggalJam(truck.tiba_lokasi_bongkar), formatTanggalJam(truck.keluar_lokasi_bongkar),
+                    truck.customer || '-', truck.tujuan || '-', 
+                    truck.qty ? Number(truck.qty).toLocaleString('id-ID') : '-',
+                    formatTanggalJam(truck.jadwal_bongkar),
+                    getDynamicStatus(truck) || '-',
+                    truck.nama_driver || '-', truck.no_hp || '-', truck.no_mobil || '-', truck.jenis_mobil || '-'
                 ];
-                if (showLeadTimeColumn) {
-                    rowData.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
-                }
+                if (showLeadTimeColumn) rowData.push(calculateLeadTime(truck.tiba_lokasi_bongkar));
 
                 rowData.forEach(cellData => {
                     const td = document.createElement('td');
                     td.textContent = cellData;
-                    td.style.border = '1px solid #ddd';
+                    td.style.border = '1px solid #e2e8f0';
                     td.style.padding = '8px';
-                    if (showLeadTimeColumn) {
-                       td.style.textAlign = 'center';
-                       td.style.verticalAlign = 'middle';
-                    }
+                    td.style.color = '#334155';
+                    
+                    // --- SETTING RATA TENGAH (ATAS-BAWAH & KIRI-KANAN) ---
+                    td.style.textAlign = 'center'; 
+                    td.style.verticalAlign = 'middle';
+                    
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);
@@ -4518,40 +4778,56 @@
         // ==========================================
     // FUNGSI EXPORT BARU (DATA LENGKAP)
     // ==========================================
-
-        window.exportRitaseToExcel = () => {
-        // 1. AMBIL DATA DARI STATE (Bukan dari tabel HTML)
+    window.exportRitaseToExcel = () => {
+        // 1. Cek apakah ada data yang akan diexport
         const dataToExport = paginationState.ritaseTruck.filteredData;
-
         if (!dataToExport || dataToExport.length === 0) {
             Swal.fire('Info', 'Tidak ada data untuk diexport', 'info');
             return;
         }
 
-        // --- DEFINISI HEADER KOLOM (Pastikan "Lama Inap" ada di sini) ---
+        // 2. Definisi Header Kolom (Pastikan urutan sesuai keinginan)
         const headers = [
             "Angkutan", 
             "Plat Nomor", 
+            "Jenis Truck",      
             "Nama Driver", 
             "Customer", 
             "Kota", 
+            "Uang Jalan",       // <--- KOLOM YANG HILANG
+            "Qty (Kg)",         // <--- KOLOM YANG HILANG
+            "Jadwal Bongkar",   // <--- KOLOM YANG HILANG
             "Tiba Muat", 
             "Keluar Muat", 
             "Tiba Bongkar", 
             "Keluar Bongkar", 
             "Tanggal Selesai", 
-            "Lama Inap",   // <--- INI KOLOM YANG SEBELUMNYA HILANG
+            "Lama Inap",   
             "FO"
         ];
 
-        // Helper: Format Tanggal
-        const fmt = (isoStr) => isoStr ? formatTanggalJam(isoStr) : '-';
+        // Helper: Format Tanggal (Mengubah ISO/Timestamp ke format yang mudah dibaca)
+        const fmt = (isoStr) => {
+            if (!isoStr) return '-';
+            // Handle jika input adalah Firestore Timestamp
+            if (typeof isoStr.toDate === 'function') isoStr = isoStr.toDate();
+            // Handle jika input string/date
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return '-';
+            
+            return d.toLocaleString('id-ID', { 
+                day: '2-digit', month: '2-digit', year: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
+        };
 
-        // Helper Internal: Hitung Durasi (Langsung di sini agar aman)
+        // Helper: Hitung Durasi (Lama Inap)
         const hitungDurasi = (startStr, endStr) => {
             if (!startStr || !endStr) return '-';
-            const start = new Date(startStr);
-            const end = new Date(endStr);
+            // Handle Firestore Timestamp jika perlu
+            const start = startStr.toDate ? startStr.toDate() : new Date(startStr);
+            const end = endStr.toDate ? endStr.toDate() : new Date(endStr);
+            
             let diff = end - start; 
             if (isNaN(diff) || diff < 0) return '-';
 
@@ -4568,36 +4844,68 @@
             return parts.length > 0 ? parts.join(' ') : '0 Mnt';
         };
         
-        // 2. MAPPING DATA KE BARIS EXCEL
+        // 3. Mapping Data ke Body Excel
         const body = dataToExport.map(item => {
-            const tglSelesai = item.timestamp_selesai?.toDate 
-                ? item.timestamp_selesai.toDate().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) 
-                : '-';
+            // A. Format Tanggal Selesai
+            let tglSelesai = '-';
+            if (item.timestamp_selesai) {
+                const dateObj = item.timestamp_selesai.toDate ? item.timestamp_selesai.toDate() : new Date(item.timestamp_selesai);
+                tglSelesai = dateObj.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+            }
             
-            // HITUNG LAMA INAP (Keluar Bongkar - Keluar Muat)
+            // B. Hitung Durasi
             const duration = hitungDurasi(item.keluar_lokasi_muat, item.keluar_lokasi_bongkar);
-                
+
+            // C. Logika Cari Jenis Truck (Jika kosong di data ritase, cari di master truk)
+            // Ini penting agar pencarian Uang Jalan akurat
+            let jenisTruck = item.jenis_mobil;
+            if (!jenisTruck) {
+                const truckRef = window.trucksData.find(t => t.no_mobil === item.plat_nomor);
+                jenisTruck = truckRef ? truckRef.jenis_mobil : '';
+            }
+
+            // D. Logika Cari Uang Jalan (Lookup ke Master Variable Cost)
+            const vendor = item.angkutanName || '';
+            const destination = (item.tujuan || '').toUpperCase().trim();
+            const origin = 'KARAWANG';
+            
+            const masterVar = window.masterVarCost || [];
+            // Cari biaya yang cocok (Vendor + Jenis Truck + Asal + Tujuan)
+            const foundCost = masterVar.find(c => 
+                c.vendor === vendor && 
+                (c.jenis_truck || '') === (jenisTruck || '') &&
+                c.destination.toUpperCase() === destination &&
+                c.origin.toUpperCase() === origin
+            );
+            // Ambil nilai cost, default 0 jika tidak ketemu
+            const uangJalanVal = foundCost ? parseFloat(foundCost.cost) : 0;
+
+            // E. Return Array Baris (URUTAN HARUS SAMA DENGAN HEADERS DI ATAS)
             return [
                 item.angkutanName || '-',
                 item.plat_nomor || '-',
+                jenisTruck || '-',
                 item.nama_driver || '-',
                 item.customer || '-',
                 item.tujuan || '-',
+                uangJalanVal,               // <--- DATA UANG JALAN (Number)
+                item.qty || 0,              // <--- DATA QTY (Number)
+                fmt(item.jadwal_bongkar),   // <--- DATA JADWAL BONGKAR
                 fmt(item.tiba_lokasi_muat),
                 fmt(item.keluar_lokasi_muat),
                 fmt(item.tiba_lokasi_bongkar),
                 fmt(item.keluar_lokasi_bongkar),
                 tglSelesai,
-                duration, // <--- DATA DURASI DIMASUKKAN KE SINI (Kolom ke-11)
+                duration,
                 item.fo || '-'
             ];
         });
 
-        // 3. GABUNGKAN HEADER DAN BODY
+        // 4. Gabungkan Header dan Body
         const wsData = [headers, ...body];
         const worksheet = XLSX.utils.aoa_to_sheet(wsData);
         
-        // 4. STYLING HEADER (BOLD & WARNA)
+        // 5. Styling Header (Bold & Abu-abu)
         if (worksheet['!ref']) {
             const range = XLSX.utils.decode_range(worksheet['!ref']);
             for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -4606,17 +4914,19 @@
                 worksheet[address].s = { 
                     font: { bold: true }, 
                     fill: { fgColor: { rgb: "CCCCCC" } },
-                    alignment: { horizontal: "center" }
+                    alignment: { horizontal: "center", vertical: "center" }
                 };
             }
         }
 
-        // 5. ATUR LEBAR KOLOM (Agar "Lama Inap" terbaca jelas)
+        // 6. Atur Lebar Kolom agar rapi
         const colWidths = headers.map(h => ({ wch: h.length + 5 }));
-        colWidths[10] = { wch: 25 }; // Lebar khusus untuk kolom Lama Inap
+        colWidths[6] = { wch: 15 }; // Lebar Uang Jalan
+        colWidths[8] = { wch: 20 }; // Lebar Jadwal Bongkar
+        colWidths[14] = { wch: 25 }; // Lebar Lama Inap
         worksheet['!cols'] = colWidths;
 
-        // 6. GENERATE FILE
+        // 7. Generate & Download File
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Ritase");
         
@@ -4926,6 +5236,52 @@ window.saveFixCost = () => {
     renderFixCostTable();
 };
 
+window.exportVarCostToExcel = () => {
+    // 1. Ambil data dari variabel global masterVarCost
+    const dataToExport = window.masterVarCost || [];
+
+    if (dataToExport.length === 0) {
+        Swal.fire('Info', 'Tidak ada data Master Variable Cost untuk diexport', 'info');
+        return;
+    }
+
+    // 2. Tentukan Header Kolom
+    const headers = [
+        "VENDOR", 
+        "JENIS TRUCK", 
+        "KOTA MUAT (ORIGIN)", 
+        "KOTA BONGKAR (DESTINATION)", 
+        "UANG JALAN (RP)"
+    ];
+
+    // 3. Mapping data ke dalam format baris Excel
+    const body = dataToExport.sort((a, b) => a.vendor.localeCompare(b.vendor)).map(item => [
+        item.vendor || '-',
+        item.jenis_truck || '-',
+        item.origin || '-',
+        item.destination || '-',
+        item.cost || 0
+    ]);
+
+    // 4. Gabungkan Header dan Body
+    const wsData = [headers, ...body];
+
+    // 5. Buat Worksheet dan Workbook
+    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Master Variable Cost");
+
+    // 6. Atur lebar kolom otomatis (optional)
+    const colWidths = headers.map(h => ({ wch: h.length + 10 }));
+    worksheet['!cols'] = colWidths;
+
+    // 7. Download File
+    const timestamp = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Master_Variable_Cost_${timestamp}.xlsx`);
+    
+    showSuccessAlert("Berhasil", "Data Master Variable Cost telah diexport ke Excel.");
+};
+
 /* ===========================================================
    TAMBAHKAN KODE BARU INI DI SINI (ANTARA SAVE DAN DELETE)
    =========================================================== */
@@ -4967,7 +5323,10 @@ window.autoGenerateFixCost = () => {
 
         // YUSHAR: 26 Juta
         "PT. YUSHAR PUTERA JAYA": 26000000,
-        "YUSHAR": 26000000
+        "YUSHAR": 26000000,
+
+        "PT. DEWI SRI": 32000000, // Ganti angka ini dengan harga sewa yang sesuai
+        "DEWI SRI": 32000000
     };
 
     let updatedCount = 0;
@@ -5159,7 +5518,9 @@ function renderVarCostTable() {
         "PT. TIARA FAJAR TRANSPORTINDO": 26000000,
         "TFT": 26000000,
         "PT. YUSHAR PUTERA JAYA": 26000000,
-        "YUSHAR": 26000000
+        "YUSHAR": 26000000,
+        "PT. DEWI SRI": 32000000,
+        "DEWI SRI": 32000000
     };
 
     // --- 4. LOGIKA LAPORAN KEUANGAN & EXPORT ---
@@ -5210,10 +5571,14 @@ function renderVarCostTable() {
     window.calculateRealtimeReport = (monthInput) => {
         const [year, month] = monthInput.split('-');
 
-        // Filter Data Ritase (Variable Cost) berdasarkan bulan dipilih
+        // Kode Baru (berdasarkan keluar_lokasi_muat)
         const filteredRitase = window.allRitaseData.filter(trip => {
-            if(!trip.timestamp_selesai) return false;
-            const tripDate = trip.timestamp_selesai.toDate();
+            // Memastikan data keluar_lokasi_muat tersedia
+            if(!trip.keluar_lokasi_muat) return false;
+            
+            // Konversi string/object tanggal ke Date object JavaScript
+            const tripDate = new Date(trip.keluar_lokasi_muat); 
+            
             return tripDate.getFullYear() === parseInt(year) && (tripDate.getMonth() + 1) === parseInt(month);
         });
 
@@ -5289,10 +5654,10 @@ window.calculateRealtimeReport = (monthInput) => {
     const [year, month] = monthInput.split('-');
 
     // Filter Data Ritase
+    // Cuplikan perubahan di admin.html
     const filteredRitase = window.allRitaseData.filter(trip => {
-        if(!trip.timestamp_selesai) return false;
-        // Handle jika timestamp_selesai berupa string atau object Firestore
-        const tripDate = trip.timestamp_selesai.toDate ? trip.timestamp_selesai.toDate() : new Date(trip.timestamp_selesai);
+        if(!trip.keluar_lokasi_muat) return false; // Pastikan menggunakan field keluar_lokasi_muat
+        const tripDate = new Date(trip.keluar_lokasi_muat); 
         return tripDate.getFullYear() === parseInt(year) && (tripDate.getMonth() + 1) === parseInt(month);
     });
 
@@ -5463,18 +5828,22 @@ window.recalculateVendorTotal = (vendorEncoded) => {
     const newQty = parseInt(qtyInput.value) || 0;
     const rate = parseFloat(rateInput.value) || 0;
     
-    // Hitung Fix Cost Baru
     const newFixCost = newQty * rate;
-    
-    // Hitung Total Tagihan Baru
     const newTotalVendor = newFixCost + varCostValue;
 
-    // Update HTML
     subtotalCell.innerText = formatRupiah(newFixCost);
     if(grandTotalCell) grandTotalCell.innerText = formatRupiah(newTotalVendor);
 
+    // Update kotak total di bagian atas dashboard
     calculateGrandTotalAll();
-    window.updateRitaseDashboard();
+    
+    // --- TAMBAHKAN BARIS INI ---
+    // Agar Cost per Ton langsung menyesuaikan angka pengeluaran baru
+    window.calculateCostPerTon(); 
+    
+    if (typeof window.updateRitaseDashboard === 'function') {
+        window.updateRitaseDashboard();
+    }
 };
 
 // --- 5. HITUNG GRAND TOTAL SEMUA (KOTAK WARNA-WARNI DI ATAS) ---
@@ -5787,82 +6156,122 @@ window.calculateGrandTotalAll = () => {
 
 
         // --- LOGIKA CRUD RITASE ---
+        // --- FUNGSI HELPER TANGGAL (WAJIB DITAMBAHKAN) ---
+        // --- 1. FUNGSI HELPER TANGGAL (FIX ERROR CONSOLE) ---
+        function safeDateToInput(input) {
+            if (!input) return "";
+            
+            let date;
+            // Cek apakah input adalah Firestore Timestamp
+            if (input && typeof input.toDate === 'function') {
+                date = input.toDate();
+            } else {
+                date = new Date(input);
+            }
 
-        // 1. Buka Modal (Add atau Edit)
-        // --- GANTI FUNGSI INI DI ADMIN.HTML ---
+            if (isNaN(date.getTime())) return "";
+
+            // Format ke YYYY-MM-DDTHH:mm untuk input datetime-local
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // --- 2. FUNGSI POPULATE DROPDOWN (JENIS TRUCK & CUSTOMER) ---
+        function populateRitaseDropdowns() {
+            // A. Isi Dropdown Jenis Truck
+            const truckSelect = document.getElementById('ritaseJenisTruck');
+            if (truckSelect) {
+                const currentVal = truckSelect.value; // Simpan nilai jika ada
+                let options = '<option value="">- Pilih Jenis Truck -</option>';
+                
+                // Ambil data dari variabel global window.jenisTruckData
+                if (window.jenisTruckData && window.jenisTruckData.length > 0) {
+                    // Sortir A-Z
+                    const sortedTrucks = [...window.jenisTruckData].sort((a,b) => a.name.localeCompare(b.name));
+                    sortedTrucks.forEach(item => {
+                        options += `<option value="${item.name}">${item.name}</option>`;
+                    });
+                }
+                truckSelect.innerHTML = options;
+                if(currentVal) truckSelect.value = currentVal;
+            }
+
+            // B. Isi Dropdown Customer
+            const customerSelect = document.getElementById('ritaseCustomer');
+            // Pastikan elemennya adalah SELECT (karena baru diubah di HTML)
+            if (customerSelect && customerSelect.tagName === 'SELECT') {
+                const currentVal = customerSelect.value;
+                let options = '<option value="">- Pilih Customer -</option>';
+                
+                // Ambil data dari variabel global window.customersData
+                if (window.customersData && window.customersData.length > 0) {
+                    const sortedCustomers = [...window.customersData].sort((a,b) => a.name.localeCompare(b.name));
+                    sortedCustomers.forEach(item => {
+                        options += `<option value="${item.name}">${item.name}</option>`;
+                    });
+                }
+                customerSelect.innerHTML = options;
+                if(currentVal) customerSelect.value = currentVal;
+            }
+        }
+
+        // --- 3. FUNGSI BUKA MODAL (UPDATE LENGKAP) ---
         window.openRitaseModal = (mode, docId = null) => {
             const modal = document.getElementById('ritase-form-modal');
             const form = document.getElementById('ritaseForm');
             const title = document.getElementById('ritase-modal-title');
             const idInput = document.getElementById('ritaseId');
             
-            // Populate dropdown jenis truck
-            const jenisSelect = document.getElementById('ritaseJenisTruck');
-            jenisSelect.innerHTML = '<option value="">- Pilih -</option>';
-            
-            if (window.jenisTruckData) {
-                window.jenisTruckData.forEach(j => {
-                    jenisSelect.innerHTML += `<option value="${j.name}">${j.name}</option>`;
-                });
-            }
+            // Panggil fungsi populate dropdown SEBELUM mengisi data
+            populateRitaseDropdowns();
 
             if (mode === 'add') {
                 title.textContent = "Tambah Data Ritase Manual";
                 form.reset();
                 idInput.value = "";
+                // Set default tanggal selesai ke sekarang
+                document.getElementById('ritaseSelesai').value = safeDateToInput(new Date());
+
             } else if (mode === 'edit' && docId) {
                 title.textContent = "Edit Data Ritase";
                 const data = window.allRitaseData.find(d => d.docId === docId);
-                if (!data) return;
+                
+                if (!data) {
+                    Swal.fire("Error", "Data tidak ditemukan", "error");
+                    return;
+                }
 
                 idInput.value = docId;
+                
+                // Isi Form
                 document.getElementById('ritaseAngkutan').value = data.angkutanName || '';
                 document.getElementById('ritasePlat').value = data.plat_nomor || '';
-
-                // Logika Fallback Jenis Truck
-                let selectedJenis = data.jenis_mobil;
-                if (!selectedJenis && data.plat_nomor) {
-                    const truckRef = window.trucksData.find(t => t.no_mobil === data.plat_nomor);
-                    if (truckRef) {
-                        selectedJenis = truckRef.jenis_mobil;
-                    }
-                }
-                document.getElementById('ritaseJenisTruck').value = selectedJenis || '';
-
                 document.getElementById('ritaseDriver').value = data.nama_driver || '';
-                document.getElementById('ritaseCustomer').value = data.customer || '';
                 document.getElementById('ritaseKota').value = data.tujuan || '';
                 document.getElementById('ritaseFO').value = data.fo || '';
+                document.getElementById('ritaseQty').value = data.qty || '';
+                
+                // Isi Dropdown (Jenis Truck & Customer)
+                // Karena dropdown sudah di-populate di atas, kita tinggal set value-nya
+                document.getElementById('ritaseJenisTruck').value = data.jenis_mobil || '';
+                document.getElementById('ritaseCustomer').value = data.customer || '';
 
-                // --- PERBAIKAN FORMAT TANGGAL ---
-                // Fungsi helper ini memastikan tanggal terbaca dengan benar oleh input HTML
-                const safeDateToInput = (val) => {
-                    if (!val) return "";
-                    let dateObj;
-                    
-                    // Cek tipe data (Firestore Timestamp vs String vs Date Object)
-                    if (val.toDate) dateObj = val.toDate(); 
-                    else if (typeof val === 'string') dateObj = new Date(val); 
-                    else if (val instanceof Date) dateObj = val;
-
-                    if (!dateObj || isNaN(dateObj)) return "";
-
-                    // Konversi ke format YYYY-MM-DDTHH:mm (Waktu Lokal)
-                    const offsetMs = dateObj.getTimezoneOffset() * 60 * 1000;
-                    const localISOTime = (new Date(dateObj.getTime() - offsetMs)).toISOString().slice(0, 16);
-                    return localISOTime;
-                };
-
-                // Isi input tanggal dengan format yang benar
+                // Isi Tanggal (Menggunakan fungsi safeDateToInput yang sudah diperbaiki)
+                document.getElementById('ritaseJadwalBongkar').value = safeDateToInput(data.jadwal_bongkar);
                 document.getElementById('ritaseTibaMuat').value = safeDateToInput(data.tiba_lokasi_muat);
                 document.getElementById('ritaseKeluarMuat').value = safeDateToInput(data.keluar_lokasi_muat);
                 document.getElementById('ritaseTibaBongkar').value = safeDateToInput(data.tiba_lokasi_bongkar);
                 document.getElementById('ritaseKeluarBongkar').value = safeDateToInput(data.keluar_lokasi_bongkar);
                 document.getElementById('ritaseSelesai').value = safeDateToInput(data.timestamp_selesai);
             }
-
+            
             modal.classList.remove('hidden');
-        };        
+        };
 
         // 2. Tutup Modal
         window.closeRitaseModal = () => {
@@ -5882,6 +6291,7 @@ window.calculateGrandTotalAll = () => {
             };
 
             // 3. Susun Data (Raw Data)
+            // Di dalam fungsi window.saveRitaseData
             const rawData = {
                 angkutanName: document.getElementById('ritaseAngkutan').value,
                 plat_nomor: document.getElementById('ritasePlat').value,
@@ -5891,13 +6301,16 @@ window.calculateGrandTotalAll = () => {
                 tujuan: document.getElementById('ritaseKota').value,
                 fo: document.getElementById('ritaseFO').value,
                 
-                // Simpan langsung sebagai Date Object (Firestore otomatis convert ke Timestamp)
+                // Simpan data Qty dan Jadwal Bongkar
+                qty: document.getElementById('ritaseQty').value || 0,
+                jadwal_bongkar: document.getElementById('ritaseJadwalBongkar').value || null,
+
                 tiba_lokasi_muat: getValOrNull('ritaseTibaMuat'),
                 keluar_lokasi_muat: getValOrNull('ritaseKeluarMuat'),
                 tiba_lokasi_bongkar: getValOrNull('ritaseTibaBongkar'),
                 keluar_lokasi_bongkar: getValOrNull('ritaseKeluarBongkar'),
+                timestamp_selesai: document.getElementById('ritaseSelesai').value ? new Date(document.getElementById('ritaseSelesai').value) : new Date()
             };
-
             // 4. Handle Tanggal Selesai (Wajib)
             const selesaiVal = document.getElementById('ritaseSelesai').value;
             if (selesaiVal) {
@@ -6300,7 +6713,170 @@ window.exportRitaseSummaryExcel = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Performa Vendor");
     XLSX.writeFile(workbook, `Rekap_Performa_Vendor.xlsx`);
 };
+window.autoFillMissingDates = async () => {
+    // 1. Filter data dari window.allRitaseData untuk periode Agustus-Oktober 2025 yang datanya masih kosong
+    const targetData = window.allRitaseData.filter(trip => {
+        const tgl = trip.timestamp_selesai?.toDate ? trip.timestamp_selesai.toDate() : null;
+        if (!tgl) return false;
         
+        const bulan = tgl.getMonth() + 1; // 8 = Agustus, 10 = Oktober
+        const tahun = tgl.getFullYear();
+        
+        // Hanya memproses data yang belum memiliki 'keluar_lokasi_bongkar'
+        return tahun === 2025 && bulan >= 8 && bulan <= 10 && !trip.keluar_lokasi_bongkar;
+    });
+
+    if (targetData.length === 0) {
+        return Swal.fire("Info", "Tidak ada data kosong yang ditemukan pada periode Agustus-Oktober 2025.", "info");
+    }
+
+    Swal.fire({
+        title: 'Konfirmasi Auto-Fill',
+        text: `Ditemukan ${targetData.length} data ritase yang akan diisi otomatis. Lanjutkan?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Ya, Isi Otomatis'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            // Menampilkan loading sederhana
+            Swal.fire({ title: 'Sedang memproses...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            for (const trip of targetData) {
+                const tSelesai = trip.timestamp_selesai.toDate();
+                const satuJam = 60 * 60 * 1000;
+                const satuHari = 24 * satuJam;
+
+                // Logika Waktu Berdasarkan Permintaan Anda:
+                // 1. Keluar Bongkar = Tanggal Selesai (Sama persis)
+                const keluarBongkar = new Date(tSelesai.getTime());
+                
+                // 2. Tiba Bongkar = 4 jam sebelum Keluar Bongkar (Estimasi proses bongkar)
+                const tibaBongkar = new Date(keluarBongkar.getTime() - (4 * satuJam));
+                
+                // 3. Keluar Muat = 2 hari sebelum Tiba Bongkar (Estimasi perjalanan)
+                const keluarMuat = new Date(tibaBongkar.getTime() - (2 * satuHari));
+                
+                // 4. Tiba Muat = 3 jam sebelum Keluar Muat (Estimasi antri/proses muat)
+                const tibaMuat = new Date(keluarMuat.getTime() - (3 * satuJam));
+
+                const updateData = {
+                    keluar_lokasi_bongkar: keluarBongkar.toISOString(),
+                    tiba_lokasi_bongkar: tibaBongkar.toISOString(),
+                    keluar_lokasi_muat: keluarMuat.toISOString(),
+                    tiba_lokasi_muat: tibaMuat.toISOString()
+                };
+
+                try {
+                    const docRef = doc(db, "completed_deliveries", trip.docId);
+                    await updateDoc(docRef, updateData);
+                } catch (err) {
+                    console.error(`Gagal update dokumen ${trip.docId}:`, err);
+                }
+            }
+
+            Swal.fire("Berhasil", `${targetData.length} data ritase telah diperbarui.`, "success");
+            
+            // Refresh data ritase setelah update selesai
+            if (typeof window.loadRitaseData === 'function') {
+                window.loadRitaseData();
+            }
+        }
+    });
+};
+
+        // Fungsi Perhitungan Cost per Ton
+        // Fungsi Perhitungan Cost per Ton
+        window.calculateCostPerTon = () => {
+            const tonaseInput = document.getElementById('totalTonaseInput');
+            const usdRateInput = document.getElementById('usdRateInput');
+            
+            const tonase = parseFloat(tonaseInput.value) || 0;
+            const usdRate = parseFloat(usdRateInput.value) || 16500;
+            
+            // Mengambil teks Total Pengeluaran dari kotak ungu
+            const grandTotalText = document.getElementById('rptGrandTotal').innerText;
+            
+            // Membersihkan format mata uang (Rp dan titik)
+            const cleanTotal = grandTotalText.replace(/Rp/g, "").replace(/\s/g, "").replace(/\./g, "").replace(",", ".");
+            const grandTotal = parseFloat(cleanTotal) || 0;
+
+            const resTonase = document.getElementById('resTotalTonase');
+            const resIDR = document.getElementById('resCostTonIDR');
+            const resUSD = document.getElementById('resCostTonUSD');
+
+            if (tonase <= 0) {
+                resTonase.innerText = "-";
+                resIDR.innerText = "-";
+                resUSD.innerText = "-";
+                return;
+            }
+
+            const costPerTonIDR = grandTotal / tonase;
+            const costPerTonUSD = costPerTonIDR / usdRate;
+
+            resTonase.innerText = tonase.toLocaleString('id-ID') + " Ton";
+            resIDR.innerText = "Rp " + Math.round(costPerTonIDR).toLocaleString('id-ID');
+            resUSD.innerText = "$ " + costPerTonUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // Integrasi dengan fungsi Hitung Laporan
+        const originalGenerateReport = window.generateFinancialReport;
+        window.generateFinancialReport = async () => {
+            // 1. Jalankan perhitungan biaya vendor
+            await originalGenerateReport();
+            
+            // 2. Jalankan perhitungan analisa tonase otomatis
+            window.calculateCostPerTon();
+        };
+
+        // --- TARUH INI DI BAGIAN PALING BAWAH SCRIPT MODULE ANDA ---
+
+        window.downloadMasterCustomer = async () => {
+            console.log("⏳ Sedang mengambil data customers...");
+            
+            // Pastikan import collection & getDocs sudah ada di atas
+            // Jika belum, firebase biasanya sudah menyediakan db dari init
+            try {
+                const querySnapshot = await getDocs(collection(db, "customers"));
+                
+                // Siapkan Header CSV
+                let csvContent = "NAMA CUSTOMER,TIPE,DAFTAR KOTA (RUTE)\n";
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const name = `"${(data.name || '').replace(/"/g, '""')}"`; // Escape tanda petik
+                    const type = data.customer_type || 'Reguler';
+                    
+                    // Gabungkan array kota menjadi string dipisah koma dalam kutip
+                    let cities = "-";
+                    if (Array.isArray(data.cities)) {
+                        cities = `"${data.cities.join(", ")}"`; 
+                    }
+                    
+                    csvContent += `${name},${type},${cities}\n`;
+                });
+
+                // Buat file CSV virtual dan download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Master_Customer_Export_${new Date().toISOString().slice(0,10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log("✅ Berhasil! File CSV sedang diunduh.");
+                return "Cek folder download Anda.";
+
+            } catch (error) {
+                console.error("Gagal export:", error);
+                return "Terjadi kesalahan (Cek error di atas).";
+            }
+        };      
     </script>
 
 </body>
