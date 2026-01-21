@@ -34,10 +34,15 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.6); z-index: 1000;
             display: flex; justify-content: center; align-items: center;
-        }
+        }   
         .modal-content {
             background: white; padding: 2rem; border-radius: 0.75rem;
-            width: 90%; max-width: 900px; max-height: 90vh;
+            
+            /* PERUBAHAN DI SINI: */
+            width: 98%;              /* Menggunakan 98% lebar layar */
+            max-width: 1500px;       /* Batas maksimal diperbesar dari 900px ke 1500px */
+            
+            max-height: 90vh;
             display: flex; flex-direction: column; position: relative;
         }
         .modal-close {
@@ -1211,7 +1216,11 @@
                             <th class="px-4 py-3" data-sort="no_mobil" onclick="window.sortModalTable('no_mobil')">Plat Nomor</th>
                             <th class="px-4 py-3" data-sort="nama_driver" onclick="window.sortModalTable('nama_driver')">Nama Driver</th>
                             <th class="px-4 py-3" data-sort="customer" onclick="window.sortModalTable('customer')">Customer</th>
+                            <th class="px-4 py-3" data-sort="tujuan" onclick="window.sortModalTable('tujuan')">Kota</th>
                             <th class="px-4 py-3" data-sort="fo" onclick="window.sortModalTable('fo')">DN</th>
+                            <th id="th-keluar-muat" class="px-4 py-3" style="display: none;">Keluar Muat</th> 
+                            <th id="th-tanggal-bongkar" class="px-4 py-3" style="display: none;">Tanggal Bongkar</th>
+                            <th id="th-lama-perjalanan" class="px-4 py-3" style="display: none;">Lama Perjalanan</th>
                             <th class="px-4 py-3" data-sort="no_hp" onclick="window.sortModalTable('no_hp')">No HP</th>
                             <th class="px-4 py-3" data-sort="jenis_mobil" onclick="window.sortModalTable('jenis_mobil')">Jenis Truck</th>
                             <th class="px-4 py-3">Dimensi (cm)</th>
@@ -1450,6 +1459,7 @@
 
         let currentModalTrucks = [];
         let modalSort = { column: 'angkutan', direction: 'asc' };
+        let currentModalStatus = ''; // <-- Variabel baru untuk menyimpan status saat ini
         let ritaseSort = { column: 'timestamp_selesai', direction: 'desc' };
         let activeFilters = {};
         let vendorTruckModalFilters = {};
@@ -3298,26 +3308,135 @@ card.innerHTML = `
         function renderModalTable(trucksToRender) {
             const modalList = document.getElementById('modal-truck-list');
             modalList.innerHTML = '';
+            
+            // --- 1. DEFINE ELEMENT HEADER ---
+            const thKeluar = document.getElementById('th-keluar-muat');      // Untuk OTW Customer
+            const thBongkar = document.getElementById('th-tanggal-bongkar'); // Untuk OTW Mill
+            const thLama = document.getElementById('th-lama-perjalanan');    // Untuk Keduanya
+            
+            // --- 2. CEK STATUS AKTIF ---
+            const isOtwCustomer = (currentModalStatus === 'OTW CUSTOMER');
+            const isOtwMill = (currentModalStatus === 'OTW MILL');
+            const isTrackingMode = isOtwCustomer || isOtwMill;
+
+            // --- 3. ATUR VISIBILITY HEADER ---
+            if (thKeluar) thKeluar.style.display = isOtwCustomer ? 'table-cell' : 'none';
+            if (thBongkar) thBongkar.style.display = isOtwMill ? 'table-cell' : 'none';
+            if (thLama) thLama.style.display = isTrackingMode ? 'table-cell' : 'none';
+            // -------------------------------------
+
             if (!trucksToRender || trucksToRender.length === 0) {
-                // Update colspan menjadi 9 karena kolom bertambah
-                modalList.innerHTML = '<tr><td colspan="9" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>';
+                // Update Colspan: Standar jadi 10 (karena tambah Kota), Tracking mode jadi 12
+                const colSpanCount = isTrackingMode ? 12 : 10;
+                modalList.innerHTML = `<tr><td colspan="${colSpanCount}" class="text-center p-6 text-slate-500">Tidak ada truk yang cocok.</td></tr>`;
                 return;
             }
+
+            const now = new Date();
+
             trucksToRender.forEach(truck => {
                 const p = truck.panjang || 0, l = truck.lebar || 0, t = truck.tinggi || 0;
                 const dimensi = `${p}×${l}×${t}`;
                 const kubikasi = (p * l * t / 1000000).toFixed(2);
+                
+                let extraColumnsHtml = '';
+
+                // ========================================================
+                // SKENARIO A: OTW CUSTOMER
+                // ========================================================
+                if (isOtwCustomer) {
+                    const tglKeluarMuat = truck.keluar_lokasi_muat ? formatTanggalJam(truck.keluar_lokasi_muat) : '-';
+                    let lamaPerjalananStr = '-';
+                    let textColorClass = 'text-indigo-600'; 
+
+                    if (truck.keluar_lokasi_muat) {
+                        const startTime = truck.keluar_lokasi_muat.toDate ? truck.keluar_lokasi_muat.toDate() : new Date(truck.keluar_lokasi_muat);
+                        let endTime = now;
+
+                        if (truck.tiba_lokasi_bongkar) {
+                            endTime = truck.tiba_lokasi_bongkar.toDate ? truck.tiba_lokasi_bongkar.toDate() : new Date(truck.tiba_lokasi_bongkar);
+                            textColorClass = 'text-green-600';
+                        }
+
+                        const diff = endTime - startTime;
+                        if (diff > 0) {
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            lamaPerjalananStr = `${days} Hari ${hours} Jam`;
+                        }
+                    }
+
+                    extraColumnsHtml = `
+                        <td class="px-4 py-3 whitespace-nowrap font-semibold text-slate-700">${tglKeluarMuat}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-bold ${textColorClass}">${lamaPerjalananStr}</td>
+                    `;
+                }
+                
+                // ========================================================
+                // SKENARIO B: OTW MILL (DATA DARI RITASE TERAKHIR)
+                // ========================================================
+                else if (isOtwMill) {
+                    // Cari riwayat ritase terakhir untuk mendapatkan tanggal bongkar
+                    const ritaseHistory = (window.allRitaseData || []).filter(r => 
+                        r.plat_nomor === truck.no_mobil && r.keluar_lokasi_bongkar
+                    );
+
+                    const lastRitase = ritaseHistory.sort((a, b) => {
+                        const dateA = a.keluar_lokasi_bongkar.toDate ? a.keluar_lokasi_bongkar.toDate() : new Date(a.keluar_lokasi_bongkar);
+                        const dateB = b.keluar_lokasi_bongkar.toDate ? b.keluar_lokasi_bongkar.toDate() : new Date(b.keluar_lokasi_bongkar);
+                        return dateB - dateA; 
+                    })[0];
+
+                    let tglBongkarStr = '-';
+                    let lamaPerjalananStr = '-';
+                    let textColorClass = 'text-indigo-600';
+                    let startTime = null;
+
+                    if (lastRitase && lastRitase.keluar_lokasi_bongkar) {
+                        startTime = lastRitase.keluar_lokasi_bongkar.toDate ? lastRitase.keluar_lokasi_bongkar.toDate() : new Date(lastRitase.keluar_lokasi_bongkar);
+                        tglBongkarStr = formatTanggalJam(startTime);
+                    } else if (truck.keluar_lokasi_bongkar) {
+                        startTime = truck.keluar_lokasi_bongkar.toDate ? truck.keluar_lokasi_bongkar.toDate() : new Date(truck.keluar_lokasi_bongkar);
+                        tglBongkarStr = formatTanggalJam(startTime);
+                    }
+
+                    if (startTime) {
+                        let endTime = now;
+                        if (truck.tiba_lokasi_muat) {
+                            endTime = truck.tiba_lokasi_muat.toDate ? truck.tiba_lokasi_muat.toDate() : new Date(truck.tiba_lokasi_muat);
+                            textColorClass = 'text-green-600';
+                        }
+
+                        const diff = endTime - startTime;
+                        if (diff > 0) {
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            lamaPerjalananStr = `${days} Hari ${hours} Jam`;
+                        }
+                    }
+
+                    extraColumnsHtml = `
+                        <td class="px-4 py-3 whitespace-nowrap font-semibold text-slate-700">${tglBongkarStr}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-bold ${textColorClass}">${lamaPerjalananStr}</td>
+                    `;
+                }
+                // ========================================================
+
                 const row = document.createElement('tr');
                 row.className = 'border-b';
                 
-                // PERHATIKAN BAGIAN INI: Tambahkan truck.customer dan truck.fo setelah truck.nama_driver
                 row.innerHTML = `
                     <td class="px-4 py-3 font-medium">${truck.angkutan || '-'}</td>
                     <td class="px-4 py-3">${truck.no_mobil || '-'}</td>
                     <td class="px-4 py-3">${truck.nama_driver || '-'}</td>
                     
                     <td class="px-4 py-3">${truck.customer || '-'}</td>
+                    
+                    <td class="px-4 py-3 font-medium text-slate-600">${truck.tujuan || '-'}</td>
                     <td class="px-4 py-3">${truck.fo || '-'}</td>
+                    
+                    ${extraColumnsHtml}
+                    
                     <td class="px-4 py-3">${truck.no_hp || '-'}</td>
                     <td class="px-4 py-3">${truck.jenis_mobil || '-'}</td>
                     <td class="px-4 py-3">${dimensi}</td>
@@ -3357,15 +3476,15 @@ card.innerHTML = `
         };
 
         window.showTrucksByStatus = (status) => {
-            // [PERBAIKAN] Logika 'if' diubah untuk mendeteksi nama status baru
+            // 1. Simpan status ke variabel global
+            currentModalStatus = status; 
+
+            // Cek khusus untuk status INAP/ANTRI (Logika lama Anda)
             if (status.startsWith('INAP') || status === 'ANTRI BU17' || status === 'ANTRI CMI' || status === 'ANTRI BONGKAR (Lainnya)') {
-                // Jika ya, panggil fungsi modal INAP/Lama Inap
                 showInapStatusModal(status);
-                return; // Hentikan eksekusi di sini
+                return;
             }
 
-            // --- Kode di bawah ini adalah kode LAMA Anda, untuk status NON-INAP ---
-            // Ini hanya akan berjalan untuk status seperti TERSEDIA, OTW MILL, ANTRI MUAT, dll.
             const modal = document.getElementById('status-modal');
             const modalTitle = document.getElementById('modal-title');
             const filterDropdown = document.getElementById('modalFilterAngkutan');
@@ -3380,7 +3499,8 @@ card.innerHTML = `
             searchInput.value = '';
             filterDropdown.value = '';
             modalSort = { column: 'angkutan', direction: 'asc' };
-            renderModalTable(currentModalTrucks);
+            
+            renderModalTable(currentModalTrucks); // Render tabel
             modal.classList.remove('hidden');
         }
 
@@ -6882,4 +7002,3 @@ window.autoFillMissingDates = async () => {
 
 </body>
 </html>
-
