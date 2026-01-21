@@ -10,8 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1840,216 +1839,410 @@
         };
 
         // --- 2. EXPORT TO PDF (TAMPILAN BAGUS & BERWARNA) ---
-        window.exportToPdf = () => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            
-            const angkutanName = currentUserData.angkutanName || 'Report';
-            const timestamp = getFormattedTimestamp();
-            
-            let filteredData = getFilteredSummaryData();
+        // --- 2. EXPORT TO PDF (VISUAL SESUAI GAMBAR + LEAD TIME & NO HP) ---
+// --- 2. EXPORT TO PDF (MAXIMIZED FONT SIZE & READABILITY) ---
+// --- 2. EXPORT TO PDF (PREMIUM ROUNDED CARDS) ---
+// --- 2. EXPORT TO PDF (COLORFUL ROUNDED CARDS) ---
+window.exportToPdf = () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    
+    const angkutanName = currentUserData.angkutanName || 'Logistik';
+    const timestamp = getFormattedTimestamp();
+    const filteredData = getFilteredSummaryData(); 
+    const selectedFilter = document.getElementById('summaryFilterStatus').value;
 
-            const selectedStatus = document.getElementById('summaryFilterStatus').value;
-            const showLeadTimeColumn = (selectedStatus.includes('INAP') || selectedStatus.includes('ANTRI'));
+    // --- 1. HEADER ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(30, 41, 59);
+    doc.text(`SUMMARY REPORT`, 14, 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(79, 70, 229);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${angkutanName} | ${timestamp}`, 14, 21);
 
-            // Judul Dokumen
-            doc.setFontSize(16);
-            doc.setTextColor(30, 41, 59); // Slate-800
-            doc.text(`Summary Report - ${angkutanName}`, 14, 15);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100, 116, 139); // Slate-500
-            doc.text(`Dicetak pada: ${timestamp}`, 14, 22);
+    // --- 2. PERSIAPAN DATA ---
+    const tableBody = filteredData.map((truck, index) => {
+        // Format tanggal dipersingkat agar hemat tempat
+        // Contoh: 21/01 14:00
+        const fmt = (t) => t ? `${t.split('T')[0].split('-')[2]}/${t.split('T')[0].split('-')[1]} ${t.split('T')[1]}` : '-';
+        return [
+            index + 1, 
+            truck.fo || '-', 
+            truck.qty || '-', 
+            fmt(truck.jadwal_bongkar), 
+            fmt(truck.tiba_lokasi_muat), 
+            fmt(truck.keluar_lokasi_muat),
+            fmt(truck.tiba_lokasi_bongkar), 
+            fmt(truck.keluar_lokasi_bongkar),
+            truck.customer || '-', 
+            truck.tujuan || '-', 
+            truck.keterangan || '-',
+            calculateLeadTime(truck.tiba_lokasi_bongkar),
+            truck.nama_driver || '-', 
+            truck.no_hp || '-', 
+            truck.no_mobil || '-', 
+            truck.jenis_mobil || '-'
+        ];
+    });
 
-            // Definisi Kolom
-            const columns = [
-                { header: 'No', dataKey: 'no' },
-                { header: 'FO/DN', dataKey: 'fo' },
-                { header: 'Qty', dataKey: 'qty' },
-                { header: 'Jadwal', dataKey: 'jadwal' },
-                { header: 'Tiba Bongkar', dataKey: 'tiba_bongkar' }, // Fokus info penting
-                { header: 'Customer', dataKey: 'customer' },
-                { header: 'Kota', dataKey: 'kota' },
-                { header: 'Status', dataKey: 'status' }, // Kolom ini akan diwarnai
-                { header: 'Driver', dataKey: 'driver' },
-                { header: 'Plat No', dataKey: 'plat' },
-                { header: 'Jenis', dataKey: 'jenis' }
-            ];
-            if (showLeadTimeColumn) columns.push({ header: 'Lead Time', dataKey: 'leadtime' });
+    // --- 3. RENDER TABEL ---
+    doc.autoTable({
+        startY: 25,
+        theme: 'grid',
+        head: [
+            [
+                { content: 'NO', rowSpan: 2 }, 
+                { content: 'FO/DN', rowSpan: 2 }, 
+                { content: 'QTY', rowSpan: 2 }, 
+                { content: 'JADWAL', rowSpan: 2 },
+                { content: 'LOKASI MUAT', colSpan: 2, styles: { fillColor: [219, 234, 254], textColor: [30, 64, 175] } },
+                { content: 'LOKASI BONGKAR', colSpan: 2, styles: { fillColor: [254, 243, 199], textColor: [146, 64, 14] } },
+                { content: 'CUST', rowSpan: 2 }, 
+                { content: 'KOTA', rowSpan: 2 }, 
+                { content: 'STATUS', rowSpan: 2 }, 
+                { content: 'LEAD TIME', rowSpan: 2, styles: { textColor: [185, 28, 28] } },
+                { content: 'DRIVER', rowSpan: 2 }, 
+                { content: 'NO HP', rowSpan: 2 }, 
+                { content: 'PLAT', rowSpan: 2 }, 
+                { content: 'JENIS', rowSpan: 2 },
+            ],
+            [
+                { content: 'TIBA' }, { content: 'KELUAR' }, { content: 'TIBA' }, { content: 'KELUAR' },
+            ]
+        ],
+        body: tableBody, // <--- DATA DIMASUKKAN DI SINI
+        styles: { 
+            fontSize: 7, // Font dikecilkan agar muat
+            cellPadding: 1.5, 
+            valign: 'middle', 
+            halign: 'center', 
+            textColor: [51, 65, 85], 
+            lineWidth: 0.1,
+            overflow: 'linebreak'
+        }, 
+        headStyles: { 
+            fillColor: [241, 245, 249], 
+            textColor: [30, 41, 59], 
+            fontStyle: 'bold', 
+            halign: 'center', 
+            valign: 'middle',
+            lineWidth: 0.1
+        },
+        // PENGATURAN LEBAR KOLOM MANUAL
+        columnStyles: { 
+            0: { cellWidth: 8 },  // No
+            1: { cellWidth: 15 }, // FO
+            2: { cellWidth: 12 }, // Qty
+            3: { cellWidth: 16 }, // Jadwal
+            4: { cellWidth: 16 }, // Tiba Muat
+            5: { cellWidth: 16 }, // Keluar Muat
+            6: { cellWidth: 16 }, // Tiba Bongkar
+            7: { cellWidth: 16 }, // Keluar Bongkar
+            8: { cellWidth: 25 }, // Customer (Lebar)
+            9: { cellWidth: 15 }, // Kota
+            10: { cellWidth: 18, fontStyle: 'bold' }, // Status
+            11: { cellWidth: 15, fontStyle: 'bold' }, // Lead Time
+            12: { cellWidth: 18 }, // Driver
+            13: { cellWidth: 18 }, // No HP
+            14: { cellWidth: 18, fontStyle: 'bold' }, // Plat
+            15: { cellWidth: 15 }  // Jenis
+        },
+        didParseCell: function(data) {
+             if (data.section === 'body' && data.column.index === 10) {
+                 const s = data.cell.raw;
+                 if(s.includes('INAP')) data.cell.styles.textColor = [194, 65, 12];
+                 else if(s.includes('ANTRI')) data.cell.styles.textColor = [161, 98, 7];
+                 else if(s.includes('OTW')) data.cell.styles.textColor = [21, 128, 61];
+             }
+        }
+    });
 
-            const body = filteredData.map((truck, index) => {
-                const row = {
-                    no: index + 1,
-                    fo: truck.fo || '-',
-                    qty: truck.qty || '0',
-                    jadwal: formatTanggalJam(truck.jadwal_bongkar),
-                    tiba_bongkar: formatTanggalJam(truck.tiba_lokasi_bongkar),
-                    customer: truck.customer || '-',
-                    kota: truck.tujuan || '-',
-                    status: truck.keterangan || '-',
-                    driver: truck.nama_driver || '-',
-                    plat: truck.no_mobil || '-',
-                    jenis: truck.jenis_mobil || '-'
-                };
-                if (showLeadTimeColumn) row.leadtime = calculateLeadTime(truck.tiba_lokasi_bongkar);
-                return row;
+    doc.save(`Summary_${selectedFilter}_${getFilenameTimestamp()}.pdf`);
+};
+
+
+// --- 3. EXPORT AS IMAGE (CREATIVE, ICONIC & GRADIENT CARDS) ---
+window.exportAsImage = async () => {
+    const angkutanName = currentUserData.angkutanName || 'Report';
+    
+    let filteredData = getFilteredSummaryData(); 
+    const selectedFilter = document.getElementById('summaryFilterStatus').value;
+    const timestamp = getFormattedTimestamp();
+
+    // Container Canvas
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '3200px'; 
+    container.style.padding = '60px'; 
+    container.style.backgroundColor = '#ffffff'; // Ubah background jadi putih bersih
+    container.style.fontFamily = "'Inter', sans-serif";
+
+    // --- 1. HEADER (Card dihapus, hanya Judul) ---
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 40px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);">
+                    <i class="fas fa-truck-moving"></i>
+                </div>
+                <div>
+                    <h1 style="font-size: 48px; font-weight: 900; color: #1e293b; margin: 0; text-transform: uppercase; letter-spacing: -1px;">SUMMARY REPORT</h1>
+                    <h2 style="font-size: 32px; color: #64748b; margin: 5px 0 0 0; font-weight: 600;">${angkutanName}</h2>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="background: white; padding: 15px 30px; border-radius: 50px; font-size: 24px; color: #475569; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                    <i class="far fa-calendar-alt" style="margin-right: 10px; color: #6366f1;"></i> ${timestamp}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // --- 2. TABLE STYLING (Diperbesar & Rata Tengah) ---
+    // Font diperbesar ke 24px dan 26px
+    // text-align: center ditambahkan ke semua style
+
+    const thMain = "background-color: #f8fafc; color: #334155; font-weight: 800; font-size: 24px; padding: 25px 15px; border: 1px solid #e2e8f0; text-transform: uppercase; vertical-align: middle; text-align: center;";
+    
+    const thMuat = "background-color: #eff6ff; color: #1e40af; font-weight: 800; font-size: 24px; padding: 20px; border: 1px solid #bfdbfe; text-transform: uppercase; text-align: center;";
+    const thBongkar = "background-color: #fffbeb; color: #92400e; font-weight: 800; font-size: 24px; padding: 20px; border: 1px solid #fde68a; text-transform: uppercase; text-align: center;";
+    
+    const thSub = "background-color: #ffffff; color: #64748b; font-weight: 700; font-size: 22px; padding: 15px; border: 1px solid #e2e8f0; text-transform: uppercase; text-align: center;";
+    
+    // Body Style: text-align: center WAJIB ada disini
+    const tdStyle = "padding: 25px 15px; border: 1px solid #f1f5f9; font-size: 26px; color: #1e293b; font-weight: 600; vertical-align: middle; text-align: center;";
+
+    html += `
+        <div style="background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="${thMain} width: 80px;">NO</th>
+                        <th rowspan="2" style="${thMain}">FO/DN</th>
+                        <th rowspan="2" style="${thMain}">QTY<br><span style="font-size:18px; color:#94a3b8;">(KG)</span></th>
+                        <th rowspan="2" style="${thMain}">JADWAL<br>BONGKAR</th>
+                        <th colspan="2" style="${thMuat}"><i class="fas fa-arrow-up" style="margin-right:10px; opacity:0.6;"></i>LOKASI MUAT</th>
+                        <th colspan="2" style="${thBongkar}"><i class="fas fa-arrow-down" style="margin-right:10px; opacity:0.6;"></i>LOKASI BONGKAR</th>
+                        <th rowspan="2" style="${thMain}">CUSTOMER</th>
+                        <th rowspan="2" style="${thMain}">KOTA</th>
+                        <th rowspan="2" style="${thMain} width: 200px;">STATUS</th>
+                        <th rowspan="2" style="${thMain} color: #dc2626; background-color: #fef2f2; border-left: 4px solid #fca5a5;">LEAD<br>TIME</th>
+                        <th rowspan="2" style="${thMain}">DRIVER</th>
+                        <th rowspan="2" style="${thMain}">NO HP</th>
+                        <th rowspan="2" style="${thMain}">PLAT<br>NOMOR</th>
+                        <th rowspan="2" style="${thMain}">JENIS</th>
+                    </tr>
+                    <tr>
+                        <th style="${thSub}">TIBA</th>
+                        <th style="${thSub}">KELUAR</th>
+                        <th style="${thSub}">TIBA</th>
+                        <th style="${thSub}">KELUAR</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    filteredData.forEach((truck, index) => {
+        const bgRow = index % 2 === 0 ? '#ffffff' : '#f8fafc';
+        const formatTime = (t) => t ? `<div style="line-height:1.2;">${t.split('T')[0].split('-')[2]}/${t.split('T')[0].split('-')[1]}<br><span style="color:#94a3b8; font-size: 20px;">${t.split('T')[1]}</span></div>` : '-';
+        const leadTime = calculateLeadTime(truck.tiba_lokasi_bongkar);
+
+        // Badge Style
+        let badgeBg = '#f1f5f9'; let badgeColor = '#475569';
+        const s = truck.keterangan || '';
+        
+        if (s.includes('INAP')) { badgeBg = '#ffedd5'; badgeColor = '#c2410c'; }
+        else if (s === 'TERSEDIA') { badgeBg = '#dbeafe'; badgeColor = '#1d4ed8'; }
+        else if (s.includes('OTW')) { badgeBg = '#dcfce7'; badgeColor = '#15803d'; }
+        else if (s.includes('ANTRI')) { badgeBg = '#fef9c3'; badgeColor = '#a16207'; }
+        else if (s === 'STORING') { badgeBg = '#fee2e2'; badgeColor = '#b91c1c'; }
+
+        // Badge sekarang lebih besar font-nya
+        const badgeStyle = `display: inline-block; background-color: ${badgeBg}; color: ${badgeColor}; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 20px; text-transform: uppercase; min-width: 140px; text-align: center; letter-spacing: 0.5px;`;
+        
+        const leadTimeStyle = leadTime.includes('Hari') 
+            ? "color: #b91c1c; font-weight: 900; background-color: #fef2f2; border-left: 4px solid #fca5a5;" 
+            : "color: #334155; border-left: 1px solid #f1f5f9;";
+
+        html += `
+            <tr style="background-color: ${bgRow};">
+                <td style="${tdStyle} color: #94a3b8;">${index + 1}</td>
+                <td style="${tdStyle} font-weight: 700;">${truck.fo || '-'}</td>
+                <td style="${tdStyle} font-family: monospace; font-size: 28px; color: #475569;">${truck.qty || '-'}</td>
+                <td style="${tdStyle}">${formatTime(truck.jadwal_bongkar)}</td>
+                <td style="${tdStyle}">${formatTime(truck.tiba_lokasi_muat)}</td>
+                <td style="${tdStyle}">${formatTime(truck.keluar_lokasi_muat)}</td>
+                <td style="${tdStyle}">${formatTime(truck.tiba_lokasi_bongkar)}</td>
+                <td style="${tdStyle}">${formatTime(truck.keluar_lokasi_bongkar)}</td>
+                <td style="${tdStyle} font-weight: 600;">${truck.customer || '-'}</td>
+                <td style="${tdStyle} text-transform: uppercase;">${truck.tujuan || '-'}</td>
+                <td style="${tdStyle}"><span style="${badgeStyle}">${truck.keterangan || '-'}</span></td>
+                <td style="${tdStyle} ${leadTimeStyle}">${leadTime}</td>
+                <td style="${tdStyle} text-transform: uppercase; font-size: 22px;">${truck.nama_driver || '-'}</td>
+                <td style="${tdStyle} font-size: 22px;">${truck.no_hp || '-'}</td>
+                <td style="${tdStyle} font-weight: 800; font-size: 28px; color: #1e293b;">${truck.no_mobil || '-'}</td>
+                <td style="${tdStyle} color: #64748b; font-size: 20px; text-transform: uppercase;">${truck.jenis_mobil || '-'}</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table></div>`;
+    
+    // Footer yang diperbesar sedikit
+    html += `<div style="margin-top: 50px; text-align: center; color: #94a3b8; font-size: 24px; padding-top: 20px; font-weight: 600;">&copy; ${new Date().getFullYear()} Logistik IKK - System Monitoring</div>`;
+
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+        const canvas = await html2canvas(container, { scale: 1, useCORS: true, backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        link.download = `Dashboard_WA_${selectedFilter === 'all' ? 'All' : selectedFilter}_${getFilenameTimestamp()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    } catch (e) {
+        console.error(e);
+        showErrorAlert("Error", "Gagal export gambar.");
+    } finally {
+        document.body.removeChild(container);
+    }
+};
+
+// --- HELPER DESAIN KARTU: GRADIENT & ICON ---
+function getCardDesign(label) {
+    const l = label.toUpperCase();
+    
+    // Default Style (Slate)
+    let style = { 
+        gradient: 'linear-gradient(135deg, #64748b 0%, #334155 100%)', // Slate Gradient
+        icon: 'fa-truck',
+        shadow: 'rgba(100, 116, 139, 0.4)'
+    };
+
+    if (l.includes('TOTAL')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #4f46e5 0%, #312e81 100%)', // Indigo
+            icon: 'fa-layer-group',
+            shadow: 'rgba(79, 70, 229, 0.4)'
+        };
+    } else if (l.includes('INAP')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', // Vivid Orange
+            icon: 'fa-bed',
+            shadow: 'rgba(249, 115, 22, 0.4)'
+        };
+    } else if (l.includes('ANTRI')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #eab308 0%, #a16207 100%)', // Gold/Yellow
+            icon: 'fa-hourglass-half',
+            shadow: 'rgba(234, 179, 8, 0.4)'
+        };
+    } else if (l.includes('OTW')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)', // Emerald Green
+            icon: 'fa-shipping-fast',
+            shadow: 'rgba(16, 185, 129, 0.4)'
+        };
+    } else if (l.includes('TERSEDIA')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', // Bright Blue
+            icon: 'fa-check-circle',
+            shadow: 'rgba(59, 130, 246, 0.4)'
+        };
+    } else if (l.includes('STORING') || l.includes('NO DRIVER')) {
+        style = { 
+            gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', // Red
+            icon: 'fa-exclamation-triangle',
+            shadow: 'rgba(239, 68, 68, 0.4)'
+        };
+    }
+
+    return style;
+}
+
+        // --- HELPER BARU: HITUNG STATISTIK DETAIL ---
+        function calculateDetailedStats(data) {
+            // Inisialisasi counter untuk semua status yang diminta
+            const stats = {
+                total: data.length,
+                otw_mill: 0,
+                antri_muat: 0,
+                otw_customer: 0,
+                antri_bongkar: 0,
+                inap: 0,
+                storing: 0,
+                no_driver: 0,
+                tersedia: 0
+            };
+
+            data.forEach(t => {
+                const k = t.keterangan || '';
+                // Cek status exact match atau includes tergantung kebutuhan
+                if (k === 'OTW MILL') stats.otw_mill++;
+                else if (k === 'ANTRI MUAT') stats.antri_muat++;
+                else if (k === 'OTW CUSTOMER') stats.otw_customer++;
+                else if (k === 'ANTRI BONGKAR') stats.antri_bongkar++;
+                else if (k === 'INAP') stats.inap++;
+                else if (k === 'STORING') stats.storing++;
+                else if (k === 'NO DRIVER') stats.no_driver++;
+                else if (k === 'TERSEDIA') stats.tersedia++;
             });
 
-            doc.autoTable({
-                columns: columns,
-                body: body,
-                startY: 28,
-                theme: 'grid',
-                styles: { 
-                    fontSize: 7, 
-                    cellPadding: 2, 
-                    valign: 'middle', 
-                    halign: 'center',
-                    lineColor: [226, 232, 240] // Slate-200
-                },
-                headStyles: { 
-                    fillColor: [79, 70, 229], // Indigo-600
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [248, 250, 252] // Slate-50
-                },
-                // --- LOGIKA PEWARNAAN OTOMATIS (BADGE STATUS) ---
-                didParseCell: function(data) {
-                    if (data.section === 'body' && data.column.dataKey === 'status') {
-                        const statusRaw = data.cell.raw;
-                        // Ubah warna teks berdasarkan status
-                        // Kita gunakan RGB manual karena jspdf butuh array/hex
-                        const hexColor = getStatusTextColorCode(statusRaw);
-                        const r = parseInt(hexColor.substr(1,2), 16);
-                        const g = parseInt(hexColor.substr(3,2), 16);
-                        const b = parseInt(hexColor.substr(5,2), 16);
-                        
-                        data.cell.styles.textColor = [r, g, b];
-                        data.cell.styles.fontStyle = 'bold';
-                    }
-                }
-            });
+            return stats;
+        }
 
-            doc.save(`Summary_Report_${getFilenameTimestamp()}.pdf`);
+        // --- CONFIG WARNA & LABEL KARTU ---
+        function getCardConfig(stats) {
+            return {
+                'TOTAL': { label: 'TOTAL TRUCK', value: stats.total, color: '#64748b', bg: '#f1f5f9' }, // Slate
+                'OTW MILL': { label: 'OTW MILL', value: stats.otw_mill, color: '#7e22ce', bg: '#f3e8ff' }, // Purple
+                'ANTRI MUAT': { label: 'ANTRI MUAT', value: stats.antri_muat, color: '#0891b2', bg: '#cffafe' }, // Cyan
+                'OTW CUSTOMER': { label: 'OTW CUSTOMER', value: stats.otw_customer, color: '#15803d', bg: '#dcfce7' }, // Green
+                'ANTRI BONGKAR': { label: 'ANTRI BONGKAR', value: stats.antri_bongkar, color: '#ca8a04', bg: '#fef9c3' }, // Yellow
+                'INAP': { label: 'INAP', value: stats.inap, color: '#c2410c', bg: '#ffedd5' }, // Orange
+                'STORING': { label: 'STORING', value: stats.storing, color: '#b91c1c', bg: '#fee2e2' }, // Red
+                'NO DRIVER': { label: 'NO DRIVER', value: stats.no_driver, color: '#be123c', bg: '#ffe4e6' }, // Rose
+                'TERSEDIA': { label: 'TERSEDIA', value: stats.tersedia, color: '#1d4ed8', bg: '#dbeafe' } // Blue
+            };
+        }
+
+        // --- HELPER BARU: FORMATTER ---
+        const getStatusBadgeStyle = (status) => {
+            // Style untuk HTML/Image Export
+            let bg, color;
+            switch (status) {
+                case 'INAP':
+                case 'INAP BU17':
+                case 'INAP CMI': 
+                    bg = '#ffedd5'; color = '#c2410c'; break; // Orange
+                case 'ANTRI MUAT':
+                case 'ANTRI BONGKAR':
+                case 'ANTRI BU17':
+                case 'ANTRI CMI': 
+                    bg = '#fef9c3'; color = '#a16207'; break; // Yellow
+                case 'OTW CUSTOMER':
+                case 'OTW MILL': 
+                    bg = '#dcfce7'; color = '#15803d'; break; // Green
+                case 'TERSEDIA': 
+                    bg = '#dbeafe'; color = '#1d4ed8'; break; // Blue
+                case 'NO DRIVER':
+                case 'STORING':
+                    bg = '#fee2e2'; color = '#b91c1c'; break; // Red
+                default: 
+                    bg = '#f1f5f9'; color = '#475569'; // Grey
+            }
+            return `background-color: ${bg}; color: ${color}; padding: 4px 12px; border-radius: 6px; font-weight: 700; font-size: 11px; display: inline-block; min-width: 80px; text-align: center;`;
         };
 
-        // --- 3. EXPORT AS IMAGE (FORMAT CARD RAPIBH) ---
-        window.exportAsImage = async () => {
-            const angkutanName = currentUserData.angkutanName || 'Report';
-            
-            let filteredData = getFilteredSummaryData();
-            
-            // Logic Sort khusus Image (Prioritas Inap/Antri di atas)
-            const selectedStatus = document.getElementById('summaryFilterStatus').value;
-            const showLeadTimeColumn = (selectedStatus.includes('INAP') || selectedStatus.includes('ANTRI'));
-            
-            if (showLeadTimeColumn) {
-                filteredData.sort((a, b) => {
-                    const leadTimeA = calculateLeadTimeInMinutes(a.tiba_lokasi_bongkar);
-                    const leadTimeB = calculateLeadTimeInMinutes(b.tiba_lokasi_bongkar);
-                    return leadTimeB - leadTimeA;
-                });
+        const getEmptyStyle = (val) => {
+            if (!val || val === '-' || val === '0' || val === 0) {
+                return 'color: #94a3b8; font-style: italic;'; // Abu-abu italic
             }
-
-            // --- MEMBUAT ELEMEN HTML TEMPORARY UNTUK SCREENSHOT ---
-            const container = document.createElement('div');
-            // Styling Container agar terlihat seperti "Kertas Laporan"
-            container.style.position = 'absolute';
-            container.style.left = '-9999px'; // Sembunyikan dari layar user
-            container.style.top = '0';
-            container.style.width = '1400px'; // Lebar fix agar tabel luas
-            container.style.padding = '40px';
-            container.style.backgroundColor = '#ffffff';
-            container.style.fontFamily = "'Inter', sans-serif";
-            container.style.color = '#1e293b';
-
-            // Header Laporan
-            let htmlContent = `
-                <div style="margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h1 style="font-size: 24px; font-weight: 800; color: #1e293b; margin: 0;">SUMMARY REPORT</h1>
-                        <h2 style="font-size: 18px; color: #4f46e5; margin: 5px 0 0 0;">${angkutanName}</h2>
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 14px; color: #64748b; margin: 0;">Generated Date:</p>
-                        <p style="font-size: 14px; font-weight: 600; color: #334155; margin: 0;">${getFormattedTimestamp()}</p>
-                    </div>
-                </div>
-            `;
-
-            // Tabel
-            htmlContent += `
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                    <thead>
-                        <tr style="background-color: #f1f5f9; color: #334155;">
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">No</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: left;">FO/DN</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Qty</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Jadwal Bongkar</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Tiba Bongkar</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: left;">Customer</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Kota</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Status</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: left;">Driver</th>
-                            <th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Plat Nomor</th>
-                            ${showLeadTimeColumn ? '<th style="padding: 12px; border: 1px solid #cbd5e1; text-align: center;">Lead Time</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            filteredData.forEach((truck, index) => {
-                // Style Badge Status Manual (Inline CSS)
-                const bgStatus = getStatusColorCode(truck.keterangan);
-                const textStatus = getStatusTextColorCode(truck.keterangan);
-                const badgeStyle = `display: inline-block; padding: 4px 12px; border-radius: 9999px; background-color: ${bgStatus}; color: ${textStatus}; font-weight: 700; font-size: 11px; text-transform: uppercase;`;
-
-                htmlContent += `
-                    <tr>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${index + 1}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; font-weight: 600;">${truck.fo || '-'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${truck.qty || '0'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${formatTanggalJam(truck.jadwal_bongkar)}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${formatTanggalJam(truck.tiba_lokasi_bongkar)}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0;">${truck.customer || '-'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${truck.tujuan || '-'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">
-                            <span style="${badgeStyle}">${truck.keterangan || '-'}</span>
-                        </td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0;">${truck.nama_driver || '-'}</td>
-                        <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-weight: 600;">${truck.no_mobil || '-'}</td>
-                        ${showLeadTimeColumn ? `<td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center; color: #dc2626; font-weight: 700;">${calculateLeadTime(truck.tiba_lokasi_bongkar)}</td>` : ''}
-                    </tr>
-                `;
-            });
-
-            htmlContent += `</tbody></table>`;
-            
-            // Footer
-            htmlContent += `
-                <div style="margin-top: 20px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                    &copy; ${new Date().getFullYear()} Logistik IKK - System Monitoring
-                </div>
-            `;
-
-            container.innerHTML = htmlContent;
-            document.body.appendChild(container);
-
-            try {
-                // Scale 2 untuk resolusi tinggi (tidak buram saat di-zoom di WA)
-                const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-                const link = document.createElement('a');
-                link.download = `Report_Image_${getFilenameTimestamp()}.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-            } catch (error) {
-                console.error("Gagal export gambar:", error);
-                showErrorAlert("Error", "Gagal membuat gambar.");
-            } finally {
-                document.body.removeChild(container);
-            }
+            return 'color: #334155; font-weight: 500;'; // Normal dark
         };
         
         function closeFilterPopup() {
@@ -2736,4 +2929,3 @@
     </script>
 </body>
 </html>
-
